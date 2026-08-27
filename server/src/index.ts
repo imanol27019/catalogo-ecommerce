@@ -1,9 +1,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import dns from 'node:dns';
 import express from 'express';
 import cors from 'cors';
 import { connectDb } from './db';
 import { requireAdmin } from './auth';
+
+// Muchos entornos de contenedores en la nube (Render incluido) resuelven DNS pero no tienen
+// salida IPv6 funcional. Node prioriza IPv6 por defecto, lo que puede romper el handshake TLS
+// contra MongoDB Atlas a mitad de camino (funciona en local, falla solo en la nube). Forzamos
+// IPv4 primero para evitar esa ruta rota.
+dns.setDefaultResultOrder('ipv4first');
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN ?? '*';
