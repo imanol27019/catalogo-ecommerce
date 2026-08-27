@@ -11,7 +11,6 @@ export function HeroBanner() {
   useEffect(() => {
     if (images.length < 2) return;
     const interval = setInterval(() => {
-      console.log('[hero] tick, images.length=', images.length);
       setActiveIndex((i) => (i + 1) % images.length);
     }, SLIDE_DURATION_MS);
     return () => clearInterval(interval);
