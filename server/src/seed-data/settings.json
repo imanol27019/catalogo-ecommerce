@@ -1,0 +1,76 @@
+{
+  "businessName": "Maim",
+  "businessTagline": "Indumentaria de mujer por mayor",
+  "whatsappNumber": "5491128577292",
+  "whatsappContactMessage": "Hola Maim! Te escribo desde el catálogo web, quería hacerte una consulta.",
+  "contactEmail": "contacto@negocio.com",
+  "contactAddress": "Galeria Cleopatra Local 8, Cuenca 345, Flores, CABA",
+  "contactHours": "Lun a Vie 8 a 18 hs",
+  "currency": "ARS",
+  "locale": "es-AR",
+  "shippingMethods": [
+    {
+      "id": "pickup",
+      "label": "Retiro en el local",
+      "description": "Retirás tu pedido en nuestro local."
+    },
+    {
+      "id": "freight",
+      "label": "Envío por transporte / encomienda",
+      "description": "Coordinamos el envío a tu localidad (flete a cargo del comprador)."
+    },
+    {
+      "id": "delivery",
+      "label": "Envío a domicilio (CABA / GBA)",
+      "description": "Coordinamos entrega a domicilio dentro de zona de cobertura."
+    }
+  ],
+  "minOrderQty": 10,
+  "minOrderTotal": 60000,
+  "announcementMessage": null,
+  "categoryLabels": {
+    "remeras": "Remeras",
+    "buzos": "Buzos",
+    "pantalones": "Pantalones",
+    "camperas": "Camperas"
+  },
+  "categoryOrder": ["remeras", "buzos", "pantalones", "camperas"],
+  "syncFiltersToUrl": true,
+  "maxWhatsAppMessageLength": 3000,
+  "hero": {
+    "eyebrow": "Temporada actual",
+    "heading": "Indumentaria de mujer por mayor",
+    "subtext": "Precios y stock actualizados. Coordiná tu pedido por WhatsApp.",
+    "ctaLabel": "Ver catálogo",
+    "images": [
+      "https://images.unsplash.com/photo-1495121605193-b116b5b9c5fe?auto=format&fit=crop&w=1920&q=75",
+      "https://images.unsplash.com/photo-1612423284934-2850a4ea6b0f?auto=format&fit=crop&w=1920&q=75",
+      "https://images.unsplash.com/photo-1582719188393-bb71ca45dbb9?auto=format&fit=crop&w=1920&q=75",
+      "https://images.unsplash.com/photo-1603400521630-9f2de124b33b?auto=format&fit=crop&w=1920&q=75",
+      "https://images.unsplash.com/photo-1532453288672-3a27e9be9efd?auto=format&fit=crop&w=1920&q=75"
+    ]
+  },
+  "faq": [
+    {
+      "question": "¿Cuál es la compra mínima?",
+      "answer": "El pedido mínimo es de 10 prendas o $60.000 (lo que se cumpla primero), combinando los talles y colores que quieras."
+    },
+    {
+      "question": "¿Hacen envíos?",
+      "answer": "Sí. Podés retirar por el local, coordinar un transporte/encomienda a tu localidad, o envío a domicilio en CABA/GBA."
+    },
+    {
+      "question": "¿Cómo se confirma el pedido?",
+      "answer": "Armás tu pedido en el carrito y lo enviás por WhatsApp. Ahí coordinamos forma de pago y envío directamente con vos."
+    },
+    {
+      "question": "¿Puedo combinar talles y colores para llegar al mínimo?",
+      "answer": "Sí, el mínimo es sobre el total del pedido, no por producto — podés combinar libremente."
+    }
+  ],
+  "newsletter": {
+    "enabled": true,
+    "title": "Sumate a las promociones",
+    "subtext": "Dejanos tu mail y te avisamos de nuevas colecciones y ofertas."
+  }
+}

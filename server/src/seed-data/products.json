@@ -1,0 +1,1906 @@
+{
+  "updatedAt": "2026-08-27T03:37:07.058Z",
+  "products": [
+    {
+      "id": "rem-001",
+      "slug": "remera-basica-oversize",
+      "name": "Remera Básica Oversize",
+      "category": "remeras",
+      "description": "Remera de algodón peinado 24/1, corte oversize. Ideal para estampado.",
+      "images": [
+        "/images/products/remera-basica-oversize.svg"
+      ],
+      "unitPrice": 4500,
+      "bulkPricing": [
+        {
+          "minQty": 6,
+          "price": 3800
+        }
+      ],
+      "minQtyPerVariant": 3,
+      "minQtyPerProduct": 12,
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "colors": [
+        {
+          "name": "Negro",
+          "hex": "#111111"
+        },
+        {
+          "name": "Blanco",
+          "hex": "#F5F5F4"
+        },
+        {
+          "name": "Gris Melange",
+          "hex": "#9CA3AF"
+        }
+      ],
+      "variants": [
+        {
+          "id": "rem-001-S-negro",
+          "size": "S",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 33
+        },
+        {
+          "id": "rem-001-S-blanco",
+          "size": "S",
+          "color": "Blanco",
+          "colorHex": "#F5F5F4",
+          "stockStatus": "in_stock",
+          "stockQty": 50
+        },
+        {
+          "id": "rem-001-S-gris-melange",
+          "size": "S",
+          "color": "Gris Melange",
+          "colorHex": "#9CA3AF",
+          "stockStatus": "in_stock",
+          "stockQty": 37
+        },
+        {
+          "id": "rem-001-M-negro",
+          "size": "M",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 52
+        },
+        {
+          "id": "rem-001-M-blanco",
+          "size": "M",
+          "color": "Blanco",
+          "colorHex": "#F5F5F4",
+          "stockStatus": "in_stock",
+          "stockQty": 49
+        },
+        {
+          "id": "rem-001-M-gris-melange",
+          "size": "M",
+          "color": "Gris Melange",
+          "colorHex": "#9CA3AF",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "rem-001-L-negro",
+          "size": "L",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 46
+        },
+        {
+          "id": "rem-001-L-blanco",
+          "size": "L",
+          "color": "Blanco",
+          "colorHex": "#F5F5F4",
+          "stockStatus": "in_stock",
+          "stockQty": 70
+        },
+        {
+          "id": "rem-001-L-gris-melange",
+          "size": "L",
+          "color": "Gris Melange",
+          "colorHex": "#9CA3AF",
+          "stockStatus": "in_stock",
+          "stockQty": 60
+        },
+        {
+          "id": "rem-001-XL-negro",
+          "size": "XL",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 66
+        },
+        {
+          "id": "rem-001-XL-blanco",
+          "size": "XL",
+          "color": "Blanco",
+          "colorHex": "#F5F5F4",
+          "stockStatus": "in_stock",
+          "stockQty": 70
+        },
+        {
+          "id": "rem-001-XL-gris-melange",
+          "size": "XL",
+          "color": "Gris Melange",
+          "colorHex": "#9CA3AF",
+          "stockStatus": "in_stock",
+          "stockQty": 57
+        }
+      ],
+      "status": "active",
+      "featured": true,
+      "tags": [
+        "basica",
+        "algodon",
+        "oversize"
+      ]
+    },
+    {
+      "id": "rem-002",
+      "slug": "remera-estampada-frase",
+      "name": "Remera Estampada Frase",
+      "category": "remeras",
+      "description": "Remera de algodón con estampa frontal, corte clásico.",
+      "images": [
+        "/images/products/remera-estampada-frase.svg"
+      ],
+      "unitPrice": 5200,
+      "salePrice": 3999,
+      "minQtyPerVariant": 3,
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "colors": [
+        {
+          "name": "Negro",
+          "hex": "#111111"
+        },
+        {
+          "name": "Blanco",
+          "hex": "#F5F5F4"
+        }
+      ],
+      "variants": [
+        {
+          "id": "rem-002-S-negro",
+          "size": "S",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 60
+        },
+        {
+          "id": "rem-002-S-blanco",
+          "size": "S",
+          "color": "Blanco",
+          "colorHex": "#F5F5F4",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "rem-002-M-negro",
+          "size": "M",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "low_stock",
+          "stockQty": 4
+        },
+        {
+          "id": "rem-002-M-blanco",
+          "size": "M",
+          "color": "Blanco",
+          "colorHex": "#F5F5F4",
+          "stockStatus": "in_stock",
+          "stockQty": 54
+        },
+        {
+          "id": "rem-002-L-negro",
+          "size": "L",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 43
+        },
+        {
+          "id": "rem-002-L-blanco",
+          "size": "L",
+          "color": "Blanco",
+          "colorHex": "#F5F5F4",
+          "stockStatus": "in_stock",
+          "stockQty": 48
+        }
+      ],
+      "status": "active",
+      "tags": [
+        "estampada"
+      ]
+    },
+    {
+      "id": "rem-003",
+      "slug": "remera-deportiva-dry-fit",
+      "name": "Remera Deportiva Dry Fit",
+      "category": "remeras",
+      "description": "Tela dry fit transpirable, ideal para uso deportivo o urbano.",
+      "images": [
+        "/images/products/remera-deportiva-dry-fit.svg"
+      ],
+      "unitPrice": 4800,
+      "bulkPricing": [
+        {
+          "minQty": 12,
+          "price": 4200
+        }
+      ],
+      "minQtyPerVariant": 3,
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "colors": [
+        {
+          "name": "Negro",
+          "hex": "#111111"
+        },
+        {
+          "name": "Azul",
+          "hex": "#2563EB"
+        },
+        {
+          "name": "Gris",
+          "hex": "#6B7280"
+        }
+      ],
+      "variants": [
+        {
+          "id": "rem-003-S-negro",
+          "size": "S",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 66
+        },
+        {
+          "id": "rem-003-S-azul",
+          "size": "S",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "in_stock",
+          "stockQty": 45
+        },
+        {
+          "id": "rem-003-S-gris",
+          "size": "S",
+          "color": "Gris",
+          "colorHex": "#6B7280",
+          "stockStatus": "in_stock",
+          "stockQty": 37
+        },
+        {
+          "id": "rem-003-M-negro",
+          "size": "M",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 47
+        },
+        {
+          "id": "rem-003-M-azul",
+          "size": "M",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "in_stock",
+          "stockQty": 33
+        },
+        {
+          "id": "rem-003-M-gris",
+          "size": "M",
+          "color": "Gris",
+          "colorHex": "#6B7280",
+          "stockStatus": "in_stock",
+          "stockQty": 58
+        },
+        {
+          "id": "rem-003-L-negro",
+          "size": "L",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 64
+        },
+        {
+          "id": "rem-003-L-azul",
+          "size": "L",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "in_stock",
+          "stockQty": 54
+        },
+        {
+          "id": "rem-003-L-gris",
+          "size": "L",
+          "color": "Gris",
+          "colorHex": "#6B7280",
+          "stockStatus": "in_stock",
+          "stockQty": 68
+        },
+        {
+          "id": "rem-003-XL-negro",
+          "size": "XL",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 62
+        },
+        {
+          "id": "rem-003-XL-azul",
+          "size": "XL",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "in_stock",
+          "stockQty": 64
+        },
+        {
+          "id": "rem-003-XL-gris",
+          "size": "XL",
+          "color": "Gris",
+          "colorHex": "#6B7280",
+          "stockStatus": "low_stock",
+          "stockQty": 3
+        }
+      ],
+      "status": "active",
+      "tags": [
+        "deportiva",
+        "dry-fit"
+      ]
+    },
+    {
+      "id": "rem-004",
+      "slug": "remera-cuello-v-algodon",
+      "name": "Remera Cuello V Algodón",
+      "category": "remeras",
+      "description": "Remera cuello en V, algodón 100%, corte entallado.",
+      "images": [
+        "/images/products/remera-cuello-v-algodon.svg"
+      ],
+      "unitPrice": 4300,
+      "minQtyPerVariant": 3,
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "colors": [
+        {
+          "name": "Blanco",
+          "hex": "#F5F5F4"
+        },
+        {
+          "name": "Negro",
+          "hex": "#111111"
+        },
+        {
+          "name": "Bordo",
+          "hex": "#7F1D1D"
+        }
+      ],
+      "variants": [
+        {
+          "id": "rem-004-S-blanco",
+          "size": "S",
+          "color": "Blanco",
+          "colorHex": "#F5F5F4",
+          "stockStatus": "in_stock",
+          "stockQty": 53
+        },
+        {
+          "id": "rem-004-S-negro",
+          "size": "S",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 60
+        },
+        {
+          "id": "rem-004-S-bordo",
+          "size": "S",
+          "color": "Bordo",
+          "colorHex": "#7F1D1D",
+          "stockStatus": "in_stock",
+          "stockQty": 69
+        },
+        {
+          "id": "rem-004-M-blanco",
+          "size": "M",
+          "color": "Blanco",
+          "colorHex": "#F5F5F4",
+          "stockStatus": "in_stock",
+          "stockQty": 47
+        },
+        {
+          "id": "rem-004-M-negro",
+          "size": "M",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "rem-004-M-bordo",
+          "size": "M",
+          "color": "Bordo",
+          "colorHex": "#7F1D1D",
+          "stockStatus": "low_stock",
+          "stockQty": 4
+        },
+        {
+          "id": "rem-004-L-blanco",
+          "size": "L",
+          "color": "Blanco",
+          "colorHex": "#F5F5F4",
+          "stockStatus": "in_stock",
+          "stockQty": 71
+        },
+        {
+          "id": "rem-004-L-negro",
+          "size": "L",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 60
+        },
+        {
+          "id": "rem-004-L-bordo",
+          "size": "L",
+          "color": "Bordo",
+          "colorHex": "#7F1D1D",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        }
+      ],
+      "status": "active",
+      "tags": [
+        "cuello-v"
+      ]
+    },
+    {
+      "id": "buz-005",
+      "slug": "buzo-canguro-frisa",
+      "name": "Buzo Canguro Frisa",
+      "category": "buzos",
+      "description": "Buzo canguro con capucha, frisa interior, bolsillo frontal.",
+      "images": [
+        "/images/products/buzo-canguro-frisa.svg"
+      ],
+      "unitPrice": 9800,
+      "bulkPricing": [
+        {
+          "minQty": 6,
+          "price": 8600
+        }
+      ],
+      "minQtyPerVariant": 2,
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "colors": [
+        {
+          "name": "Negro",
+          "hex": "#111111"
+        },
+        {
+          "name": "Gris Melange",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "Verde Militar",
+          "hex": "#4B5320"
+        }
+      ],
+      "variants": [
+        {
+          "id": "buz-005-S-negro",
+          "size": "S",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "buz-005-S-gris-melange",
+          "size": "S",
+          "color": "Gris Melange",
+          "colorHex": "#9CA3AF",
+          "stockStatus": "in_stock",
+          "stockQty": 60
+        },
+        {
+          "id": "buz-005-S-verde-militar",
+          "size": "S",
+          "color": "Verde Militar",
+          "colorHex": "#4B5320",
+          "stockStatus": "low_stock",
+          "stockQty": 4
+        },
+        {
+          "id": "buz-005-M-negro",
+          "size": "M",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 68
+        },
+        {
+          "id": "buz-005-M-gris-melange",
+          "size": "M",
+          "color": "Gris Melange",
+          "colorHex": "#9CA3AF",
+          "stockStatus": "in_stock",
+          "stockQty": 40
+        },
+        {
+          "id": "buz-005-M-verde-militar",
+          "size": "M",
+          "color": "Verde Militar",
+          "colorHex": "#4B5320",
+          "stockStatus": "low_stock",
+          "stockQty": 4
+        },
+        {
+          "id": "buz-005-L-negro",
+          "size": "L",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "buz-005-L-gris-melange",
+          "size": "L",
+          "color": "Gris Melange",
+          "colorHex": "#9CA3AF",
+          "stockStatus": "in_stock",
+          "stockQty": 57
+        },
+        {
+          "id": "buz-005-L-verde-militar",
+          "size": "L",
+          "color": "Verde Militar",
+          "colorHex": "#4B5320",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "buz-005-XL-negro",
+          "size": "XL",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 61
+        },
+        {
+          "id": "buz-005-XL-gris-melange",
+          "size": "XL",
+          "color": "Gris Melange",
+          "colorHex": "#9CA3AF",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "buz-005-XL-verde-militar",
+          "size": "XL",
+          "color": "Verde Militar",
+          "colorHex": "#4B5320",
+          "stockStatus": "in_stock",
+          "stockQty": 43
+        }
+      ],
+      "status": "active",
+      "featured": true,
+      "tags": [
+        "canguro",
+        "frisa"
+      ]
+    },
+    {
+      "id": "buz-006",
+      "slug": "buzo-cuello-redondo-rustico",
+      "name": "Buzo Cuello Redondo Rústico",
+      "category": "buzos",
+      "description": "Buzo cuello redondo, tela rústica, corte clásico.",
+      "images": [
+        "/images/products/buzo-cuello-redondo-rustico.svg"
+      ],
+      "unitPrice": 8900,
+      "salePrice": 6900,
+      "minQtyPerVariant": 2,
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "colors": [
+        {
+          "name": "Negro",
+          "hex": "#111111"
+        },
+        {
+          "name": "Bordo",
+          "hex": "#7F1D1D"
+        },
+        {
+          "name": "Beige",
+          "hex": "#D8CAB8"
+        }
+      ],
+      "variants": [
+        {
+          "id": "buz-006-S-negro",
+          "size": "S",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "low_stock",
+          "stockQty": 3
+        },
+        {
+          "id": "buz-006-S-bordo",
+          "size": "S",
+          "color": "Bordo",
+          "colorHex": "#7F1D1D",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "buz-006-S-beige",
+          "size": "S",
+          "color": "Beige",
+          "colorHex": "#D8CAB8",
+          "stockStatus": "in_stock",
+          "stockQty": 39
+        },
+        {
+          "id": "buz-006-M-negro",
+          "size": "M",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 42
+        },
+        {
+          "id": "buz-006-M-bordo",
+          "size": "M",
+          "color": "Bordo",
+          "colorHex": "#7F1D1D",
+          "stockStatus": "in_stock",
+          "stockQty": 73
+        },
+        {
+          "id": "buz-006-M-beige",
+          "size": "M",
+          "color": "Beige",
+          "colorHex": "#D8CAB8",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "buz-006-L-negro",
+          "size": "L",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 64
+        },
+        {
+          "id": "buz-006-L-bordo",
+          "size": "L",
+          "color": "Bordo",
+          "colorHex": "#7F1D1D",
+          "stockStatus": "in_stock",
+          "stockQty": 55
+        },
+        {
+          "id": "buz-006-L-beige",
+          "size": "L",
+          "color": "Beige",
+          "colorHex": "#D8CAB8",
+          "stockStatus": "low_stock",
+          "stockQty": 3
+        },
+        {
+          "id": "buz-006-XL-negro",
+          "size": "XL",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 45
+        },
+        {
+          "id": "buz-006-XL-bordo",
+          "size": "XL",
+          "color": "Bordo",
+          "colorHex": "#7F1D1D",
+          "stockStatus": "in_stock",
+          "stockQty": 63
+        },
+        {
+          "id": "buz-006-XL-beige",
+          "size": "XL",
+          "color": "Beige",
+          "colorHex": "#D8CAB8",
+          "stockStatus": "in_stock",
+          "stockQty": 64
+        }
+      ],
+      "status": "active",
+      "tags": [
+        "rustico"
+      ]
+    },
+    {
+      "id": "buz-007",
+      "slug": "buzo-oversize-frisa-perchada",
+      "name": "Buzo Oversize Frisa Perchada",
+      "category": "buzos",
+      "description": "Buzo oversize, frisa perchada premium, ideal para invierno.",
+      "images": [
+        "/images/products/buzo-oversize-frisa-perchada.svg"
+      ],
+      "unitPrice": 10500,
+      "minQtyPerVariant": 2,
+      "minQtyPerProduct": 6,
+      "sizes": [
+        "M",
+        "L",
+        "XL"
+      ],
+      "colors": [
+        {
+          "name": "Negro",
+          "hex": "#111111"
+        },
+        {
+          "name": "Gris",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Blanco",
+          "hex": "#F5F5F4"
+        }
+      ],
+      "variants": [
+        {
+          "id": "buz-007-M-negro",
+          "size": "M",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "low_stock",
+          "stockQty": 4
+        },
+        {
+          "id": "buz-007-M-gris",
+          "size": "M",
+          "color": "Gris",
+          "colorHex": "#6B7280",
+          "stockStatus": "in_stock",
+          "stockQty": 52
+        },
+        {
+          "id": "buz-007-M-blanco",
+          "size": "M",
+          "color": "Blanco",
+          "colorHex": "#F5F5F4",
+          "stockStatus": "low_stock",
+          "stockQty": 3
+        },
+        {
+          "id": "buz-007-L-negro",
+          "size": "L",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 66
+        },
+        {
+          "id": "buz-007-L-gris",
+          "size": "L",
+          "color": "Gris",
+          "colorHex": "#6B7280",
+          "stockStatus": "in_stock",
+          "stockQty": 34
+        },
+        {
+          "id": "buz-007-L-blanco",
+          "size": "L",
+          "color": "Blanco",
+          "colorHex": "#F5F5F4",
+          "stockStatus": "in_stock",
+          "stockQty": 63
+        },
+        {
+          "id": "buz-007-XL-negro",
+          "size": "XL",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 43
+        },
+        {
+          "id": "buz-007-XL-gris",
+          "size": "XL",
+          "color": "Gris",
+          "colorHex": "#6B7280",
+          "stockStatus": "in_stock",
+          "stockQty": 37
+        },
+        {
+          "id": "buz-007-XL-blanco",
+          "size": "XL",
+          "color": "Blanco",
+          "colorHex": "#F5F5F4",
+          "stockStatus": "in_stock",
+          "stockQty": 49
+        }
+      ],
+      "status": "active",
+      "tags": [
+        "oversize",
+        "premium"
+      ]
+    },
+    {
+      "id": "buz-008",
+      "slug": "buzo-cierre-medio-zip",
+      "name": "Buzo Cierre Medio Zip",
+      "category": "buzos",
+      "description": "Buzo con cierre medio zip, cuello alto, frisa interior.",
+      "images": [
+        "/images/products/buzo-cierre-medio-zip.svg"
+      ],
+      "unitPrice": 11200,
+      "minQtyPerVariant": 2,
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "colors": [
+        {
+          "name": "Azul Marino",
+          "hex": "#1E3A5F"
+        },
+        {
+          "name": "Negro",
+          "hex": "#111111"
+        }
+      ],
+      "variants": [
+        {
+          "id": "buz-008-S-azul-marino",
+          "size": "S",
+          "color": "Azul Marino",
+          "colorHex": "#1E3A5F",
+          "stockStatus": "in_stock",
+          "stockQty": 65
+        },
+        {
+          "id": "buz-008-S-negro",
+          "size": "S",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "buz-008-M-azul-marino",
+          "size": "M",
+          "color": "Azul Marino",
+          "colorHex": "#1E3A5F",
+          "stockStatus": "in_stock",
+          "stockQty": 36
+        },
+        {
+          "id": "buz-008-M-negro",
+          "size": "M",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 55
+        },
+        {
+          "id": "buz-008-L-azul-marino",
+          "size": "L",
+          "color": "Azul Marino",
+          "colorHex": "#1E3A5F",
+          "stockStatus": "in_stock",
+          "stockQty": 59
+        },
+        {
+          "id": "buz-008-L-negro",
+          "size": "L",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 45
+        }
+      ],
+      "status": "active",
+      "tags": [
+        "medio-zip"
+      ]
+    },
+    {
+      "id": "pan-009",
+      "slug": "jogger-chupin-frisa",
+      "name": "Jogger Chupín Frisa",
+      "category": "pantalones",
+      "description": "Jogger chupín con puño, frisa interior, cintura elastizada.",
+      "images": [
+        "/images/products/jogger-chupin-frisa.svg"
+      ],
+      "unitPrice": 8600,
+      "bulkPricing": [
+        {
+          "minQty": 6,
+          "price": 7500
+        }
+      ],
+      "minQtyPerVariant": 2,
+      "sizes": [
+        "38",
+        "40",
+        "42",
+        "44"
+      ],
+      "colors": [
+        {
+          "name": "Negro",
+          "hex": "#111111"
+        },
+        {
+          "name": "Gris",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Azul",
+          "hex": "#2563EB"
+        }
+      ],
+      "variants": [
+        {
+          "id": "pan-009-38-negro",
+          "size": "38",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 64
+        },
+        {
+          "id": "pan-009-38-gris",
+          "size": "38",
+          "color": "Gris",
+          "colorHex": "#6B7280",
+          "stockStatus": "in_stock",
+          "stockQty": 33
+        },
+        {
+          "id": "pan-009-38-azul",
+          "size": "38",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "pan-009-40-negro",
+          "size": "40",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "low_stock",
+          "stockQty": 3
+        },
+        {
+          "id": "pan-009-40-gris",
+          "size": "40",
+          "color": "Gris",
+          "colorHex": "#6B7280",
+          "stockStatus": "in_stock",
+          "stockQty": 57
+        },
+        {
+          "id": "pan-009-40-azul",
+          "size": "40",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "pan-009-42-negro",
+          "size": "42",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 64
+        },
+        {
+          "id": "pan-009-42-gris",
+          "size": "42",
+          "color": "Gris",
+          "colorHex": "#6B7280",
+          "stockStatus": "low_stock",
+          "stockQty": 3
+        },
+        {
+          "id": "pan-009-42-azul",
+          "size": "42",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "in_stock",
+          "stockQty": 34
+        },
+        {
+          "id": "pan-009-44-negro",
+          "size": "44",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 46
+        },
+        {
+          "id": "pan-009-44-gris",
+          "size": "44",
+          "color": "Gris",
+          "colorHex": "#6B7280",
+          "stockStatus": "low_stock",
+          "stockQty": 3
+        },
+        {
+          "id": "pan-009-44-azul",
+          "size": "44",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "in_stock",
+          "stockQty": 59
+        }
+      ],
+      "status": "active",
+      "featured": true,
+      "tags": [
+        "jogger",
+        "frisa"
+      ]
+    },
+    {
+      "id": "pan-010",
+      "slug": "pantalon-cargo-gabardina",
+      "name": "Pantalón Cargo Gabardina",
+      "category": "pantalones",
+      "description": "Pantalón cargo con bolsillos laterales, tela gabardina resistente.",
+      "images": [
+        "/images/products/pantalon-cargo-gabardina.svg"
+      ],
+      "unitPrice": 10200,
+      "minQtyPerVariant": 2,
+      "sizes": [
+        "38",
+        "40",
+        "42",
+        "44"
+      ],
+      "colors": [
+        {
+          "name": "Verde Militar",
+          "hex": "#4B5320"
+        },
+        {
+          "name": "Negro",
+          "hex": "#111111"
+        },
+        {
+          "name": "Beige",
+          "hex": "#D8CAB8"
+        }
+      ],
+      "variants": [
+        {
+          "id": "pan-010-38-verde-militar",
+          "size": "38",
+          "color": "Verde Militar",
+          "colorHex": "#4B5320",
+          "stockStatus": "in_stock",
+          "stockQty": 43
+        },
+        {
+          "id": "pan-010-38-negro",
+          "size": "38",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "pan-010-38-beige",
+          "size": "38",
+          "color": "Beige",
+          "colorHex": "#D8CAB8",
+          "stockStatus": "in_stock",
+          "stockQty": 34
+        },
+        {
+          "id": "pan-010-40-verde-militar",
+          "size": "40",
+          "color": "Verde Militar",
+          "colorHex": "#4B5320",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "pan-010-40-negro",
+          "size": "40",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 50
+        },
+        {
+          "id": "pan-010-40-beige",
+          "size": "40",
+          "color": "Beige",
+          "colorHex": "#D8CAB8",
+          "stockStatus": "in_stock",
+          "stockQty": 66
+        },
+        {
+          "id": "pan-010-42-verde-militar",
+          "size": "42",
+          "color": "Verde Militar",
+          "colorHex": "#4B5320",
+          "stockStatus": "in_stock",
+          "stockQty": 35
+        },
+        {
+          "id": "pan-010-42-negro",
+          "size": "42",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 60
+        },
+        {
+          "id": "pan-010-42-beige",
+          "size": "42",
+          "color": "Beige",
+          "colorHex": "#D8CAB8",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "pan-010-44-verde-militar",
+          "size": "44",
+          "color": "Verde Militar",
+          "colorHex": "#4B5320",
+          "stockStatus": "in_stock",
+          "stockQty": 57
+        },
+        {
+          "id": "pan-010-44-negro",
+          "size": "44",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "pan-010-44-beige",
+          "size": "44",
+          "color": "Beige",
+          "colorHex": "#D8CAB8",
+          "stockStatus": "in_stock",
+          "stockQty": 49
+        }
+      ],
+      "status": "active",
+      "tags": [
+        "cargo",
+        "gabardina"
+      ]
+    },
+    {
+      "id": "pan-011",
+      "slug": "jean-chupin-elastizado",
+      "name": "Jean Chupín Elastizado",
+      "category": "pantalones",
+      "description": "Jean chupín elastizado, tiro medio, alta durabilidad.",
+      "images": [
+        "/images/products/jean-chupin-elastizado.svg"
+      ],
+      "unitPrice": 12500,
+      "minQtyPerVariant": 2,
+      "sizes": [
+        "38",
+        "40",
+        "42",
+        "44",
+        "46"
+      ],
+      "colors": [
+        {
+          "name": "Azul",
+          "hex": "#2563EB"
+        },
+        {
+          "name": "Negro",
+          "hex": "#111111"
+        }
+      ],
+      "variants": [
+        {
+          "id": "pan-011-38-azul",
+          "size": "38",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "in_stock",
+          "stockQty": 53
+        },
+        {
+          "id": "pan-011-38-negro",
+          "size": "38",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 63
+        },
+        {
+          "id": "pan-011-40-azul",
+          "size": "40",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "low_stock",
+          "stockQty": 3
+        },
+        {
+          "id": "pan-011-40-negro",
+          "size": "40",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 37
+        },
+        {
+          "id": "pan-011-42-azul",
+          "size": "42",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "in_stock",
+          "stockQty": 40
+        },
+        {
+          "id": "pan-011-42-negro",
+          "size": "42",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 67
+        },
+        {
+          "id": "pan-011-44-azul",
+          "size": "44",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "in_stock",
+          "stockQty": 36
+        },
+        {
+          "id": "pan-011-44-negro",
+          "size": "44",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 66
+        },
+        {
+          "id": "pan-011-46-azul",
+          "size": "46",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "low_stock",
+          "stockQty": 3
+        },
+        {
+          "id": "pan-011-46-negro",
+          "size": "46",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 33
+        }
+      ],
+      "status": "active",
+      "tags": [
+        "jean"
+      ]
+    },
+    {
+      "id": "pan-012",
+      "slug": "jogger-deportivo-pique",
+      "name": "Jogger Deportivo Piqué",
+      "category": "pantalones",
+      "description": "Jogger deportivo tela piqué liviana, puño en botamanga.",
+      "images": [
+        "/images/products/jogger-deportivo-pique.svg"
+      ],
+      "unitPrice": 7800,
+      "minQtyPerVariant": 3,
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "colors": [
+        {
+          "name": "Negro",
+          "hex": "#111111"
+        },
+        {
+          "name": "Gris",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Azul Marino",
+          "hex": "#1E3A5F"
+        }
+      ],
+      "variants": [
+        {
+          "id": "pan-012-S-negro",
+          "size": "S",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "low_stock",
+          "stockQty": 3
+        },
+        {
+          "id": "pan-012-S-gris",
+          "size": "S",
+          "color": "Gris",
+          "colorHex": "#6B7280",
+          "stockStatus": "in_stock",
+          "stockQty": 41
+        },
+        {
+          "id": "pan-012-S-azul-marino",
+          "size": "S",
+          "color": "Azul Marino",
+          "colorHex": "#1E3A5F",
+          "stockStatus": "in_stock",
+          "stockQty": 35
+        },
+        {
+          "id": "pan-012-M-negro",
+          "size": "M",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "low_stock",
+          "stockQty": 4
+        },
+        {
+          "id": "pan-012-M-gris",
+          "size": "M",
+          "color": "Gris",
+          "colorHex": "#6B7280",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "pan-012-M-azul-marino",
+          "size": "M",
+          "color": "Azul Marino",
+          "colorHex": "#1E3A5F",
+          "stockStatus": "low_stock",
+          "stockQty": 3
+        },
+        {
+          "id": "pan-012-L-negro",
+          "size": "L",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 57
+        },
+        {
+          "id": "pan-012-L-gris",
+          "size": "L",
+          "color": "Gris",
+          "colorHex": "#6B7280",
+          "stockStatus": "in_stock",
+          "stockQty": 63
+        },
+        {
+          "id": "pan-012-L-azul-marino",
+          "size": "L",
+          "color": "Azul Marino",
+          "colorHex": "#1E3A5F",
+          "stockStatus": "low_stock",
+          "stockQty": 4
+        },
+        {
+          "id": "pan-012-XL-negro",
+          "size": "XL",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 67
+        },
+        {
+          "id": "pan-012-XL-gris",
+          "size": "XL",
+          "color": "Gris",
+          "colorHex": "#6B7280",
+          "stockStatus": "low_stock",
+          "stockQty": 4
+        },
+        {
+          "id": "pan-012-XL-azul-marino",
+          "size": "XL",
+          "color": "Azul Marino",
+          "colorHex": "#1E3A5F",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        }
+      ],
+      "status": "active",
+      "tags": [
+        "deportivo"
+      ]
+    },
+    {
+      "id": "cam-013",
+      "slug": "campera-rompeviento",
+      "name": "Campera Rompeviento",
+      "category": "camperas",
+      "description": "Campera rompeviento liviana, ideal para entretiempo.",
+      "images": [
+        "/images/products/campera-rompeviento.svg"
+      ],
+      "unitPrice": 13500,
+      "minQtyPerVariant": 2,
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "colors": [
+        {
+          "name": "Negro",
+          "hex": "#111111"
+        },
+        {
+          "name": "Azul",
+          "hex": "#2563EB"
+        },
+        {
+          "name": "Gris",
+          "hex": "#6B7280"
+        }
+      ],
+      "variants": [
+        {
+          "id": "cam-013-S-negro",
+          "size": "S",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "low_stock",
+          "stockQty": 4
+        },
+        {
+          "id": "cam-013-S-azul",
+          "size": "S",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "in_stock",
+          "stockQty": 50
+        },
+        {
+          "id": "cam-013-S-gris",
+          "size": "S",
+          "color": "Gris",
+          "colorHex": "#6B7280",
+          "stockStatus": "low_stock",
+          "stockQty": 3
+        },
+        {
+          "id": "cam-013-M-negro",
+          "size": "M",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 51
+        },
+        {
+          "id": "cam-013-M-azul",
+          "size": "M",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "in_stock",
+          "stockQty": 48
+        },
+        {
+          "id": "cam-013-M-gris",
+          "size": "M",
+          "color": "Gris",
+          "colorHex": "#6B7280",
+          "stockStatus": "in_stock",
+          "stockQty": 54
+        },
+        {
+          "id": "cam-013-L-negro",
+          "size": "L",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "low_stock",
+          "stockQty": 4
+        },
+        {
+          "id": "cam-013-L-azul",
+          "size": "L",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "in_stock",
+          "stockQty": 40
+        },
+        {
+          "id": "cam-013-L-gris",
+          "size": "L",
+          "color": "Gris",
+          "colorHex": "#6B7280",
+          "stockStatus": "in_stock",
+          "stockQty": 67
+        },
+        {
+          "id": "cam-013-XL-negro",
+          "size": "XL",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 71
+        },
+        {
+          "id": "cam-013-XL-azul",
+          "size": "XL",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "in_stock",
+          "stockQty": 67
+        },
+        {
+          "id": "cam-013-XL-gris",
+          "size": "XL",
+          "color": "Gris",
+          "colorHex": "#6B7280",
+          "stockStatus": "in_stock",
+          "stockQty": 39
+        }
+      ],
+      "status": "active",
+      "tags": [
+        "rompeviento",
+        "entretiempo"
+      ]
+    },
+    {
+      "id": "cam-014",
+      "slug": "campera-inflable-corta",
+      "name": "Campera Inflable Corta",
+      "category": "camperas",
+      "description": "Campera inflable corta, relleno térmico, cierre frontal.",
+      "images": [
+        "/images/products/campera-inflable-corta.svg"
+      ],
+      "unitPrice": 18900,
+      "minQtyPerVariant": 1,
+      "minQtyPerProduct": 4,
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "colors": [
+        {
+          "name": "Negro",
+          "hex": "#111111"
+        },
+        {
+          "name": "Verde Militar",
+          "hex": "#4B5320"
+        },
+        {
+          "name": "Bordo",
+          "hex": "#7F1D1D"
+        }
+      ],
+      "variants": [
+        {
+          "id": "cam-014-S-negro",
+          "size": "S",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 70
+        },
+        {
+          "id": "cam-014-S-verde-militar",
+          "size": "S",
+          "color": "Verde Militar",
+          "colorHex": "#4B5320",
+          "stockStatus": "in_stock",
+          "stockQty": 50
+        },
+        {
+          "id": "cam-014-S-bordo",
+          "size": "S",
+          "color": "Bordo",
+          "colorHex": "#7F1D1D",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "cam-014-M-negro",
+          "size": "M",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 36
+        },
+        {
+          "id": "cam-014-M-verde-militar",
+          "size": "M",
+          "color": "Verde Militar",
+          "colorHex": "#4B5320",
+          "stockStatus": "low_stock",
+          "stockQty": 3
+        },
+        {
+          "id": "cam-014-M-bordo",
+          "size": "M",
+          "color": "Bordo",
+          "colorHex": "#7F1D1D",
+          "stockStatus": "in_stock",
+          "stockQty": 64
+        },
+        {
+          "id": "cam-014-L-negro",
+          "size": "L",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "cam-014-L-verde-militar",
+          "size": "L",
+          "color": "Verde Militar",
+          "colorHex": "#4B5320",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "cam-014-L-bordo",
+          "size": "L",
+          "color": "Bordo",
+          "colorHex": "#7F1D1D",
+          "stockStatus": "in_stock",
+          "stockQty": 63
+        },
+        {
+          "id": "cam-014-XL-negro",
+          "size": "XL",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 44
+        },
+        {
+          "id": "cam-014-XL-verde-militar",
+          "size": "XL",
+          "color": "Verde Militar",
+          "colorHex": "#4B5320",
+          "stockStatus": "in_stock",
+          "stockQty": 54
+        },
+        {
+          "id": "cam-014-XL-bordo",
+          "size": "XL",
+          "color": "Bordo",
+          "colorHex": "#7F1D1D",
+          "stockStatus": "in_stock",
+          "stockQty": 52
+        }
+      ],
+      "status": "active",
+      "tags": [
+        "inflable",
+        "invierno"
+      ]
+    },
+    {
+      "id": "cam-015",
+      "slug": "campera-jean-clasica",
+      "name": "Campera Jean Clásica",
+      "category": "camperas",
+      "description": "Campera de jean clásica, corte recto, botones metálicos.",
+      "images": [
+        "/images/products/campera-jean-clasica.svg"
+      ],
+      "unitPrice": 15600,
+      "salePrice": 12900,
+      "minQtyPerVariant": 2,
+      "sizes": [
+        "S",
+        "M",
+        "L"
+      ],
+      "colors": [
+        {
+          "name": "Azul",
+          "hex": "#2563EB"
+        }
+      ],
+      "variants": [
+        {
+          "id": "cam-015-S-azul",
+          "size": "S",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        },
+        {
+          "id": "cam-015-M-azul",
+          "size": "M",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "in_stock",
+          "stockQty": 62
+        },
+        {
+          "id": "cam-015-L-azul",
+          "size": "L",
+          "color": "Azul",
+          "colorHex": "#2563EB",
+          "stockStatus": "in_stock",
+          "stockQty": 64
+        }
+      ],
+      "status": "active",
+      "tags": [
+        "jean"
+      ]
+    },
+    {
+      "id": "cam-016",
+      "slug": "campera-bomber-frisa",
+      "name": "Campera Bomber Frisa",
+      "category": "camperas",
+      "description": "Campera bomber con frisa interior, puños y cintura elastizados.",
+      "images": [
+        "/images/products/campera-bomber-frisa.svg"
+      ],
+      "unitPrice": 14200,
+      "bulkPricing": [
+        {
+          "minQty": 4,
+          "price": 12800
+        }
+      ],
+      "minQtyPerVariant": 2,
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "colors": [
+        {
+          "name": "Negro",
+          "hex": "#111111"
+        },
+        {
+          "name": "Verde Militar",
+          "hex": "#4B5320"
+        }
+      ],
+      "variants": [
+        {
+          "id": "cam-016-S-negro",
+          "size": "S",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 73
+        },
+        {
+          "id": "cam-016-S-verde-militar",
+          "size": "S",
+          "color": "Verde Militar",
+          "colorHex": "#4B5320",
+          "stockStatus": "low_stock",
+          "stockQty": 4
+        },
+        {
+          "id": "cam-016-M-negro",
+          "size": "M",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 46
+        },
+        {
+          "id": "cam-016-M-verde-militar",
+          "size": "M",
+          "color": "Verde Militar",
+          "colorHex": "#4B5320",
+          "stockStatus": "in_stock",
+          "stockQty": 48
+        },
+        {
+          "id": "cam-016-L-negro",
+          "size": "L",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 33
+        },
+        {
+          "id": "cam-016-L-verde-militar",
+          "size": "L",
+          "color": "Verde Militar",
+          "colorHex": "#4B5320",
+          "stockStatus": "low_stock",
+          "stockQty": 4
+        },
+        {
+          "id": "cam-016-XL-negro",
+          "size": "XL",
+          "color": "Negro",
+          "colorHex": "#111111",
+          "stockStatus": "in_stock",
+          "stockQty": 51
+        },
+        {
+          "id": "cam-016-XL-verde-militar",
+          "size": "XL",
+          "color": "Verde Militar",
+          "colorHex": "#4B5320",
+          "stockStatus": "out_of_stock",
+          "stockQty": 0
+        }
+      ],
+      "status": "active",
+      "featured": true,
+      "tags": [
+        "bomber"
+      ]
+    }
+  ]
+}
