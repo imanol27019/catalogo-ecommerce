@@ -10,10 +10,13 @@
 
 name: Mantener la API despierta
 
+# Cada 5 min (no cada 15) porque GitHub puede demorar las tareas programadas cuando está
+# cargado; si la demora supera los 15 min el servicio se duerme igual. Pinguear más seguido no
+# consume horas extra de Render: el servicio está despierto las mismas horas de cualquier modo.
 on:
   schedule:
-    - cron: '*/10 11-23 * * *' # 08:00–20:59 ART
-    - cron: '*/10 0-2 * * *' # 21:00–23:59 ART
+    - cron: '*/5 11-23 * * *' # 08:00–20:59 ART
+    - cron: '*/5 0-2 * * *' # 21:00–23:59 ART
   workflow_dispatch: # permite ejecutarlo a mano desde la pestaña Actions
 
 jobs:
