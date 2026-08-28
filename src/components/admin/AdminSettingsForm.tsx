@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import type { FaqItem, ShippingMethodOption, SiteSettings } from '../../types/settings';
 import { Button } from '../ui/Button';
+import { INPUT_CLASS, INPUT_COMPACT_CLASS, LABEL_CLASS, LABEL_TEXT_CLASS, TEXTAREA_CLASS } from '../ui/formStyles';
 
 interface AdminSettingsFormProps {
   settings: SiteSettings;
@@ -39,7 +40,7 @@ export function AdminSettingsForm({ settings, onSave, saveLabel = 'Guardar cambi
       </Fieldset>
 
       <Fieldset title="Mínimo de compra mayorista">
-        <p className="mb-3 text-xs text-stone-500">
+        <p className="mb-3 text-xs text-stone-600">
           Para poder finalizar el pedido por WhatsApp alcanza con cumplir UNA de las dos condiciones (cantidad o
           monto). Dejar en 0 desactiva esa condición.
         </p>
@@ -79,12 +80,12 @@ export function AdminSettingsForm({ settings, onSave, saveLabel = 'Guardar cambi
             onChange={(v) => update('hero', { ...draft.hero, ctaLabel: v })}
           />
           <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-            <span className="font-semibold text-stone-700">Subtexto</span>
+            <span className={LABEL_TEXT_CLASS}>Subtexto</span>
             <textarea
               value={draft.hero.subtext}
               onChange={(e) => update('hero', { ...draft.hero, subtext: e.target.value })}
               rows={2}
-              className="resize-none rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              className={TEXTAREA_CLASS}
             />
           </label>
         </div>
@@ -102,9 +103,10 @@ export function AdminSettingsForm({ settings, onSave, saveLabel = 'Guardar cambi
       </Fieldset>
 
       <Fieldset title="Newsletter">
-        <label className="flex items-center gap-2 text-sm text-stone-700">
+        <label className="flex min-h-11 items-center gap-2 text-sm text-stone-700">
           <input
             type="checkbox"
+            className="h-5 w-5"
             checked={draft.newsletter.enabled}
             onChange={(e) => update('newsletter', { ...draft.newsletter, enabled: e.target.checked })}
           />
@@ -145,12 +147,12 @@ function Fieldset({ title, children }: { title: string; children: ReactNode }) {
 
 function TextField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
-    <label className="flex flex-col gap-1 text-sm">
-      <span className="font-semibold text-stone-700">{label}</span>
+    <label className={LABEL_CLASS}>
+      <span className={LABEL_TEXT_CLASS}>{label}</span>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+        className={INPUT_CLASS}
       />
     </label>
   );
@@ -158,14 +160,14 @@ function TextField({ label, value, onChange }: { label: string; value: string; o
 
 function NumberField({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
   return (
-    <label className="flex flex-col gap-1 text-sm">
-      <span className="font-semibold text-stone-700">{label}</span>
+    <label className={LABEL_CLASS}>
+      <span className={LABEL_TEXT_CLASS}>{label}</span>
       <input
         type="number"
         min={0}
         value={value}
         onChange={(e) => onChange(Number(e.target.value) || 0)}
-        className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+        className={INPUT_CLASS}
       />
     </label>
   );
@@ -197,27 +199,28 @@ function ShippingMethodsEditor({
               value={method.label}
               onChange={(e) => updateMethod(index, { label: e.target.value })}
               placeholder="Nombre"
-              className="rounded-lg border border-stone-300 px-2.5 py-1.5 text-sm"
+              className={INPUT_COMPACT_CLASS}
             />
             <input
               value={method.description ?? ''}
               onChange={(e) => updateMethod(index, { description: e.target.value })}
               placeholder="Descripción (opcional)"
-              className="rounded-lg border border-stone-300 px-2.5 py-1.5 text-sm"
+              className={INPUT_COMPACT_CLASS}
             />
           </div>
-          <button type="button" onClick={() => removeMethod(index)} className="self-start text-stone-400 hover:text-red-500">
+          <button
+            type="button"
+            onClick={() => removeMethod(index)}
+            aria-label={`Quitar el método "${method.label}"`}
+            className="flex h-11 w-11 shrink-0 items-center justify-center self-start rounded-lg text-lg text-stone-600 hover:bg-stone-100 hover:text-red-700"
+          >
             ×
           </button>
         </div>
       ))}
-      <button
-        type="button"
-        onClick={addMethod}
-        className="self-start rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium hover:bg-stone-50"
-      >
+      <Button type="button" variant="secondary" className="self-start" onClick={addMethod}>
         + Agregar método
-      </button>
+      </Button>
     </div>
   );
 }
@@ -242,9 +245,14 @@ function FaqEditor({ items, onChange }: { items: FaqItem[]; onChange: (items: Fa
               value={item.question}
               onChange={(e) => updateItem(index, { question: e.target.value })}
               placeholder="Pregunta"
-              className="flex-1 rounded-lg border border-stone-300 px-2.5 py-1.5 text-sm font-medium"
+              className={`${INPUT_COMPACT_CLASS} flex-1`}
             />
-            <button type="button" onClick={() => removeItem(index)} className="text-stone-400 hover:text-red-500">
+            <button
+              type="button"
+              onClick={() => removeItem(index)}
+              aria-label="Quitar esta pregunta"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-lg text-stone-600 hover:bg-stone-100 hover:text-red-700"
+            >
               ×
             </button>
           </div>
@@ -253,17 +261,13 @@ function FaqEditor({ items, onChange }: { items: FaqItem[]; onChange: (items: Fa
             onChange={(e) => updateItem(index, { answer: e.target.value })}
             placeholder="Respuesta"
             rows={2}
-            className="resize-none rounded-lg border border-stone-300 px-2.5 py-1.5 text-sm"
+            className={`${INPUT_COMPACT_CLASS} resize-none`}
           />
         </div>
       ))}
-      <button
-        type="button"
-        onClick={addItem}
-        className="self-start rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium hover:bg-stone-50"
-      >
+      <Button type="button" variant="secondary" className="self-start" onClick={addItem}>
         + Agregar pregunta
-      </button>
+      </Button>
     </div>
   );
 }
@@ -293,7 +297,8 @@ function HeroImagesEditor({ images, onChange }: { images: string[]; onChange: (i
             <button
               type="button"
               onClick={() => removeImage(index)}
-              className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-stone-900/70 text-xs text-white"
+              aria-label={`Quitar la foto ${index + 1} del banner`}
+              className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center text-lg text-white drop-shadow"
             >
               ×
             </button>
@@ -311,11 +316,11 @@ function HeroImagesEditor({ images, onChange }: { images: string[]; onChange: (i
             }
           }}
           placeholder="URL de la imagen"
-          className="flex-1 rounded-lg border border-stone-300 px-2.5 py-1.5 text-sm"
+          className={`${INPUT_COMPACT_CLASS} flex-1`}
         />
-        <button type="button" onClick={addImage} className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium hover:bg-stone-50">
+        <Button type="button" variant="secondary" onClick={addImage}>
           Agregar
-        </button>
+        </Button>
       </div>
     </div>
   );

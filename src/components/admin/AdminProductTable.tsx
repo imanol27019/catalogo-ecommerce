@@ -2,6 +2,7 @@ import type { Product } from '../../types/product';
 import { CATEGORY_LABELS } from '../../config/site.config';
 import { formatCurrency } from '../../utils/format';
 import { isOnSale } from '../../utils/pricing';
+import { Button } from '../ui/Button';
 
 const STATUS_LABELS: Record<Product['status'], string> = {
   active: 'Activo',
@@ -30,26 +31,18 @@ export function AdminProductTable({ products, onEdit, onDelete }: AdminProductTa
             <p className="mt-1.5 font-heading text-base font-semibold text-brand-600">
               {formatCurrency(isOnSale(product) ? product.salePrice! : product.unitPrice)}
               {isOnSale(product) && (
-                <span className="ml-2 text-xs font-normal text-stone-400 line-through">
+                <span className="ml-2 text-xs font-normal text-stone-500 line-through">
                   {formatCurrency(product.unitPrice)}
                 </span>
               )}
             </p>
             <div className="mt-3 flex gap-2 border-t border-stone-100 pt-3">
-              <button
-                type="button"
-                onClick={() => onEdit(product.id)}
-                className="flex-1 rounded-lg border border-stone-300 px-3 py-2 text-sm font-semibold text-brand-700 hover:bg-stone-50"
-              >
+              <Button variant="secondary" className="flex-1" onClick={() => onEdit(product.id)}>
                 Editar
-              </button>
-              <button
-                type="button"
-                onClick={() => onDelete(product.id)}
-                className="rounded-lg border border-stone-300 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-stone-50"
-              >
+              </Button>
+              <Button variant="danger" onClick={() => onDelete(product.id)}>
                 Eliminar
-              </button>
+              </Button>
             </div>
           </div>
         ))}
@@ -76,7 +69,7 @@ export function AdminProductTable({ products, onEdit, onDelete }: AdminProductTa
                 <td className="whitespace-nowrap px-3 py-2 text-stone-600">
                   {formatCurrency(isOnSale(product) ? product.salePrice! : product.unitPrice)}
                   {isOnSale(product) && (
-                    <span className="ml-1.5 text-xs text-stone-400 line-through">
+                    <span className="ml-1.5 text-xs text-stone-500 line-through">
                       {formatCurrency(product.unitPrice)}
                     </span>
                   )}
@@ -87,14 +80,14 @@ export function AdminProductTable({ products, onEdit, onDelete }: AdminProductTa
                   <button
                     type="button"
                     onClick={() => onEdit(product.id)}
-                    className="mr-3 font-semibold text-brand-700 hover:text-brand-800"
+                    className="mr-3 min-h-11 font-semibold text-brand-700 hover:text-brand-800"
                   >
                     Editar
                   </button>
                   <button
                     type="button"
                     onClick={() => onDelete(product.id)}
-                    className="font-semibold text-red-600 hover:text-red-700"
+                    className="min-h-11 font-semibold text-red-700 hover:text-red-800"
                   >
                     Eliminar
                   </button>

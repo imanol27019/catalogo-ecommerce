@@ -36,11 +36,11 @@ export function NewsletterForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="tu@mail.com"
-            className="min-w-0 flex-1 rounded-lg border border-stone-700 bg-stone-800 px-3 py-2 text-sm text-white placeholder:text-stone-500 focus:border-brand-400 focus:outline-none"
+            className="min-h-11 min-w-0 flex-1 rounded-lg border border-stone-700 bg-stone-800 px-3 text-sm text-white placeholder:text-stone-400 focus:border-brand-400"
           />
           <button
             type="submit"
-            className="shrink-0 rounded-lg bg-brand-600 px-3 py-2 font-heading text-xs font-semibold text-white transition-colors hover:bg-brand-700"
+            className="min-h-11 shrink-0 rounded-lg bg-brand-600 px-4 font-heading text-sm font-semibold text-white transition-colors hover:bg-brand-700"
           >
             Sumarme
           </button>

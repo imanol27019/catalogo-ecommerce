@@ -45,7 +45,7 @@ export function ColorSwatchPicker({ product, selectedSize, selectedColor, onSele
                   </span>
                 )}
               </button>
-              <span className="text-[10px] text-stone-400">{isOutOfStock ? '—' : `${variant?.stockQty ?? 0} u.`}</span>
+              <span className="text-[10px] text-stone-500">{isOutOfStock ? '—' : `${variant?.stockQty ?? 0} u.`}</span>
             </div>
           );
         })}

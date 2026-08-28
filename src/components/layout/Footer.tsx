@@ -23,6 +23,8 @@ export function Footer({ categories, onSelectCategory }: FooterProps) {
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
         <div>
           <p className="font-heading text-lg font-semibold text-white">{BUSINESS_NAME}</p>
+          {/* Sobre el fondo oscuro del footer el texto secundario tiene que ir más claro, no más
+              oscuro: stone-500 acá daba 3.65 de contraste. */}
           <p className="mt-1 text-sm text-stone-400">{BUSINESS_TAGLINE}</p>
           <p className="mt-4 text-sm">{CONTACT_ADDRESS}</p>
           <p className="text-sm">{CONTACT_HOURS}</p>
@@ -31,10 +33,14 @@ export function Footer({ categories, onSelectCategory }: FooterProps) {
         {categories.length > 0 && (
           <div>
             <p className="font-heading text-sm font-semibold text-white">Categorías</p>
-            <ul className="mt-3 flex flex-col gap-2 text-sm">
+            <ul className="mt-1 flex flex-col text-sm">
               {categories.map((category) => (
                 <li key={category}>
-                  <a href="#catalogo" onClick={() => onSelectCategory(category)} className="hover:text-white">
+                  <a
+                    href="#catalogo"
+                    onClick={() => onSelectCategory(category)}
+                    className="inline-flex min-h-11 items-center hover:text-white"
+                  >
                     {CATEGORY_LABELS[category] ?? category}
                   </a>
                 </li>
@@ -45,17 +51,17 @@ export function Footer({ categories, onSelectCategory }: FooterProps) {
 
         <div>
           <p className="font-heading text-sm font-semibold text-white">Contacto</p>
-          <div className="mt-3 flex flex-col gap-2 text-sm">
+          <div className="mt-1 flex flex-col text-sm">
             <a
               href={`https://wa.me/${WHATSAPP_NUMBER}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 hover:text-white"
+              className="inline-flex min-h-11 items-center gap-2 hover:text-white"
             >
               <WhatsAppIcon className="h-4 w-4" />
               WhatsApp
             </a>
-            <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-white">
+            <a href={`mailto:${CONTACT_EMAIL}`} className="inline-flex min-h-11 items-center hover:text-white">
               {CONTACT_EMAIL}
             </a>
           </div>
@@ -64,7 +70,7 @@ export function Footer({ categories, onSelectCategory }: FooterProps) {
         <NewsletterForm />
       </div>
 
-      <div className="border-t border-stone-800 px-4 py-4 text-center text-xs text-stone-500 sm:px-6">
+      <div className="border-t border-stone-800 px-4 py-4 text-center text-xs text-stone-400 sm:px-6">
         © {year} {BUSINESS_NAME}. Precios mayoristas sujetos a stock — la compra se confirma por
         WhatsApp, no procesamos pagos online.
       </div>

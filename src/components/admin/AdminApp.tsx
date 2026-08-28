@@ -11,6 +11,7 @@ import { AdminProductForm } from './AdminProductForm';
 import { AdminSettingsForm } from './AdminSettingsForm';
 import { AdminLoginScreen } from './AdminLoginScreen';
 import { ExportJsonButton } from './ExportJsonButton';
+import { Alert } from '../ui/Alert';
 import { Button } from '../ui/Button';
 
 const ADMIN_PASSWORD_KEY = 'catalogo:adminPassword';
@@ -42,6 +43,7 @@ function createBlankProduct(): Product {
 }
 
 type Tab = 'sales' | 'stock' | 'products' | 'settings';
+type Feedback = { tone: 'success' | 'error'; text: string } | null;
 
 export function AdminApp() {
   const [adminPassword, setAdminPassword] = useState<string | null>(() => sessionStorage.getItem(ADMIN_PASSWORD_KEY));
@@ -54,31 +56,32 @@ export function AdminApp() {
   const [publishedSnapshot, setPublishedSnapshot] = useState(() => JSON.stringify(catalog.products));
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isPublishing, setPublishing] = useState(false);
-  const [publishMessage, setPublishMessage] = useState<string | null>(null);
+  const [publishFeedback, setPublishFeedback] = useState<Feedback>(null);
 
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => clone(settings));
   const [isSavingSettings, setSavingSettings] = useState(false);
-  const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
+  const [settingsFeedback, setSettingsFeedback] = useState<Feedback>(null);
 
   const hasUnpublishedChanges = useMemo(
     () => JSON.stringify(products) !== publishedSnapshot,
     [products, publishedSnapshot],
   );
 
-  function handleLogin(password: string) {
+  function handleLoginSuccess(password: string) {
     sessionStorage.setItem(ADMIN_PASSWORD_KEY, password);
     setAdminPassword(password);
     setLoginError(null);
   }
 
+  /** La contraseña dejó de servir (cambió en el servidor o venía guardada de antes). */
   function handleAuthError() {
     sessionStorage.removeItem(ADMIN_PASSWORD_KEY);
     setAdminPassword(null);
-    setLoginError('Contraseña incorrecta. Volvé a ingresarla.');
+    setLoginError('Tu sesión ya no es válida. Ingresá la contraseña de nuevo.');
   }
 
   if (!adminPassword) {
-    return <AdminLoginScreen onSubmit={handleLogin} error={loginError} />;
+    return <AdminLoginScreen onSuccess={handleLoginSuccess} initialError={loginError} />;
   }
 
   const editingProduct = editingId ? (products.find((p) => p.id === editingId) ?? null) : null;
@@ -104,17 +107,20 @@ export function AdminApp() {
 
   async function handlePublish() {
     setPublishing(true);
-    setPublishMessage(null);
+    setPublishFeedback(null);
     try {
       await saveCatalog(products, adminPassword!);
       setPublishedSnapshot(JSON.stringify(products));
-      setPublishMessage('Publicado — ya lo ven tus clientas.');
+      setPublishFeedback({ tone: 'success', text: 'Publicado — ya lo ven tus clientas.' });
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         handleAuthError();
-      } else {
-        setPublishMessage('No se pudo publicar. Revisá tu conexión e intentá de nuevo.');
+        return;
       }
+      setPublishFeedback({
+        tone: 'error',
+        text: err instanceof ApiError ? err.userMessage : 'No se pudo publicar.',
+      });
     } finally {
       setPublishing(false);
     }
@@ -123,16 +129,19 @@ export function AdminApp() {
   async function handlePublishSettings(updated: SiteSettings) {
     setSiteSettings(updated);
     setSavingSettings(true);
-    setSettingsMessage(null);
+    setSettingsFeedback(null);
     try {
       await saveSettings(updated, adminPassword!);
-      setSettingsMessage('Publicado — ya lo ven tus clientas.');
+      setSettingsFeedback({ tone: 'success', text: 'Publicado — ya lo ven tus clientas.' });
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         handleAuthError();
-      } else {
-        setSettingsMessage('No se pudo publicar. Revisá tu conexión e intentá de nuevo.');
+        return;
       }
+      setSettingsFeedback({
+        tone: 'error',
+        text: err instanceof ApiError ? err.userMessage : 'No se pudo publicar la configuración.',
+      });
     } finally {
       setSavingSettings(false);
     }
@@ -156,12 +165,15 @@ export function AdminApp() {
     <div className="mx-auto max-w-4xl px-4 pb-28 pt-5 sm:px-6 sm:pb-8">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h1 className="font-heading text-lg font-bold text-stone-900">Panel de administración</h1>
-        <a href="#/" className="text-sm font-semibold text-brand-700 hover:text-brand-800">
+        <a
+          href="#/"
+          className="inline-flex min-h-11 items-center text-sm font-semibold text-brand-700 hover:text-brand-800"
+        >
           ← Ver el catálogo
         </a>
       </div>
 
-      <div className="mb-5 flex gap-1 overflow-x-auto border-b border-stone-200">
+      <div className="mb-5 flex gap-1 overflow-x-auto border-b border-stone-200" role="tablist">
         <TabButton isActive={tab === 'sales'} onClick={() => setTab('sales')}>
           Ventas
         </TabButton>
@@ -204,6 +216,7 @@ export function AdminApp() {
             <AdminProductForm
               key={editingProduct.id}
               product={editingProduct}
+              adminPassword={adminPassword}
               onSave={handleSaveProductDraft}
               onCancel={() => setEditingId(null)}
             />
@@ -216,9 +229,13 @@ export function AdminApp() {
       {tab === 'settings' && (
         <>
           <div className="mb-4 flex flex-wrap items-center justify-end gap-3">
-            {settingsMessage && <p className="text-sm font-medium text-stone-600">{settingsMessage}</p>}
             <ExportJsonButton data={siteSettings} filename="settings.json" label="Descargar backup" />
           </div>
+          {settingsFeedback && (
+            <Alert tone={settingsFeedback.tone} className="mb-4">
+              {settingsFeedback.text}
+            </Alert>
+          )}
           <AdminSettingsForm
             settings={siteSettings}
             onSave={handlePublishSettings}
@@ -228,11 +245,16 @@ export function AdminApp() {
       )}
 
       {showPublishBar && (
+        // z-20: barra fija, por debajo del header (z-30) y de las capas modales (z-50).
         <div className="fixed inset-x-0 bottom-0 z-20 border-t border-stone-200 bg-white/95 px-4 py-3 backdrop-blur sm:static sm:mt-6 sm:border-0 sm:bg-transparent sm:px-0 sm:backdrop-blur-none">
           <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
-            <p className="text-xs text-stone-500 sm:text-sm">
-              {publishMessage ??
-                (hasUnpublishedChanges ? 'Tenés cambios sin publicar.' : 'Todo publicado.')}
+            <p
+              className={`text-xs sm:text-sm ${
+                publishFeedback?.tone === 'error' ? 'font-medium text-red-700' : 'text-stone-600'
+              }`}
+              role={publishFeedback?.tone === 'error' ? 'alert' : 'status'}
+            >
+              {publishFeedback?.text ?? (hasUnpublishedChanges ? 'Tenés cambios sin publicar.' : 'Todo publicado.')}
             </p>
             <Button onClick={handlePublish} disabled={isPublishing || !hasUnpublishedChanges}>
               {isPublishing ? 'Publicando…' : 'Publicar cambios'}
@@ -248,9 +270,11 @@ function TabButton({ isActive, onClick, children }: { isActive: boolean; onClick
   return (
     <button
       type="button"
+      role="tab"
+      aria-selected={isActive}
       onClick={onClick}
-      className={`-mb-px shrink-0 border-b-2 px-3 py-2 font-heading text-sm font-medium transition-colors ${
-        isActive ? 'border-brand-600 text-brand-700' : 'border-transparent text-stone-500 hover:text-stone-800'
+      className={`-mb-px min-h-11 shrink-0 border-b-2 px-3 font-heading text-sm font-medium transition-colors ${
+        isActive ? 'border-brand-600 text-brand-700' : 'border-transparent text-stone-600 hover:text-stone-900'
       }`}
     >
       {children}

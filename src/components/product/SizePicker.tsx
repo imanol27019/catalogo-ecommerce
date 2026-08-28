@@ -30,7 +30,7 @@ export function SizePicker({ product, selectedSize, selectedColor, onSelect }: S
               }
               className={`flex min-w-11 flex-col items-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
                 isOutOfStock
-                  ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400 line-through'
+                  ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-500 line-through'
                   : isActive
                     ? 'border-brand-600 bg-brand-600 text-white'
                     : 'border-stone-300 bg-white text-stone-700 hover:border-stone-400'
@@ -38,7 +38,7 @@ export function SizePicker({ product, selectedSize, selectedColor, onSelect }: S
             >
               {size}
               {!isOutOfStock && (
-                <span className={`text-[10px] font-normal ${isActive ? 'text-white/80' : 'text-stone-400'}`}>
+                <span className={`text-[10px] font-normal ${isActive ? 'text-white/80' : 'text-stone-500'}`}>
                   {variant?.stockQty ?? 0} u.
                 </span>
               )}

@@ -6,7 +6,9 @@
   --font-heading: "Jost", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial,
     sans-serif;
 
-  /* Acento terracota / rosa empolvado — estética boutique de indumentaria */
+  /* Acento terracota / rosa empolvado — estética boutique de indumentaria.
+     brand-600 y 700 son los únicos que se usan como fondo de texto blanco: ambos pasan WCAG AA
+     (4.53 y 6.22). */
   --color-brand-50: #fbf4f1;
   --color-brand-100: #f3e3dc;
   --color-brand-200: #e6c7ba;
@@ -18,17 +20,49 @@
   --color-brand-800: #6f4234;
   --color-brand-900: #58362b;
 
-  /* Semáforo de stock — independiente del acento para que no pierda sentido si cambia la paleta */
-  --color-stock-in: #16a34a;
+  /* Semáforo de stock — independiente del acento para que no pierda sentido si cambia la paleta.
+     Los tonos van oscurecidos a propósito: se usan como texto de 12px sobre su variante -soft y
+     con los valores anteriores (#16a34a / #d97706 / #78716c) el contraste quedaba en 3.0-4.4, por
+     debajo del 4.5 que pide WCAG AA. Estos dan 4.79 / 4.84 / 6.99. */
+  --color-stock-in: #15803d;
   --color-stock-in-soft: #f0fdf4;
-  --color-stock-low: #d97706;
+  --color-stock-low: #b45309;
   --color-stock-low-soft: #fffbeb;
-  --color-stock-out: #78716c;
+  --color-stock-out: #57534e;
   --color-stock-out-soft: #f5f5f4;
+
+  /* Verde institucional de WhatsApp. Se usa el tono oscuro de su paleta y no el clásico #25D366
+     porque, con el ícono blanco encima, aquel daba 1.98 de contraste (hace falta 3.0 como mínimo
+     para elementos no textuales). Este da 4.14. */
+  --color-whatsapp: #128c7e;
+  --color-whatsapp-dark: #0e6b60;
 }
+
+/*
+  ESCALA DE Z-INDEX — mantener estos cuatro niveles y no inventar valores sueltos:
+    z-10  contenido por encima de un fondo decorativo (texto del banner sobre la foto)
+    z-20  barras fijas y botones flotantes (carrito flotante, contacto, barra de publicar)
+    z-30  header sticky — tiene que tapar a los flotantes al hacer scroll
+    z-50  capas modales (Modal y Drawer) — tapan absolutamente todo lo anterior
+*/
 
 @layer base {
   body {
     @apply bg-stone-50 font-sans text-stone-900 antialiased;
+  }
+
+  /*
+    Foco visible global. Antes cada control resolvía el foco por su cuenta (o lo borraba con
+    focus:outline-none sin reemplazo), así que navegar con teclado dejaba varios campos sin
+    ninguna señal. Con esta regla todo lo enfocable tiene indicador por defecto.
+  */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-600);
+    outline-offset: 2px;
+  }
+
+  /* Las imágenes nunca deben poder ensanchar su contenedor. */
+  img {
+    max-width: 100%;
   }
 }

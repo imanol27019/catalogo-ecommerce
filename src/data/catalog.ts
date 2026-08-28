@@ -9,13 +9,20 @@ import { apiGet, apiPut } from './apiClient';
  */
 export const catalog: ProductCatalog = productsData as ProductCatalog;
 
+/** `true` cuando lo que se está mostrando son los datos de muestra porque la API no respondió. */
+export let isUsingFallbackCatalog = false;
+
 export async function loadCatalog(): Promise<void> {
   try {
     const data = await apiGet<ProductCatalog>('/api/products');
     catalog.updatedAt = data.updatedAt;
     catalog.products = data.products;
+    isUsingFallbackCatalog = false;
   } catch (err) {
-    console.warn('No se pudo cargar el catálogo desde la API — se usan los datos de muestra incluidos.', err);
+    // No se propaga: es preferible mostrar el catálogo de muestra a dejar la pantalla en blanco.
+    // El aviso al visitante lo da `isUsingFallbackCatalog`.
+    isUsingFallbackCatalog = true;
+    console.warn('No se pudo cargar el catálogo desde la API — se usan los datos de muestra.', err);
   }
 }
 
@@ -23,4 +30,5 @@ export async function saveCatalog(products: Product[], adminPassword: string): P
   const data = await apiPut<ProductCatalog>('/api/products', { products }, adminPassword);
   catalog.updatedAt = data.updatedAt;
   catalog.products = data.products;
+  isUsingFallbackCatalog = false;
 }

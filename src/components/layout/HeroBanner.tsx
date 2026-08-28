@@ -34,7 +34,12 @@ export function HeroBanner() {
               }`}
             />
           ))}
-          <div className="absolute inset-0 bg-stone-900/45" />
+          {/*
+            El velo va al 55% y no al 45%: el texto es blanco y la foto la elige el negocio, así
+            que puede ser clara. Sobre una foto blanca, un velo del 45% deja el contraste en 3.36
+            (hace falta 4.5); con 55% queda en 4.74 en el peor caso.
+          */}
+          <div className="absolute inset-0 bg-stone-900/55" />
         </div>
       )}
 
@@ -44,7 +49,7 @@ export function HeroBanner() {
         <p className="text-sm text-white/90 sm:text-base">{HERO.subtext}</p>
         <a
           href="#catalogo"
-          className="mt-2 inline-flex items-center justify-center rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-brand-700 transition-colors hover:bg-stone-100"
+          className="mt-2 inline-flex min-h-11 items-center justify-center rounded-lg bg-white px-5 text-sm font-semibold text-brand-700 transition-colors hover:bg-stone-100"
         >
           {HERO.ctaLabel}
         </a>

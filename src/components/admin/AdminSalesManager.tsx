@@ -5,6 +5,9 @@ import { fetchOrders, updateOrderStatus } from '../../data/orders';
 import { ApiError } from '../../data/apiClient';
 import { formatCurrency } from '../../utils/format';
 import { Button } from '../ui/Button';
+import { Chip } from '../ui/Chip';
+import { Alert } from '../ui/Alert';
+import { Badge } from '../ui/Badge';
 import { AdminManualSaleForm } from './AdminManualSaleForm';
 
 interface AdminSalesManagerProps {
@@ -23,10 +26,10 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   cancelled: 'Descartada',
 };
 
-const STATUS_CLASSES: Record<OrderStatus, string> = {
-  pending: 'bg-stock-low-soft text-stock-low',
-  confirmed: 'bg-stock-in-soft text-stock-in',
-  cancelled: 'bg-stock-out-soft text-stock-out',
+const STATUS_TONES: Record<OrderStatus, 'stock-low' | 'stock-in' | 'stock-out'> = {
+  pending: 'stock-low',
+  confirmed: 'stock-in',
+  cancelled: 'stock-out',
 };
 
 export function AdminSalesManager({ products, adminPassword, onAuthError, onStockChanged }: AdminSalesManagerProps) {
@@ -45,7 +48,7 @@ export function AdminSalesManager({ products, adminPassword, onAuthError, onStoc
         onAuthError();
         return;
       }
-      setError('No se pudieron cargar las ventas. Revisá tu conexión.');
+      setError(err instanceof ApiError ? err.userMessage : 'No se pudieron cargar las ventas.');
     }
   }
 
@@ -80,7 +83,7 @@ export function AdminSalesManager({ products, adminPassword, onAuthError, onStoc
         onAuthError();
         return;
       }
-      setError(err instanceof ApiError ? err.message : 'No se pudo actualizar la venta.');
+      setError(err instanceof ApiError ? err.userMessage : 'No se pudo actualizar la venta.');
     } finally {
       setBusyId(null);
     }
@@ -106,26 +109,28 @@ export function AdminSalesManager({ products, adminPassword, onAuthError, onStoc
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap gap-2">
-          <FilterChip isActive={filter === 'pending'} onClick={() => setFilter('pending')}>
+          <Chip isActive={filter === 'pending'} onClick={() => setFilter('pending')}>
             {`Pedidos web${pendingCount > 0 ? ` (${pendingCount})` : ''}`}
-          </FilterChip>
-          <FilterChip isActive={filter === 'confirmed'} onClick={() => setFilter('confirmed')}>
+          </Chip>
+          <Chip isActive={filter === 'confirmed'} onClick={() => setFilter('confirmed')}>
             Vendidas
-          </FilterChip>
-          <FilterChip isActive={filter === 'all'} onClick={() => setFilter('all')}>
+          </Chip>
+          <Chip isActive={filter === 'all'} onClick={() => setFilter('all')}>
             Todas
-          </FilterChip>
+          </Chip>
         </div>
         <Button onClick={() => setCreating(true)}>+ Cargar venta</Button>
       </div>
 
-      <p className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2.5 text-xs text-stone-600">
+      <Alert tone="info">
         El stock <strong>solo</strong> se descuenta cuando registrás la venta acá. Los pedidos que llegan del
         catálogo son consultas: quedan a la espera hasta que cobres la seña o el total.
-      </p>
+      </Alert>
 
       {error && (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">{error}</p>
+        <Alert tone="error" onRetry={() => void load()}>
+          {error}
+        </Alert>
       )}
 
       {orders === null ? (
@@ -154,21 +159,6 @@ export function AdminSalesManager({ products, adminPassword, onAuthError, onStoc
   );
 }
 
-function FilterChip({ isActive, onClick, children }: { isActive: boolean; onClick: () => void; children: string }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-        isActive
-          ? 'border-brand-600 bg-brand-600 text-white'
-          : 'border-stone-300 bg-white text-stone-700 hover:border-stone-400'
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
 
 function OrderCard({
   order,
@@ -186,7 +176,7 @@ function OrderCard({
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="font-heading text-sm font-semibold text-stone-900">
-            {order.customer.name} <span className="font-normal text-stone-400">· {order.code}</span>
+            {order.customer.name} <span className="font-normal text-stone-500">· {order.code}</span>
           </p>
           <p className="text-xs text-stone-500">
             {date.toLocaleDateString('es-AR')} {date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
@@ -194,9 +184,7 @@ function OrderCard({
             {order.source === 'manual' ? ' · mostrador' : ' · web'}
           </p>
         </div>
-        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_CLASSES[order.status]}`}>
-          {STATUS_LABELS[order.status]}
-        </span>
+        <Badge tone={STATUS_TONES[order.status]}>{STATUS_LABELS[order.status]}</Badge>
       </div>
 
       <ul className="mt-3 flex flex-col gap-1 border-t border-stone-100 pt-3 text-sm">
@@ -229,14 +217,9 @@ function OrderCard({
 
         {order.status === 'pending' && (
           <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={isBusy}
-              onClick={() => onResolve(order, 'cancelled')}
-              className="rounded-lg border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-600 hover:bg-stone-50 disabled:opacity-50"
-            >
+            <Button variant="danger" disabled={isBusy} onClick={() => onResolve(order, 'cancelled')}>
               Descartar
-            </button>
+            </Button>
             <Button disabled={isBusy} onClick={() => onResolve(order, 'confirmed')}>
               {isBusy ? 'Guardando…' : 'Registrar venta'}
             </Button>

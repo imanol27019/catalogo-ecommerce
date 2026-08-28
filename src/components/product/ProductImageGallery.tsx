@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { resolveImageUrl } from '../../data/apiClient';
 
 interface ProductImageGalleryProps {
   images: string[];
@@ -12,7 +13,7 @@ export function ProductImageGallery({ images, alt }: ProductImageGalleryProps) {
   return (
     <div>
       <div className="aspect-[4/5] w-full overflow-hidden rounded-xl bg-stone-100">
-        <img src={activeImage} alt={alt} className="h-full w-full object-cover" />
+        <img src={resolveImageUrl(activeImage)} alt={alt} className="h-full w-full object-cover" />
       </div>
       {images.length > 1 && (
         <div className="mt-2 flex gap-2">
@@ -26,7 +27,7 @@ export function ProductImageGallery({ images, alt }: ProductImageGalleryProps) {
                 index === activeIndex ? 'border-brand-600' : 'border-transparent'
               }`}
             >
-              <img src={image} alt="" className="h-full w-full object-cover" />
+              <img src={resolveImageUrl(image)} alt="" className="h-full w-full object-cover" />
             </button>
           ))}
         </div>

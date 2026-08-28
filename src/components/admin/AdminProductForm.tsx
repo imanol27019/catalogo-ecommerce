@@ -2,18 +2,24 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import type { BulkPriceTier, Product, ProductColor } from '../../types/product';
 import { CATEGORY_LABELS } from '../../config/site.config';
-import { AdminVariantEditor } from './AdminVariantEditor';
+import { AdminImagesEditor } from './AdminImagesEditor';
 import { regenerateVariants, slugify } from './adminUtils';
 import { Button } from '../ui/Button';
+import { Alert } from '../ui/Alert';
+import { INPUT_CLASS, INPUT_COMPACT_CLASS, LABEL_CLASS, LABEL_TEXT_CLASS, TEXTAREA_CLASS } from '../ui/formStyles';
 
 interface AdminProductFormProps {
   product: Product;
+  adminPassword: string;
   onSave: (product: Product) => void;
   onCancel: () => void;
 }
 
-export function AdminProductForm({ product, onSave, onCancel }: AdminProductFormProps) {
+const SECTION_TITLE_CLASS = 'mb-1.5 text-xs font-semibold uppercase tracking-wide text-stone-600';
+
+export function AdminProductForm({ product, adminPassword, onSave, onCancel }: AdminProductFormProps) {
   const [draft, setDraft] = useState<Product>(product);
+  const [error, setError] = useState<string | null>(null);
 
   function updateSizes(sizes: string[]) {
     setDraft((d) => ({ ...d, sizes, variants: regenerateVariants(sizes, d.colors, d.variants) }));
@@ -25,29 +31,43 @@ export function AdminProductForm({ product, onSave, onCancel }: AdminProductForm
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
+
+    if (!draft.name.trim()) {
+      setError('Poné un nombre al producto.');
+      return;
+    }
+    if (draft.sizes.length === 0 || draft.colors.length === 0) {
+      setError('Agregá al menos un talle y un color.');
+      return;
+    }
+    if (draft.salePrice != null && draft.salePrice >= draft.unitPrice) {
+      setError('El precio de oferta tiene que ser menor al precio de lista.');
+      return;
+    }
+
+    setError(null);
     onSave({ ...draft, slug: draft.slug || slugify(draft.name), updatedAt: new Date().toISOString() });
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5 rounded-lg border border-stone-200 bg-white p-4">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5 rounded-lg border border-stone-200 bg-white p-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-semibold text-stone-700">Nombre</span>
+        <label className={LABEL_CLASS}>
+          <span className={LABEL_TEXT_CLASS}>Nombre</span>
           <input
             value={draft.name}
             onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
-            required
-            className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className={INPUT_CLASS}
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-semibold text-stone-700">Categoría</span>
+        <label className={LABEL_CLASS}>
+          <span className={LABEL_TEXT_CLASS}>Categoría</span>
           <input
             list="admin-categories"
             value={draft.category}
             onChange={(e) => setDraft((d) => ({ ...d, category: e.target.value }))}
-            className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className={INPUT_CLASS}
           />
           <datalist id="admin-categories">
             {Object.keys(CATEGORY_LABELS).map((cat) => (
@@ -56,52 +76,52 @@ export function AdminProductForm({ product, onSave, onCancel }: AdminProductForm
           </datalist>
         </label>
 
-        <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-          <span className="font-semibold text-stone-700">Descripción</span>
+        <label className={`${LABEL_CLASS} sm:col-span-2`}>
+          <span className={LABEL_TEXT_CLASS}>Descripción</span>
           <textarea
             value={draft.description}
             onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
             rows={2}
-            className="resize-none rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className={TEXTAREA_CLASS}
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-semibold text-stone-700">Precio unitario</span>
+        <label className={LABEL_CLASS}>
+          <span className={LABEL_TEXT_CLASS}>Precio unitario</span>
           <input
             type="number"
             min={0}
             value={draft.unitPrice}
             onChange={(e) => setDraft((d) => ({ ...d, unitPrice: Number(e.target.value) || 0 }))}
-            className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className={INPUT_CLASS}
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-semibold text-stone-700">Precio de oferta (opcional)</span>
+        <label className={LABEL_CLASS}>
+          <span className={LABEL_TEXT_CLASS}>Precio de oferta (opcional)</span>
           <input
             type="number"
             min={0}
             value={draft.salePrice ?? ''}
             onChange={(e) => setDraft((d) => ({ ...d, salePrice: e.target.value ? Number(e.target.value) : undefined }))}
             placeholder="Vacío = sin oferta"
-            className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className={INPUT_CLASS}
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-semibold text-stone-700">Mínimo por talle/color</span>
+        <label className={LABEL_CLASS}>
+          <span className={LABEL_TEXT_CLASS}>Mínimo por talle/color</span>
           <input
             type="number"
             min={1}
             value={draft.minQtyPerVariant}
             onChange={(e) => setDraft((d) => ({ ...d, minQtyPerVariant: Number(e.target.value) || 1 }))}
-            className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className={INPUT_CLASS}
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-semibold text-stone-700">Mínimo por producto (opcional)</span>
+        <label className={LABEL_CLASS}>
+          <span className={LABEL_TEXT_CLASS}>Mínimo por producto (opcional)</span>
           <input
             type="number"
             min={0}
@@ -109,16 +129,16 @@ export function AdminProductForm({ product, onSave, onCancel }: AdminProductForm
             onChange={(e) =>
               setDraft((d) => ({ ...d, minQtyPerProduct: e.target.value ? Number(e.target.value) : undefined }))
             }
-            className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className={INPUT_CLASS}
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-semibold text-stone-700">Estado</span>
+        <label className={LABEL_CLASS}>
+          <span className={LABEL_TEXT_CLASS}>Estado</span>
           <select
             value={draft.status}
             onChange={(e) => setDraft((d) => ({ ...d, status: e.target.value as Product['status'] }))}
-            className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className={INPUT_CLASS}
           >
             <option value="active">Activo</option>
             <option value="draft">Borrador</option>
@@ -126,9 +146,10 @@ export function AdminProductForm({ product, onSave, onCancel }: AdminProductForm
           </select>
         </label>
 
-        <label className="flex items-center gap-2 pt-6 text-sm text-stone-700">
+        <label className="flex min-h-11 items-center gap-2 text-sm text-stone-700 sm:pt-6">
           <input
             type="checkbox"
+            className="h-5 w-5"
             checked={draft.featured ?? false}
             onChange={(e) => setDraft((d) => ({ ...d, featured: e.target.checked }))}
           />
@@ -136,18 +157,32 @@ export function AdminProductForm({ product, onSave, onCancel }: AdminProductForm
         </label>
       </div>
 
+      <AdminImagesEditor
+        images={draft.images}
+        adminPassword={adminPassword}
+        onChange={(images) => setDraft((d) => ({ ...d, images }))}
+      />
+
       <SizesEditor sizes={draft.sizes} onChange={updateSizes} />
       <ColorsEditor colors={draft.colors} onChange={updateColors} />
 
-      <div>
-        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-stone-500">Stock por talle / color</p>
-        <AdminVariantEditor product={draft} onChange={(variants) => setDraft((d) => ({ ...d, variants }))} />
-      </div>
+      {/*
+        Acá había una grilla para elegir a mano el estado de cada variante (disponible / poco /
+        sin stock). Quedó obsoleta cuando el stock pasó a llevarse en unidades: el estado se
+        deriva de la cantidad, así que elegirlo aparte solo permitía que se contradijeran.
+        Las unidades se cargan en la pestaña Stock y bajan solas al registrar una venta.
+      */}
+      <Alert tone="info">
+        El stock se maneja por unidades en la pestaña <strong>Stock</strong>. Los talles y colores nuevos entran
+        con 0 unidades.
+      </Alert>
 
       <BulkPricingEditor
         tiers={draft.bulkPricing ?? []}
         onChange={(bulkPricing) => setDraft((d) => ({ ...d, bulkPricing: bulkPricing.length ? bulkPricing : undefined }))}
       />
+
+      {error && <Alert tone="error">{error}</Alert>}
 
       <div className="flex justify-end gap-2 border-t border-stone-200 pt-4">
         <Button type="button" variant="secondary" onClick={onCancel}>
@@ -156,6 +191,19 @@ export function AdminProductForm({ product, onSave, onCancel }: AdminProductForm
         <Button type="submit">Guardar</Button>
       </div>
     </form>
+  );
+}
+
+function RemoveTagButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className="flex h-6 w-6 items-center justify-center rounded-full text-stone-500 hover:bg-stone-200 hover:text-red-700"
+    >
+      ×
+    </button>
   );
 }
 
@@ -170,14 +218,15 @@ function SizesEditor({ sizes, onChange }: { sizes: string[]; onChange: (sizes: s
 
   return (
     <div>
-      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-stone-500">Talles</p>
+      <p className={SECTION_TITLE_CLASS}>Talles</p>
       <div className="mb-2 flex flex-wrap gap-2">
         {sizes.map((size) => (
-          <span key={size} className="flex items-center gap-1 rounded-full bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-700">
+          <span
+            key={size}
+            className="flex items-center gap-1 rounded-full bg-stone-100 py-1 pl-3 pr-1 text-sm font-medium text-stone-700"
+          >
             {size}
-            <button type="button" onClick={() => onChange(sizes.filter((s) => s !== size))} className="text-stone-400 hover:text-red-500">
-              ×
-            </button>
+            <RemoveTagButton label={`Quitar talle ${size}`} onClick={() => onChange(sizes.filter((s) => s !== size))} />
           </span>
         ))}
       </div>
@@ -192,11 +241,12 @@ function SizesEditor({ sizes, onChange }: { sizes: string[]; onChange: (sizes: s
             }
           }}
           placeholder="Ej: XL"
-          className="w-28 rounded-lg border border-stone-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none"
+          aria-label="Nuevo talle"
+          className={`${INPUT_COMPACT_CLASS} w-28`}
         />
-        <button type="button" onClick={addSize} className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium hover:bg-stone-50">
+        <Button type="button" variant="secondary" onClick={addSize}>
           Agregar
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -214,22 +264,23 @@ function ColorsEditor({ colors, onChange }: { colors: ProductColor[]; onChange: 
 
   return (
     <div>
-      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-stone-500">Colores</p>
+      <p className={SECTION_TITLE_CLASS}>Colores</p>
       <div className="mb-2 flex flex-wrap gap-2">
         {colors.map((color) => (
           <span
             key={color.name}
-            className="flex items-center gap-1.5 rounded-full bg-stone-100 py-1 pl-1.5 pr-2.5 text-xs font-medium text-stone-700"
+            className="flex items-center gap-1.5 rounded-full bg-stone-100 py-1 pl-2 pr-1 text-sm font-medium text-stone-700"
           >
-            <span className="h-3.5 w-3.5 rounded-full ring-1 ring-inset ring-black/10" style={{ backgroundColor: color.hex }} />
+            {/* Color del producto: viene de los datos, no del sistema de diseño, por eso va inline. */}
+            <span
+              className="h-4 w-4 rounded-full ring-1 ring-inset ring-black/10"
+              style={{ backgroundColor: color.hex }}
+            />
             {color.name}
-            <button
-              type="button"
+            <RemoveTagButton
+              label={`Quitar color ${color.name}`}
               onClick={() => onChange(colors.filter((c) => c.name !== color.name))}
-              className="text-stone-400 hover:text-red-500"
-            >
-              ×
-            </button>
+            />
           </span>
         ))}
       </div>
@@ -238,7 +289,8 @@ function ColorsEditor({ colors, onChange }: { colors: ProductColor[]; onChange: 
           type="color"
           value={hex}
           onChange={(e) => setHex(e.target.value)}
-          className="h-9 w-9 rounded border border-stone-300 p-0.5"
+          aria-label="Color del nuevo tono"
+          className="h-11 w-11 rounded-lg border border-stone-300 p-1"
         />
         <input
           value={name}
@@ -250,11 +302,12 @@ function ColorsEditor({ colors, onChange }: { colors: ProductColor[]; onChange: 
             }
           }}
           placeholder="Ej: Verde militar"
-          className="w-40 rounded-lg border border-stone-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none"
+          aria-label="Nombre del nuevo color"
+          className={`${INPUT_COMPACT_CLASS} w-40`}
         />
-        <button type="button" onClick={addColor} className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium hover:bg-stone-50">
+        <Button type="button" variant="secondary" onClick={addColor}>
           Agregar
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -265,49 +318,46 @@ function BulkPricingEditor({ tiers, onChange }: { tiers: BulkPriceTier[]; onChan
     onChange(tiers.map((t, i) => (i === index ? { ...t, ...patch } : t)));
   }
 
-  function addTier() {
-    onChange([...tiers, { minQty: 6, price: 0 }]);
-  }
-
-  function removeTier(index: number) {
-    onChange(tiers.filter((_, i) => i !== index));
-  }
-
   return (
     <div>
-      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-stone-500">Precio por bulto (opcional)</p>
+      <p className={SECTION_TITLE_CLASS}>Precio por bulto (opcional)</p>
       <div className="flex flex-col gap-2">
         {tiers.map((tier, index) => (
           <div key={index} className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-stone-500">Desde</span>
+            <span className="text-sm text-stone-600">Desde</span>
             <input
               type="number"
               min={2}
               value={tier.minQty}
               onChange={(e) => updateTier(index, { minQty: Number(e.target.value) || 2 })}
-              className="w-20 rounded-lg border border-stone-300 px-2 py-1.5 text-sm"
+              aria-label="Cantidad mínima del escalón"
+              className={`${INPUT_COMPACT_CLASS} w-20`}
             />
-            <span className="text-sm text-stone-500">u. a</span>
+            <span className="text-sm text-stone-600">u. a</span>
             <input
               type="number"
               min={0}
               value={tier.price}
               onChange={(e) => updateTier(index, { price: Number(e.target.value) || 0 })}
-              className="w-28 rounded-lg border border-stone-300 px-2 py-1.5 text-sm"
+              aria-label="Precio por unidad del escalón"
+              className={`${INPUT_COMPACT_CLASS} w-28`}
             />
-            <span className="text-sm text-stone-500">c/u</span>
-            <button type="button" onClick={() => removeTier(index)} className="text-stone-400 hover:text-red-500">
-              ×
-            </button>
+            <span className="text-sm text-stone-600">c/u</span>
+            <RemoveTagButton
+              label="Quitar escalón de precio"
+              onClick={() => onChange(tiers.filter((_, i) => i !== index))}
+            />
           </div>
         ))}
-        <button
+        <Button
           type="button"
-          onClick={addTier}
-          className="self-start rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium hover:bg-stone-50"
+          variant="secondary"
+         
+          className="self-start"
+          onClick={() => onChange([...tiers, { minQty: 6, price: 0 }])}
         >
           + Agregar escalón de precio
-        </button>
+        </Button>
       </div>
     </div>
   );

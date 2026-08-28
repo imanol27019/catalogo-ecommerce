@@ -6,18 +6,19 @@ export function Header() {
   const { totals, openDrawer } = useCart();
 
   return (
+    // z-30: el header sticky tapa a los flotantes (z-20) al hacer scroll.
     <header className="sticky top-0 z-30 border-b border-stone-200 bg-white/95 backdrop-blur">
       <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 sm:px-6">
         <div />
-        <a href="#/" className="min-w-0 text-center">
+        <a href="#/" className="inline-flex min-h-11 min-w-0 flex-col justify-center text-center">
           <p className="truncate font-heading text-xl font-semibold tracking-tight text-stone-900">{BUSINESS_NAME}</p>
-          <p className="truncate text-[11px] uppercase tracking-widest text-stone-400">{BUSINESS_TAGLINE}</p>
+          <p className="truncate text-[11px] uppercase tracking-widest text-stone-500">{BUSINESS_TAGLINE}</p>
         </a>
         <div className="flex justify-end">
           <button
             type="button"
             onClick={openDrawer}
-            className="relative flex items-center gap-2 rounded-full border border-stone-300 bg-white px-3.5 py-2 text-sm font-semibold text-stone-800 transition-colors hover:bg-stone-50"
+            className="relative flex min-h-11 items-center gap-2 rounded-full border border-stone-300 bg-white px-3.5 text-sm font-semibold text-stone-800 transition-colors hover:bg-stone-50"
           >
             <CartIcon className="h-5 w-5" />
             <span className="hidden sm:inline">Carrito</span>

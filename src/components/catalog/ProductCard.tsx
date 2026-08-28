@@ -3,6 +3,7 @@ import { CATEGORY_LABELS } from '../../config/site.config';
 import { formatCurrency } from '../../utils/format';
 import { getEffectivePrice, isOnSale } from '../../utils/pricing';
 import { getProductAggregateStock, getProductTotalStock } from '../../utils/stock';
+import { resolveImageUrl } from '../../data/apiClient';
 import { StockBadge } from './StockBadge';
 
 interface ProductCardProps {
@@ -25,7 +26,7 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
     >
       <div className="relative aspect-[3/4] w-full overflow-hidden bg-stone-100">
         <img
-          src={product.images[0]}
+          src={resolveImageUrl(product.images[0] ?? '')}
           alt={product.name}
           loading="lazy"
           className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
@@ -42,10 +43,10 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
         </div>
       </div>
       <div className="flex flex-1 flex-col items-center gap-1 p-3">
-        <span className="text-[11px] font-medium uppercase tracking-wide text-stone-400">{categoryLabel}</span>
+        <span className="text-[11px] font-medium uppercase tracking-wide text-stone-500">{categoryLabel}</span>
         <h3 className="line-clamp-2 font-heading text-sm font-medium text-stone-900">{product.name}</h3>
         <div className="mt-1 flex items-baseline gap-2">
-          {onSale && <span className="text-xs text-stone-400 line-through">{formatCurrency(product.unitPrice)}</span>}
+          {onSale && <span className="text-xs text-stone-500 line-through">{formatCurrency(product.unitPrice)}</span>}
           <span className="font-heading text-lg font-semibold text-brand-600">{formatCurrency(price)}</span>
         </div>
         <span className="mt-2 w-full rounded-lg bg-brand-600 py-2 text-xs font-semibold text-white transition-colors group-hover:bg-brand-700">

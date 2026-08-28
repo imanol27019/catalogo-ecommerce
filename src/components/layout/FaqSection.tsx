@@ -19,11 +19,11 @@ export function FaqSection() {
                 type="button"
                 onClick={() => setOpenIndex(isOpen ? null : index)}
                 aria-expanded={isOpen}
-                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left font-heading text-sm font-medium text-stone-900"
+                className="flex min-h-11 w-full items-center justify-between gap-3 px-4 py-3 text-left font-heading text-sm font-medium text-stone-900"
               >
                 {item.question}
                 <ChevronDownIcon
-                  className={`h-4 w-4 shrink-0 text-stone-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                  className={`h-4 w-4 shrink-0 text-stone-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
                 />
               </button>
               {isOpen && <p className="px-4 pb-4 text-sm text-stone-600">{item.answer}</p>}

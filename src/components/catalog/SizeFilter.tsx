@@ -1,3 +1,5 @@
+import { Chip } from '../ui/Chip';
+
 interface SizeFilterProps {
   sizes: string[];
   selected: string[];
@@ -11,25 +13,13 @@ export function SizeFilter({ sizes, selected, onChange }: SizeFilterProps) {
 
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500">Talle</p>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-600">Talle</p>
       <div className="flex flex-wrap gap-2">
-        {sizes.map((size) => {
-          const isActive = selected.includes(size);
-          return (
-            <button
-              key={size}
-              type="button"
-              onClick={() => toggle(size)}
-              className={`min-w-10 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
-                isActive
-                  ? 'border-brand-600 bg-brand-600 text-white'
-                  : 'border-stone-300 bg-white text-stone-700 hover:border-stone-400'
-              }`}
-            >
-              {size}
-            </button>
-          );
-        })}
+        {sizes.map((size) => (
+          <Chip key={size} isActive={selected.includes(size)} onClick={() => toggle(size)} className="min-w-11">
+            {size}
+          </Chip>
+        ))}
       </div>
     </div>
   );

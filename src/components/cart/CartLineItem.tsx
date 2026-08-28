@@ -1,6 +1,7 @@
 import type { CartLineItem as CartLineItemType } from '../../types/cart';
 import { computeLineSubtotal, computeLineUnitPrice } from '../../utils/pricing';
 import { formatCurrency } from '../../utils/format';
+import { resolveImageUrl } from '../../data/apiClient';
 import { QuantityStepper } from '../product/QuantityStepper';
 import { TrashIcon } from '../ui/icons';
 
@@ -17,7 +18,7 @@ export function CartLineItem({ item, onSetQty, onAdjustQty, onRemove }: CartLine
 
   return (
     <div className="flex gap-3 border-b border-stone-200 pb-4">
-      <img src={item.image} alt={item.productName} className="h-20 w-16 shrink-0 rounded-lg object-cover" />
+      <img src={resolveImageUrl(item.image)} alt={item.productName} className="h-20 w-16 shrink-0 rounded-lg object-cover" />
       <div className="flex flex-1 flex-col gap-1.5">
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -30,7 +31,7 @@ export function CartLineItem({ item, onSetQty, onAdjustQty, onRemove }: CartLine
             type="button"
             onClick={() => onRemove(item.lineId)}
             aria-label={`Quitar ${item.productName}`}
-            className="text-stone-400 hover:text-red-500"
+            className="text-stone-500 hover:text-red-500"
           >
             <TrashIcon className="h-4 w-4" />
           </button>

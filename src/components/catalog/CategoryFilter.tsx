@@ -1,4 +1,5 @@
 import { CATEGORY_LABELS } from '../../config/site.config';
+import { Chip } from '../ui/Chip';
 
 interface CategoryFilterProps {
   categories: string[];
@@ -13,25 +14,13 @@ export function CategoryFilter({ categories, selected, onChange }: CategoryFilte
 
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500">Categoría</p>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-600">Categoría</p>
       <div className="flex flex-wrap gap-2">
-        {categories.map((category) => {
-          const isActive = selected.includes(category);
-          return (
-            <button
-              key={category}
-              type="button"
-              onClick={() => toggle(category)}
-              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-                isActive
-                  ? 'border-brand-600 bg-brand-600 text-white'
-                  : 'border-stone-300 bg-white text-stone-700 hover:border-stone-400'
-              }`}
-            >
-              {CATEGORY_LABELS[category] ?? category}
-            </button>
-          );
-        })}
+        {categories.map((category) => (
+          <Chip key={category} isActive={selected.includes(category)} onClick={() => toggle(category)}>
+            {CATEGORY_LABELS[category] ?? category}
+          </Chip>
+        ))}
       </div>
     </div>
   );

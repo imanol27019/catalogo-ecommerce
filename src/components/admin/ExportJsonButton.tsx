@@ -1,3 +1,5 @@
+import { Button } from '../ui/Button';
+
 interface ExportJsonButtonProps {
   data: unknown;
   filename: string;
@@ -18,12 +20,8 @@ export function ExportJsonButton({ data, filename, label }: ExportJsonButtonProp
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleExport}
-      className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
-    >
+    <Button type="button" variant="secondary" onClick={handleExport}>
       {label}
-    </button>
+    </Button>
   );
 }

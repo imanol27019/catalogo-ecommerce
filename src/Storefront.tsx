@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { catalog } from './data/catalog';
+import { catalog, isUsingFallbackCatalog } from './data/catalog';
+import { Alert } from './components/ui/Alert';
 import { AnnouncementBar } from './components/layout/AnnouncementBar';
 import { Header } from './components/layout/Header';
 import { HeroBanner } from './components/layout/HeroBanner';
@@ -33,6 +34,17 @@ export function Storefront() {
       <CategoryNav categories={facets.categories} activeCategories={filters.categories} onSelect={selectCategory} />
 
       <main id="catalogo" className="mx-auto w-full max-w-6xl flex-1 scroll-mt-16 px-4 py-8 sm:px-6">
+        {/*
+          Si la API no respondió se muestran los datos de muestra empaquetados. Conviene avisarlo:
+          los precios y el stock podrían no ser los reales y el pedido se cierra igual por WhatsApp.
+        */}
+        {isUsingFallbackCatalog && (
+          <Alert tone="warning" title="No pudimos actualizar el catálogo" className="mb-6" onRetry={() => location.reload()}>
+            Estás viendo información que puede no estar al día. Consultanos por WhatsApp para confirmar precios y
+            disponibilidad.
+          </Alert>
+        )}
+
         <div className="mb-6">
           <FiltersBar
             filters={filters}

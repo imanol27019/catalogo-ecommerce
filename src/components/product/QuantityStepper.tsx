@@ -19,7 +19,7 @@ export function QuantityStepper({ qty, min, onIncrement, onDecrement, onSetQty, 
           disabled={disabled || qty <= 1}
           onClick={onDecrement}
           aria-label="Restar unidad"
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-stone-300 text-stone-700 transition-colors hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-11 w-11 items-center justify-center rounded-lg border border-stone-300 text-stone-700 transition-colors hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <MinusIcon className="h-4 w-4" />
         </button>
@@ -29,14 +29,14 @@ export function QuantityStepper({ qty, min, onIncrement, onDecrement, onSetQty, 
           value={qty}
           disabled={disabled}
           onChange={(e) => onSetQty(Math.max(1, Number(e.target.value) || 1))}
-          className="w-14 rounded-lg border border-stone-300 py-2 text-center text-sm font-semibold focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+          className="min-h-11 w-14 rounded-lg border border-stone-300 text-center text-sm font-semibold focus:border-brand-500"
         />
         <button
           type="button"
           disabled={disabled}
           onClick={onIncrement}
           aria-label="Sumar unidad"
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-stone-300 text-stone-700 transition-colors hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-11 w-11 items-center justify-center rounded-lg border border-stone-300 text-stone-700 transition-colors hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <PlusIcon className="h-4 w-4" />
         </button>

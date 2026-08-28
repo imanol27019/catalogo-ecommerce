@@ -9,6 +9,7 @@ import { MIN_ORDER_QTY, MIN_ORDER_TOTAL, SHIPPING_METHODS } from '../../config/s
 import type { OrderFormData } from '../../types/order';
 import { createOrder } from '../../data/orders';
 import { WhatsAppIcon } from '../ui/icons';
+import { INPUT_CLASS, TEXTAREA_CLASS } from '../ui/formStyles';
 import { OrderMinimumNotice } from '../cart/OrderMinimumNotice';
 
 interface WhatsAppCheckoutModalProps {
@@ -80,7 +81,7 @@ export function WhatsAppCheckoutModal({ isOpen, onClose }: WhatsAppCheckoutModal
             value={form.contactName}
             onChange={(e) => setForm((f) => ({ ...f, contactName: e.target.value }))}
             placeholder="Ej: María / Local Rodríguez"
-            className="rounded-lg border border-stone-300 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className={INPUT_CLASS}
           />
         </label>
 
@@ -92,7 +93,7 @@ export function WhatsAppCheckoutModal({ isOpen, onClose }: WhatsAppCheckoutModal
             value={form.locality}
             onChange={(e) => setForm((f) => ({ ...f, locality: e.target.value }))}
             placeholder="Ej: Morón, Buenos Aires"
-            className="rounded-lg border border-stone-300 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className={INPUT_CLASS}
           />
         </label>
 
@@ -108,7 +109,7 @@ export function WhatsAppCheckoutModal({ isOpen, onClose }: WhatsAppCheckoutModal
             onChange={(e) => setForm((f) => ({ ...f, comment: e.target.value }))}
             rows={3}
             placeholder="Alguna aclaración sobre el pedido..."
-            className="resize-none rounded-lg border border-stone-300 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className={TEXTAREA_CLASS}
           />
         </label>
 

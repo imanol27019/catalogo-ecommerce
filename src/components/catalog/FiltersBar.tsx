@@ -9,6 +9,7 @@ import { ColorFilter } from './ColorFilter';
 import { PriceRangeFilter } from './PriceRangeFilter';
 import { Drawer } from '../ui/Drawer';
 import { Button } from '../ui/Button';
+import { Chip } from '../ui/Chip';
 import { FilterIcon } from '../ui/icons';
 
 interface FiltersBarProps {
@@ -49,7 +50,7 @@ export function FiltersBar({ filters, facets, resultCount, onChange, onReset }: 
       <button
         type="button"
         onClick={() => setPanelOpen(true)}
-        className="relative flex items-center justify-center gap-2 rounded-lg border border-stone-300 bg-white px-4 py-2.5 text-sm font-semibold text-stone-800 transition-colors hover:bg-stone-50"
+        className="relative flex min-h-11 items-center justify-center gap-2 rounded-lg border border-stone-300 bg-white px-4 text-sm font-semibold text-stone-800 transition-colors hover:bg-stone-50"
       >
         <FilterIcon className="h-4 w-4" />
         Filtros
@@ -99,25 +100,17 @@ export function FiltersBar({ filters, facets, resultCount, onChange, onReset }: 
             onChange={(priceMin, priceMax) => onChange({ ...filters, priceMin, priceMax })}
           />
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500">Disponibilidad</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-600">Disponibilidad</p>
             <div className="flex flex-wrap gap-2">
-              {STOCK_STATUSES.map((status) => {
-                const isActive = filters.stockStatuses.includes(status);
-                return (
-                  <button
-                    key={status}
-                    type="button"
-                    onClick={() => toggleStock(status)}
-                    className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'border-brand-600 bg-brand-600 text-white'
-                        : 'border-stone-300 bg-white text-stone-700 hover:border-stone-400'
-                    }`}
-                  >
-                    {STOCK_LABELS[status]}
-                  </button>
-                );
-              })}
+              {STOCK_STATUSES.map((status) => (
+                <Chip
+                  key={status}
+                  isActive={filters.stockStatuses.includes(status)}
+                  onClick={() => toggleStock(status)}
+                >
+                  {STOCK_LABELS[status]}
+                </Chip>
+              ))}
             </div>
           </div>
         </div>

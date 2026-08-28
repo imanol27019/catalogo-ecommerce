@@ -7,6 +7,8 @@ import { formatCurrency } from '../../utils/format';
 import { computeLineUnitPrice, getEffectivePrice } from '../../utils/pricing';
 import { STOCK_LABELS } from '../../utils/stock';
 import { Button } from '../ui/Button';
+import { Alert } from '../ui/Alert';
+import { INPUT_CLASS, LABEL_CLASS, LABEL_TEXT_CLASS } from '../ui/formStyles';
 
 interface AdminManualSaleFormProps {
   products: Product[];
@@ -113,7 +115,7 @@ export function AdminManualSaleForm({
         onAuthError();
         return;
       }
-      setError(err instanceof ApiError ? err.message : 'No se pudo registrar la venta.');
+      setError(err instanceof ApiError ? err.userMessage : 'No se pudo registrar la venta.');
     } finally {
       setSaving(false);
     }
@@ -123,27 +125,27 @@ export function AdminManualSaleForm({
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-2">
         <h2 className="font-heading text-base font-semibold text-stone-900">Cargar venta</h2>
-        <button type="button" onClick={onCancel} className="text-sm font-semibold text-stone-500 hover:text-stone-800">
+        <button type="button" onClick={onCancel} className="inline-flex min-h-11 items-center text-sm font-semibold text-stone-600 hover:text-stone-900">
           Volver
         </button>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-semibold text-stone-700">Clienta / local (opcional)</span>
+        <label className={LABEL_CLASS}>
+          <span className={LABEL_TEXT_CLASS}>Clienta / local (opcional)</span>
           <input
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
             placeholder="Venta en el local"
-            className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className={INPUT_CLASS}
           />
         </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-semibold text-stone-700">Localidad (opcional)</span>
+        <label className={LABEL_CLASS}>
+          <span className={LABEL_TEXT_CLASS}>Localidad (opcional)</span>
           <input
             value={locality}
             onChange={(e) => setLocality(e.target.value)}
-            className="rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className={INPUT_CLASS}
           />
         </label>
       </div>
@@ -155,7 +157,7 @@ export function AdminManualSaleForm({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar producto..."
-          className="w-full rounded-lg border border-stone-300 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+          className={INPUT_CLASS}
         />
 
         {searchResults.map((product) => (
@@ -170,10 +172,10 @@ export function AdminManualSaleForm({
                   disabled={variant.stockQty <= 0}
                   onClick={() => addVariant(product.id, variant.id)}
                   title={`${STOCK_LABELS[variant.stockStatus]} · ${variant.stockQty} u.`}
-                  className="rounded-lg border border-stone-300 px-2 py-1.5 text-xs font-medium text-stone-700 hover:border-brand-500 hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="min-h-11 rounded-lg border border-stone-300 px-2.5 text-xs font-medium text-stone-700 hover:border-brand-500 hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {variant.size}/{variant.color}
-                  <span className="ml-1 text-stone-400">({variant.stockQty})</span>
+                  <span className="ml-1 text-stone-500">({variant.stockQty})</span>
                 </button>
               ))}
             </div>
@@ -200,7 +202,7 @@ export function AdminManualSaleForm({
                     min={1}
                     value={line.qty}
                     onChange={(e) => setQty(line.variantId, Number(e.target.value) || 1)}
-                    className={`w-16 rounded-lg border px-2 py-1.5 text-center text-sm ${
+                    className={`min-h-11 w-16 rounded-lg border px-2 text-center text-sm ${
                       overStock ? 'border-stock-low text-stock-low' : 'border-stone-300'
                     }`}
                   />
@@ -210,7 +212,7 @@ export function AdminManualSaleForm({
                   <button
                     type="button"
                     onClick={() => removeLine(line.variantId)}
-                    className="text-stone-400 hover:text-red-500"
+                    className="text-stone-500 hover:text-red-500"
                     aria-label="Quitar"
                   >
                     ×
@@ -231,7 +233,7 @@ export function AdminManualSaleForm({
         </div>
       )}
 
-      {error && <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">{error}</p>}
+      {error && <Alert tone="error">{error}</Alert>}
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="secondary" onClick={onCancel}>
