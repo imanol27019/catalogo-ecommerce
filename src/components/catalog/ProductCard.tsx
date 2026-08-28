@@ -30,14 +30,16 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
           loading="lazy"
           className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
         />
-        <div className="absolute left-2 top-2">
+        {/* Apilados, no enfrentados: en tarjetas angostas (2 columnas en un celular chico) dos
+            badges en esquinas opuestas se terminan pisando. */}
+        <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
           <StockBadge status={stock} qty={totalUnits} />
+          {onSale && (
+            <span className="rounded-full bg-stone-900 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+              Oferta
+            </span>
+          )}
         </div>
-        {onSale && (
-          <span className="absolute right-2 top-2 rounded-full bg-stone-900 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
-            Oferta
-          </span>
-        )}
       </div>
       <div className="flex flex-1 flex-col items-center gap-1 p-3">
         <span className="text-[11px] font-medium uppercase tracking-wide text-stone-400">{categoryLabel}</span>

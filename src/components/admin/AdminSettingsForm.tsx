@@ -135,7 +135,8 @@ export function AdminSettingsForm({ settings, onSave, saveLabel = 'Guardar cambi
 
 function Fieldset({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <fieldset className="rounded-lg border border-stone-200 bg-white p-4">
+    // `min-w-0`: los fieldset traen min-width:min-content del navegador y no se achican en pantallas chicas.
+    <fieldset className="min-w-0 rounded-lg border border-stone-200 bg-white p-4">
       <legend className="px-1 font-heading text-sm font-semibold text-stone-900">{title}</legend>
       <div className="mt-3">{children}</div>
     </fieldset>
