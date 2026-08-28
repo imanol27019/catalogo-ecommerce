@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { Product } from '../../types/product';
 import type { SiteSettings } from '../../types/settings';
 import { catalog, saveCatalog } from '../../data/catalog';
 import { settings, saveSettings } from '../../data/settings';
 import { ApiError } from '../../data/apiClient';
+import { AdminStockManager } from './AdminStockManager';
 import { AdminProductTable } from './AdminProductTable';
 import { AdminProductForm } from './AdminProductForm';
 import { AdminSettingsForm } from './AdminSettingsForm';
@@ -39,22 +40,29 @@ function createBlankProduct(): Product {
   };
 }
 
-type Tab = 'products' | 'settings';
+type Tab = 'stock' | 'products' | 'settings';
 
 export function AdminApp() {
   const [adminPassword, setAdminPassword] = useState<string | null>(() => sessionStorage.getItem(ADMIN_PASSWORD_KEY));
   const [loginError, setLoginError] = useState<string | null>(null);
 
-  const [tab, setTab] = useState<Tab>('products');
+  const [tab, setTab] = useState<Tab>('stock');
 
   const [products, setProducts] = useState<Product[]>(() => clone(catalog.products));
+  /** Última versión publicada, para saber si quedan cambios sin publicar. */
+  const [publishedSnapshot, setPublishedSnapshot] = useState(() => JSON.stringify(catalog.products));
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [isSavingProducts, setSavingProducts] = useState(false);
-  const [productsSaveMessage, setProductsSaveMessage] = useState<string | null>(null);
+  const [isPublishing, setPublishing] = useState(false);
+  const [publishMessage, setPublishMessage] = useState<string | null>(null);
 
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => clone(settings));
   const [isSavingSettings, setSavingSettings] = useState(false);
-  const [settingsSaveMessage, setSettingsSaveMessage] = useState<string | null>(null);
+  const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
+
+  const hasUnpublishedChanges = useMemo(
+    () => JSON.stringify(products) !== publishedSnapshot,
+    [products, publishedSnapshot],
+  );
 
   function handleLogin(password: string) {
     sessionStorage.setItem(ADMIN_PASSWORD_KEY, password);
@@ -83,7 +91,7 @@ export function AdminApp() {
   }
 
   function handleDeleteProduct(id: string) {
-    if (!window.confirm('¿Quitar este producto? Se aplica recién cuando lo publiques.')) return;
+    if (!window.confirm('¿Quitar este producto? Se aplica cuando publiques los cambios.')) return;
     setProducts((prev) => prev.filter((p) => p.id !== id));
   }
 
@@ -93,54 +101,57 @@ export function AdminApp() {
     setEditingId(blank.id);
   }
 
-  async function handlePublishProducts() {
-    setSavingProducts(true);
-    setProductsSaveMessage(null);
+  async function handlePublish() {
+    setPublishing(true);
+    setPublishMessage(null);
     try {
       await saveCatalog(products, adminPassword!);
-      setProductsSaveMessage('Publicado — ya está visible para todas las visitantes.');
+      setPublishedSnapshot(JSON.stringify(products));
+      setPublishMessage('Publicado — ya lo ven tus clientas.');
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         handleAuthError();
       } else {
-        setProductsSaveMessage('No se pudo publicar. Revisá que el servidor esté corriendo.');
+        setPublishMessage('No se pudo publicar. Revisá tu conexión e intentá de nuevo.');
       }
     } finally {
-      setSavingProducts(false);
+      setPublishing(false);
     }
   }
 
   async function handlePublishSettings(updated: SiteSettings) {
     setSiteSettings(updated);
     setSavingSettings(true);
-    setSettingsSaveMessage(null);
+    setSettingsMessage(null);
     try {
       await saveSettings(updated, adminPassword!);
-      setSettingsSaveMessage('Publicado — ya está visible para todas las visitantes.');
+      setSettingsMessage('Publicado — ya lo ven tus clientas.');
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         handleAuthError();
       } else {
-        setSettingsSaveMessage('No se pudo publicar. Revisá que el servidor esté corriendo.');
+        setSettingsMessage('No se pudo publicar. Revisá tu conexión e intentá de nuevo.');
       }
     } finally {
       setSavingSettings(false);
     }
   }
 
+  const showPublishBar = tab !== 'settings';
+
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-lg font-bold text-stone-900">Panel de administración</h1>
-          <p className="text-sm text-stone-500">Los cambios se publican al servidor al instante</p>
-        </div>
+    <div className="mx-auto max-w-4xl px-4 pb-28 pt-5 sm:px-6 sm:pb-8">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <h1 className="font-heading text-lg font-bold text-stone-900">Panel de administración</h1>
         <a href="#/" className="text-sm font-semibold text-brand-700 hover:text-brand-800">
-          ← Volver al catálogo
+          ← Ver el catálogo
         </a>
       </div>
 
-      <div className="mb-6 flex gap-2 border-b border-stone-200">
+      <div className="mb-5 flex gap-1 overflow-x-auto border-b border-stone-200">
+        <TabButton isActive={tab === 'stock'} onClick={() => setTab('stock')}>
+          Stock
+        </TabButton>
         <TabButton isActive={tab === 'products'} onClick={() => setTab('products')}>
           Productos
         </TabButton>
@@ -149,23 +160,19 @@ export function AdminApp() {
         </TabButton>
       </div>
 
-      {tab === 'products' ? (
+      {tab === 'stock' && <AdminStockManager products={products} onChange={setProducts} />}
+
+      {tab === 'products' && (
         <>
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
             <Button variant="secondary" onClick={handleCreateProduct}>
               + Nuevo producto
             </Button>
-            <div className="flex flex-wrap items-center gap-3">
-              {productsSaveMessage && <p className="text-sm font-medium text-stone-600">{productsSaveMessage}</p>}
-              <ExportJsonButton
-                data={{ updatedAt: new Date().toISOString(), products }}
-                filename="products.json"
-                label="Exportar backup (JSON)"
-              />
-              <Button onClick={handlePublishProducts} disabled={isSavingProducts}>
-                {isSavingProducts ? 'Publicando…' : 'Publicar cambios'}
-              </Button>
-            </div>
+            <ExportJsonButton
+              data={{ updatedAt: new Date().toISOString(), products }}
+              filename="products.json"
+              label="Descargar backup"
+            />
           </div>
 
           {editingProduct ? (
@@ -179,14 +186,34 @@ export function AdminApp() {
             <AdminProductTable products={products} onEdit={setEditingId} onDelete={handleDeleteProduct} />
           )}
         </>
-      ) : (
+      )}
+
+      {tab === 'settings' && (
         <>
           <div className="mb-4 flex flex-wrap items-center justify-end gap-3">
-            {settingsSaveMessage && <p className="text-sm font-medium text-stone-600">{settingsSaveMessage}</p>}
-            <ExportJsonButton data={siteSettings} filename="settings.json" label="Exportar backup (JSON)" />
+            {settingsMessage && <p className="text-sm font-medium text-stone-600">{settingsMessage}</p>}
+            <ExportJsonButton data={siteSettings} filename="settings.json" label="Descargar backup" />
           </div>
-          <AdminSettingsForm settings={siteSettings} onSave={handlePublishSettings} saveLabel={isSavingSettings ? 'Publicando…' : 'Publicar cambios'} />
+          <AdminSettingsForm
+            settings={siteSettings}
+            onSave={handlePublishSettings}
+            saveLabel={isSavingSettings ? 'Publicando…' : 'Publicar cambios'}
+          />
         </>
+      )}
+
+      {showPublishBar && (
+        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-stone-200 bg-white/95 px-4 py-3 backdrop-blur sm:static sm:mt-6 sm:border-0 sm:bg-transparent sm:px-0 sm:backdrop-blur-none">
+          <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
+            <p className="text-xs text-stone-500 sm:text-sm">
+              {publishMessage ??
+                (hasUnpublishedChanges ? 'Tenés cambios sin publicar.' : 'Todo publicado.')}
+            </p>
+            <Button onClick={handlePublish} disabled={isPublishing || !hasUnpublishedChanges}>
+              {isPublishing ? 'Publicando…' : 'Publicar cambios'}
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -197,7 +224,7 @@ function TabButton({ isActive, onClick, children }: { isActive: boolean; onClick
     <button
       type="button"
       onClick={onClick}
-      className={`-mb-px border-b-2 px-3 py-2 font-heading text-sm font-medium transition-colors ${
+      className={`-mb-px shrink-0 border-b-2 px-3 py-2 font-heading text-sm font-medium transition-colors ${
         isActive ? 'border-brand-600 text-brand-700' : 'border-transparent text-stone-500 hover:text-stone-800'
       }`}
     >
