@@ -13,6 +13,14 @@ import { loadSettings } from './data/settings';
  */
 async function bootstrap() {
   await Promise.all([loadCatalog(), loadSettings()]);
+
+  // El título y la descripción viven en index.html como valores fijos (para que haya algo
+  // razonable antes de que cargue el JS); una vez que tenemos la configuración real de la
+  // tienda los reemplazamos, así la pestaña y los links compartidos muestran el nombre correcto.
+  const { SITE_META } = await import('./config/site.config');
+  document.title = SITE_META.title;
+  document.querySelector('meta[name="description"]')?.setAttribute('content', SITE_META.description);
+
   const { default: App } = await import('./App');
 
   createRoot(document.getElementById('root')!).render(
