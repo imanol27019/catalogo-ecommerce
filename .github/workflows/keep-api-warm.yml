@@ -1,0 +1,27 @@
+# Mantiene despierta la API en Render durante el horario en que la gente navega el catálogo.
+#
+# Por qué no 24/7: el plan gratuito de Render da 750 horas de instancia por mes para TODO el
+# workspace, y un mes tiene hasta 744 horas. Si se agotan, Render suspende el servicio hasta el
+# mes siguiente. Pinguear todo el día dejaría un margen de apenas unas horas — cualquier
+# redeploy lo pasaría. Con esta ventana consumimos ~496 h/mes, bien lejos del límite.
+#
+# Ventana: 08:00 a 23:59 hora de Argentina (UTC-3), todos los días.
+# GitHub Actions usa UTC, por eso son dos bloques (la ventana cruza la medianoche UTC).
+
+name: Mantener la API despierta
+
+on:
+  schedule:
+    - cron: '*/10 11-23 * * *' # 08:00–20:59 ART
+    - cron: '*/10 0-2 * * *' # 21:00–23:59 ART
+  workflow_dispatch: # permite ejecutarlo a mano desde la pestaña Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Despertar la API
+        run: |
+          # --max-time alto porque un arranque en frío de Render tarda ~1 minuto.
+          curl --fail --silent --show-error --max-time 120 \
+            https://catalogo-api-897f.onrender.com/api/health
