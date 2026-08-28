@@ -2,7 +2,7 @@ import type { Product } from '../../types/product';
 import { CATEGORY_LABELS } from '../../config/site.config';
 import { formatCurrency } from '../../utils/format';
 import { getEffectivePrice, isOnSale } from '../../utils/pricing';
-import { getProductAggregateStock } from '../../utils/stock';
+import { getProductAggregateStock, getProductTotalStock } from '../../utils/stock';
 import { StockBadge } from './StockBadge';
 
 interface ProductCardProps {
@@ -12,6 +12,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, onSelect }: ProductCardProps) {
   const stock = getProductAggregateStock(product);
+  const totalUnits = getProductTotalStock(product);
   const categoryLabel = CATEGORY_LABELS[product.category] ?? product.category;
   const onSale = isOnSale(product);
   const price = getEffectivePrice(product);
@@ -30,7 +31,7 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
           className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
         />
         <div className="absolute left-2 top-2">
-          <StockBadge status={stock} />
+          <StockBadge status={stock} qty={totalUnits} />
         </div>
         {onSale && (
           <span className="absolute right-2 top-2 rounded-full bg-stone-900 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white">

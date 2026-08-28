@@ -23,8 +23,12 @@ export function SizePicker({ product, selectedSize, selectedColor, onSelect }: S
               type="button"
               disabled={isOutOfStock}
               onClick={() => onSelect(size)}
-              title={isOutOfStock ? `Talle ${size}: sin stock en color ${selectedColor}` : `Talle ${size}`}
-              className={`min-w-11 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+              title={
+                isOutOfStock
+                  ? `Talle ${size}: sin stock en color ${selectedColor}`
+                  : `Talle ${size}: ${variant?.stockQty ?? 0} u. en color ${selectedColor}`
+              }
+              className={`flex min-w-11 flex-col items-center rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
                 isOutOfStock
                   ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400 line-through'
                   : isActive
@@ -33,6 +37,11 @@ export function SizePicker({ product, selectedSize, selectedColor, onSelect }: S
               }`}
             >
               {size}
+              {!isOutOfStock && (
+                <span className={`text-[10px] font-normal ${isActive ? 'text-white/80' : 'text-stone-400'}`}>
+                  {variant?.stockQty ?? 0} u.
+                </span>
+              )}
             </button>
           );
         })}

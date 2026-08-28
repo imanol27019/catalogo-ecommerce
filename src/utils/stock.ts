@@ -16,6 +16,11 @@ export function getProductAggregateStock(product: Pick<Product, 'variants'>): St
   return 'out_of_stock';
 }
 
+/** Unidades totales del producto sumando todos los talles y colores. */
+export function getProductTotalStock(product: Pick<Product, 'variants'>): number {
+  return product.variants.reduce((sum, v) => sum + v.stockQty, 0);
+}
+
 export function effectiveMinQty(
   product: Pick<Product, 'minQtyPerVariant'>,
   variant: Pick<ProductVariant, 'minQtyOverride'>,

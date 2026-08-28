@@ -18,9 +18,9 @@ interface AdminSalesManagerProps {
 type StatusFilter = 'pending' | 'confirmed' | 'all';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: 'Pendiente',
-  confirmed: 'Confirmada',
-  cancelled: 'Cancelada',
+  pending: 'A confirmar',
+  confirmed: 'Vendida',
+  cancelled: 'Descartada',
 };
 
 const STATUS_CLASSES: Record<OrderStatus, string> = {
@@ -64,7 +64,10 @@ export function AdminSalesManager({ products, adminPassword, onAuthError, onStoc
   const pendingCount = orders?.filter((o) => o.status === 'pending').length ?? 0;
 
   async function resolve(order: Order, status: 'confirmed' | 'cancelled') {
-    if (status === 'confirmed' && !window.confirm(`¿Confirmar la venta ${order.code}? Se va a descontar el stock.`)) {
+    if (
+      status === 'confirmed' &&
+      !window.confirm(`¿Registrar la venta ${order.code} como cobrada? Recién ahí se descuenta el stock.`)
+    ) {
       return;
     }
     setBusyId(order.id);
@@ -104,10 +107,10 @@ export function AdminSalesManager({ products, adminPassword, onAuthError, onStoc
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap gap-2">
           <FilterChip isActive={filter === 'pending'} onClick={() => setFilter('pending')}>
-            {`Pendientes${pendingCount > 0 ? ` (${pendingCount})` : ''}`}
+            {`Pedidos web${pendingCount > 0 ? ` (${pendingCount})` : ''}`}
           </FilterChip>
           <FilterChip isActive={filter === 'confirmed'} onClick={() => setFilter('confirmed')}>
-            Confirmadas
+            Vendidas
           </FilterChip>
           <FilterChip isActive={filter === 'all'} onClick={() => setFilter('all')}>
             Todas
@@ -115,6 +118,11 @@ export function AdminSalesManager({ products, adminPassword, onAuthError, onStoc
         </div>
         <Button onClick={() => setCreating(true)}>+ Cargar venta</Button>
       </div>
+
+      <p className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2.5 text-xs text-stone-600">
+        El stock <strong>solo</strong> se descuenta cuando registrás la venta acá. Los pedidos que llegan del
+        catálogo son consultas: quedan a la espera hasta que cobres la seña o el total.
+      </p>
 
       {error && (
         <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">{error}</p>
@@ -125,10 +133,11 @@ export function AdminSalesManager({ products, adminPassword, onAuthError, onStoc
       ) : visible.length === 0 ? (
         <div className="rounded-lg border border-dashed border-stone-300 px-4 py-10 text-center">
           <p className="text-sm text-stone-600">
-            {filter === 'pending' ? 'No hay pedidos pendientes.' : 'Todavía no hay ventas registradas.'}
+            {filter === 'pending' ? 'No hay pedidos web esperando.' : 'Todavía no hay ventas registradas.'}
           </p>
           <p className="mt-1 text-xs text-stone-500">
-            Los pedidos que te hagan desde el catálogo aparecen acá para que los confirmes.
+            Los pedidos que te hagan desde el catálogo aparecen acá. También podés cargar una venta de mostrador
+            con "+ Cargar venta".
           </p>
         </div>
       ) : (
@@ -226,17 +235,19 @@ function OrderCard({
               onClick={() => onResolve(order, 'cancelled')}
               className="rounded-lg border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-600 hover:bg-stone-50 disabled:opacity-50"
             >
-              Cancelar
+              Descartar
             </button>
             <Button disabled={isBusy} onClick={() => onResolve(order, 'confirmed')}>
-              {isBusy ? 'Guardando…' : 'Confirmar venta'}
+              {isBusy ? 'Guardando…' : 'Registrar venta'}
             </Button>
           </div>
         )}
       </div>
 
       {order.status === 'pending' && (
-        <p className="mt-2 text-xs text-stone-500">Al confirmar se descuenta el stock automáticamente.</p>
+        <p className="mt-2 text-xs text-stone-500">
+          Registrala cuando tengas la seña o el pago: ahí se descuenta el stock.
+        </p>
       )}
     </div>
   );

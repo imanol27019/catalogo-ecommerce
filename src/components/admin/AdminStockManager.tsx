@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import type { Product } from '../../types/product';
 import { CATEGORY_LABELS } from '../../config/site.config';
 import { settings } from '../../data/settings';
@@ -6,7 +7,8 @@ import { deriveStockStatus, STOCK_LABELS } from '../../utils/stock';
 
 interface AdminStockManagerProps {
   products: Product[];
-  onChange: (products: Product[]) => void;
+  /** Setter de React: se usa en forma funcional para que clics rápidos en +/− no se pisen. */
+  onChange: Dispatch<SetStateAction<Product[]>>;
 }
 
 type StockFilter = 'all' | 'low_or_out';
@@ -40,18 +42,21 @@ export function AdminStockManager({ products, onChange }: AdminStockManagerProps
     });
   }, [products, search, filter, threshold]);
 
-  function setVariantQty(productId: string, variantId: string, qty: number) {
-    const safeQty = Math.max(0, Math.floor(qty) || 0);
-    onChange(
-      products.map((product) =>
+  /**
+   * `updateQty` recibe la cantidad actual y devuelve la nueva. Se resuelve dentro del updater de
+   * React (no sobre el prop) para que varios clics seguidos en +/− no se pisen entre sí.
+   */
+  function updateVariantQty(productId: string, variantId: string, updateQty: (current: number) => number) {
+    onChange((prev) =>
+      prev.map((product) =>
         product.id === productId
           ? {
               ...product,
-              variants: product.variants.map((v) =>
-                v.id === variantId
-                  ? { ...v, stockQty: safeQty, stockStatus: deriveStockStatus(safeQty, threshold) }
-                  : v,
-              ),
+              variants: product.variants.map((v) => {
+                if (v.id !== variantId) return v;
+                const safeQty = Math.max(0, Math.floor(updateQty(v.stockQty)) || 0);
+                return { ...v, stockQty: safeQty, stockStatus: deriveStockStatus(safeQty, threshold) };
+              }),
             }
           : product,
       ),
@@ -61,7 +66,9 @@ export function AdminStockManager({ products, onChange }: AdminStockManagerProps
   return (
     <div className="flex flex-col gap-4">
       <p className="rounded-lg border border-stone-200 bg-stone-50 px-3 py-2.5 text-xs text-stone-600">
-        Acá se cargan las unidades cuando entra mercadería. Las ventas confirmadas ya descuentan solas.
+        Ajustá las unidades a mano cuando entra mercadería, o para <strong>devolver stock</strong> si una clienta
+        cancela o termina llevando menos prendas de las que había señado. Las ventas que registrás en la pestaña
+        Ventas ya descuentan solas.
       </p>
 
       <input
@@ -128,7 +135,7 @@ export function AdminStockManager({ products, onChange }: AdminStockManagerProps
                       <div className="flex shrink-0 items-center gap-1">
                         <button
                           type="button"
-                          onClick={() => setVariantQty(product.id, variant.id, variant.stockQty - 1)}
+                          onClick={() => updateVariantQty(product.id, variant.id, (q) => q - 1)}
                           aria-label={`Restar una unidad de ${variant.size} ${variant.color}`}
                           className="flex h-9 w-9 items-center justify-center rounded-lg border border-stone-300 text-stone-600 hover:bg-stone-50"
                         >
@@ -138,13 +145,16 @@ export function AdminStockManager({ products, onChange }: AdminStockManagerProps
                           type="number"
                           min={0}
                           value={variant.stockQty}
-                          onChange={(e) => setVariantQty(product.id, variant.id, Number(e.target.value))}
+                          onChange={(e) => {
+                            const typed = Number(e.target.value);
+                            updateVariantQty(product.id, variant.id, () => typed);
+                          }}
                           aria-label={`Unidades de ${variant.size} ${variant.color}`}
                           className="w-14 rounded-lg border border-stone-300 py-1.5 text-center text-sm font-semibold"
                         />
                         <button
                           type="button"
-                          onClick={() => setVariantQty(product.id, variant.id, variant.stockQty + 1)}
+                          onClick={() => updateVariantQty(product.id, variant.id, (q) => q + 1)}
                           aria-label={`Sumar una unidad de ${variant.size} ${variant.color}`}
                           className="flex h-9 w-9 items-center justify-center rounded-lg border border-stone-300 text-stone-600 hover:bg-stone-50"
                         >

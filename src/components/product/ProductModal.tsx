@@ -125,8 +125,13 @@ function ProductModalContent({ product, onClose }: { product: Product; onClose: 
           )}
 
           {variant && (
-            <div>
-              <StockBadge status={variant.stockStatus} />
+            <div className="flex flex-wrap items-center gap-2">
+              <StockBadge status={variant.stockStatus} qty={variant.stockQty} long />
+              {variant.stockQty > 0 && (
+                <span className="text-xs text-stone-500">
+                  en talle {variant.size} / {variant.color}
+                </span>
+              )}
             </div>
           )}
 
