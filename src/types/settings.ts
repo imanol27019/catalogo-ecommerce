@@ -35,6 +35,8 @@ export interface SiteSettings {
   currency: string;
   locale: string;
   shippingMethods: ShippingMethodOption[];
+  /** Hasta cuántas unidades una variante se muestra como "poco stock" (0 = sin stock). */
+  lowStockThreshold: number;
   /** Mínimo de prendas (unidades totales del carrito) para poder finalizar el pedido. 0 = sin mínimo. */
   minOrderQty: number;
   /** Mínimo de monto total del carrito para poder finalizar el pedido. 0 = sin mínimo. */

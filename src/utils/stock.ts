@@ -28,3 +28,24 @@ export const STOCK_LABELS: Record<StockStatus, string> = {
   low_stock: 'Poco stock',
   out_of_stock: 'Sin stock',
 };
+
+/**
+ * El estado que ve la clienta sale siempre de las unidades reales, para que no puedan
+ * contradecirse. El servidor aplica esta misma regla al descontar stock por una venta.
+ */
+export function deriveStockStatus(stockQty: number, lowStockThreshold: number): StockStatus {
+  if (stockQty <= 0) return 'out_of_stock';
+  if (stockQty <= lowStockThreshold) return 'low_stock';
+  return 'in_stock';
+}
+
+/** Devuelve el producto con `stockStatus` recalculado en todas sus variantes. */
+export function withDerivedStock<T extends Pick<Product, 'variants'>>(product: T, lowStockThreshold: number): T {
+  return {
+    ...product,
+    variants: product.variants.map((v) => ({
+      ...v,
+      stockStatus: deriveStockStatus(v.stockQty, lowStockThreshold),
+    })),
+  };
+}

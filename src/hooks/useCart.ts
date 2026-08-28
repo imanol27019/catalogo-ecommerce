@@ -19,6 +19,7 @@ export function useCart() {
     const item: CartLineItem = {
       lineId,
       productId: product.id,
+      variantId: variant.id,
       productName: product.name,
       productSlug: product.slug,
       image: product.images[0] ?? '',

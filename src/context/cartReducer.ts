@@ -68,6 +68,8 @@ export function reconcileCartItems(
 
     reconciled.push({
       ...item,
+      // Se refresca por si el carrito venía guardado de antes de que existiera este campo.
+      variantId: variant.id,
       productName: product.name,
       image: product.images[0] ?? item.image,
       unitPrice: getEffectivePrice(product),

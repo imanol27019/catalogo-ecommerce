@@ -25,6 +25,7 @@
       "description": "Coordinamos entrega a domicilio dentro de zona de cobertura."
     }
   ],
+  "lowStockThreshold": 5,
   "minOrderQty": 10,
   "minOrderTotal": 60000,
   "announcementMessage": null,

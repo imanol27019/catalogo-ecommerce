@@ -7,6 +7,7 @@ import { buildOrderMessage, buildWhatsAppUrl } from '../../utils/whatsapp';
 import { evaluateOrderMinimum } from '../../utils/orderMinimum';
 import { MIN_ORDER_QTY, MIN_ORDER_TOTAL, SHIPPING_METHODS } from '../../config/site.config';
 import type { OrderFormData } from '../../types/order';
+import { createOrder } from '../../data/orders';
 import { WhatsAppIcon } from '../ui/icons';
 import { OrderMinimumNotice } from '../cart/OrderMinimumNotice';
 
@@ -37,6 +38,31 @@ export function WhatsAppCheckoutModal({ isOpen, onClose }: WhatsAppCheckoutModal
     () => buildWhatsAppUrl(buildOrderMessage(form, items, totals, validation)),
     [form, items, totals, validation],
   );
+
+  /**
+   * Deja el pedido registrado en el panel como "pendiente" antes de saltar a WhatsApp.
+   * A propósito NO se espera la respuesta ni se bloquea el link: abrir WhatsApp es lo importante,
+   * y si el registro falla la venta igual se cierra por chat como siempre.
+   */
+  function registerPendingOrder() {
+    const shippingMethodLabel =
+      SHIPPING_METHODS.find((m) => m.id === form.shippingMethodId)?.label ?? form.shippingMethodId;
+    createOrder({
+      customer: {
+        name: form.contactName.trim(),
+        locality: form.locality.trim(),
+        shippingMethodLabel,
+        ...(form.comment?.trim() ? { comment: form.comment.trim() } : {}),
+      },
+      lines: items.map((item) => ({
+        productId: item.productId,
+        variantId: item.variantId,
+        qty: item.qty,
+      })),
+    }).catch((err) => {
+      console.warn('No se pudo registrar el pedido en el panel (el envío por WhatsApp sigue igual).', err);
+    });
+  }
 
   if (!isOpen) return null;
 
@@ -91,7 +117,10 @@ export function WhatsAppCheckoutModal({ isOpen, onClose }: WhatsAppCheckoutModal
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={onClose}
+            onClick={() => {
+              registerPendingOrder();
+              onClose();
+            }}
             className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-3 font-heading text-sm font-semibold text-white transition-colors hover:bg-brand-700"
           >
             <WhatsAppIcon className="h-4 w-4" />

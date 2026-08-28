@@ -18,7 +18,9 @@ export function regenerateVariants(
               size,
               color: color.name,
               colorHex: color.hex,
-              stockStatus: 'in_stock',
+              // Una combinación nueva arranca sin unidades: se cargan al recibir la mercadería.
+              stockQty: 0,
+              stockStatus: 'out_of_stock',
             },
       );
     }

@@ -5,8 +5,13 @@ export interface ProductVariant {
   size: string;
   color: string;
   colorHex: string;
+  /**
+   * Unidades reales en el local: es la fuente de verdad. Baja sola al confirmar una venta.
+   * `stockStatus` se recalcula a partir de este número (ver `deriveStockStatus`).
+   */
+  stockQty: number;
+  /** Derivado de `stockQty` + `lowStockThreshold`. Se guarda para que el catálogo lo lea directo. */
   stockStatus: StockStatus;
-  stockQty?: number;
   /** Overrides product.minQtyPerVariant for this exact talle/color, if set. */
   minQtyOverride?: number;
 }

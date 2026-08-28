@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import type { Product } from '../../types/product';
 import type { SiteSettings } from '../../types/settings';
-import { catalog, saveCatalog } from '../../data/catalog';
+import { catalog, loadCatalog, saveCatalog } from '../../data/catalog';
 import { settings, saveSettings } from '../../data/settings';
 import { ApiError } from '../../data/apiClient';
+import { AdminSalesManager } from './AdminSalesManager';
 import { AdminStockManager } from './AdminStockManager';
 import { AdminProductTable } from './AdminProductTable';
 import { AdminProductForm } from './AdminProductForm';
@@ -32,21 +33,21 @@ function createBlankProduct(): Product {
     sizes: ['S', 'M', 'L'],
     colors: [{ name: 'Negro', hex: '#111111' }],
     variants: [
-      { id: `${id}-S-negro`, size: 'S', color: 'Negro', colorHex: '#111111', stockStatus: 'in_stock' },
-      { id: `${id}-M-negro`, size: 'M', color: 'Negro', colorHex: '#111111', stockStatus: 'in_stock' },
-      { id: `${id}-L-negro`, size: 'L', color: 'Negro', colorHex: '#111111', stockStatus: 'in_stock' },
+      { id: `${id}-S-negro`, size: 'S', color: 'Negro', colorHex: '#111111', stockQty: 0, stockStatus: 'out_of_stock' },
+      { id: `${id}-M-negro`, size: 'M', color: 'Negro', colorHex: '#111111', stockQty: 0, stockStatus: 'out_of_stock' },
+      { id: `${id}-L-negro`, size: 'L', color: 'Negro', colorHex: '#111111', stockQty: 0, stockStatus: 'out_of_stock' },
     ],
     status: 'active',
   };
 }
 
-type Tab = 'stock' | 'products' | 'settings';
+type Tab = 'sales' | 'stock' | 'products' | 'settings';
 
 export function AdminApp() {
   const [adminPassword, setAdminPassword] = useState<string | null>(() => sessionStorage.getItem(ADMIN_PASSWORD_KEY));
   const [loginError, setLoginError] = useState<string | null>(null);
 
-  const [tab, setTab] = useState<Tab>('stock');
+  const [tab, setTab] = useState<Tab>('sales');
 
   const [products, setProducts] = useState<Product[]>(() => clone(catalog.products));
   /** Última versión publicada, para saber si quedan cambios sin publicar. */
@@ -137,7 +138,19 @@ export function AdminApp() {
     }
   }
 
-  const showPublishBar = tab !== 'settings';
+  /**
+   * Tras una venta el stock cambió del lado del servidor: se vuelve a bajar el catálogo para no
+   * pisar ese descuento con la copia vieja que tenía abierta el panel.
+   */
+  async function refreshAfterSale() {
+    await loadCatalog();
+    const fresh = clone(catalog.products);
+    setProducts(fresh);
+    setPublishedSnapshot(JSON.stringify(fresh));
+  }
+
+  // En Ventas no se muestra la barra: ahí cada acción impacta al instante en el servidor.
+  const showPublishBar = tab === 'stock' || tab === 'products';
 
   return (
     <div className="mx-auto max-w-4xl px-4 pb-28 pt-5 sm:px-6 sm:pb-8">
@@ -149,6 +162,9 @@ export function AdminApp() {
       </div>
 
       <div className="mb-5 flex gap-1 overflow-x-auto border-b border-stone-200">
+        <TabButton isActive={tab === 'sales'} onClick={() => setTab('sales')}>
+          Ventas
+        </TabButton>
         <TabButton isActive={tab === 'stock'} onClick={() => setTab('stock')}>
           Stock
         </TabButton>
@@ -159,6 +175,15 @@ export function AdminApp() {
           Configuración
         </TabButton>
       </div>
+
+      {tab === 'sales' && (
+        <AdminSalesManager
+          products={products}
+          adminPassword={adminPassword}
+          onAuthError={handleAuthError}
+          onStockChanged={refreshAfterSale}
+        />
+      )}
 
       {tab === 'stock' && <AdminStockManager products={products} onChange={setProducts} />}
 

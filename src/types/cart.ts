@@ -4,6 +4,8 @@ export interface CartLineItem {
   /** `${productId}__${size}__${color}` — stable key for one talle/color line. */
   lineId: string;
   productId: string;
+  /** Variante exacta (talle+color); la necesita el servidor para descontar stock al vender. */
+  variantId: string;
   productName: string;
   productSlug: string;
   image: string;

@@ -54,6 +54,11 @@ export function AdminSettingsForm({ settings, onSave, saveLabel = 'Guardar cambi
             value={draft.minOrderTotal}
             onChange={(v) => update('minOrderTotal', v)}
           />
+          <NumberField
+            label='Avisar "poco stock" con esta cantidad o menos'
+            value={draft.lowStockThreshold}
+            onChange={(v) => update('lowStockThreshold', v)}
+          />
         </div>
         <div className="mt-4">
           <TextField
