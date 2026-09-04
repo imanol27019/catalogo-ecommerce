@@ -49,6 +49,11 @@ export interface Product {
   status: ProductStatus;
   /** Aparece en la sección de destacados/novedades de la portada. */
   featured?: boolean;
+  /**
+   * Proveedor al que se le compra este producto (ver `types/supplier.ts`). Se guarda solo el id:
+   * los datos de contacto viven aparte y no salen en el catálogo público.
+   */
+  supplierId?: string;
   tags?: string[];
   updatedAt?: string;
 }

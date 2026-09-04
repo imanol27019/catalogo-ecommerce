@@ -42,6 +42,7 @@ async function main() {
   const settingsCollection = db.collection('settings');
   const ordersCollection = db.collection('orders');
   const imagesCollection = db.collection('images');
+  const suppliersCollection = db.collection('suppliers');
   await ordersCollection.createIndex({ createdAt: -1 });
 
   // Primer arranque: si la base está vacía, la poblamos con los datos de muestra del proyecto.
@@ -181,6 +182,41 @@ async function main() {
         { upsert: true },
       );
       res.json(settings);
+    }),
+  );
+
+  // --- Proveedores ----------------------------------------------------------
+
+  /**
+   * Datos internos del negocio: ambas rutas piden contraseña. El catálogo público solo lleva el
+   * `supplierId` en el producto, que por sí solo no revela ningún dato de contacto.
+   */
+  app.get(
+    '/api/suppliers',
+    requireAdmin,
+    asyncRoute(async (_req, res) => {
+      const doc = await suppliersCollection.findOne({ _id: 'suppliers' as never });
+      const { _id, ...rest } = doc ?? { updatedAt: new Date().toISOString(), suppliers: [] };
+      res.json(rest);
+    }),
+  );
+
+  app.put(
+    '/api/suppliers',
+    requireAdmin,
+    asyncRoute(async (req, res) => {
+      const { suppliers } = req.body as { suppliers?: unknown[] };
+      if (!Array.isArray(suppliers)) {
+        res.status(400).json({ error: 'La lista de proveedores no tiene el formato esperado.' });
+        return;
+      }
+      const updatedAt = new Date().toISOString();
+      await suppliersCollection.replaceOne(
+        { _id: 'suppliers' as never },
+        { _id: 'suppliers' as never, updatedAt, suppliers },
+        { upsert: true },
+      );
+      res.json({ updatedAt, suppliers });
     }),
   );
 

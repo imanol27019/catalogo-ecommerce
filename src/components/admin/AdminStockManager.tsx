@@ -1,10 +1,13 @@
 import { useMemo, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { Product } from '../../types/product';
+import type { Supplier } from '../../types/supplier';
 import { CATEGORY_LABELS } from '../../config/site.config';
 import { settings } from '../../data/settings';
 import { resolveImageUrl } from '../../data/apiClient';
 import { deriveStockStatus, STOCK_LABELS } from '../../utils/stock';
+import { BUSINESS_NAME } from '../../config/site.config';
+import { buildRestockMessage, buildSupplierWhatsAppUrl } from '../../utils/supplier';
 import { Chip } from '../ui/Chip';
 import { Alert } from '../ui/Alert';
 import { INPUT_CLASS } from '../ui/formStyles';
@@ -13,6 +16,8 @@ interface AdminStockManagerProps {
   products: Product[];
   /** Setter de React: se usa en forma funcional para que clics rápidos en +/− no se pisen. */
   onChange: Dispatch<SetStateAction<Product[]>>;
+  /** Para poder escribirle al proveedor justo donde se ve que falta mercadería. */
+  suppliers: Supplier[];
 }
 
 type StockFilter = 'all' | 'low_or_out';
@@ -28,7 +33,7 @@ const DOT_CLASSES = {
   out_of_stock: 'bg-stock-out',
 } as const;
 
-export function AdminStockManager({ products, onChange }: AdminStockManagerProps) {
+export function AdminStockManager({ products, onChange, suppliers }: AdminStockManagerProps) {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<StockFilter>('all');
   const [openId, setOpenId] = useState<string | null>(null);
@@ -128,6 +133,11 @@ export function AdminStockManager({ products, onChange }: AdminStockManagerProps
 
               {isOpen && (
                 <div className="flex flex-col gap-1 border-t border-stone-100 p-3">
+                  <SupplierRow
+                    supplier={suppliers.find((s) => s.id === product.supplierId)}
+                    product={product}
+                    faltantes={outCount + lowCount}
+                  />
                   {product.variants.map((variant) => (
                     <div key={variant.id} className="flex items-center gap-2 py-1">
                       <span
@@ -178,3 +188,45 @@ export function AdminStockManager({ products, onChange }: AdminStockManagerProps
   );
 }
 
+/**
+ * Muestra a quién comprarle este producto, en el mismo lugar donde se ve que hay que reponer.
+ * Si el producto no tiene proveedor asignado lo dice, en vez de no mostrar nada.
+ */
+function SupplierRow({
+  supplier,
+  product,
+  faltantes,
+}: {
+  supplier: Supplier | undefined;
+  product: Product;
+  faltantes: number;
+}) {
+  if (!supplier) {
+    return (
+      <p className="mb-2 rounded-lg bg-stone-50 px-3 py-2 text-xs text-stone-600">
+        Sin proveedor asignado. Podés elegirlo en la ficha del producto.
+      </p>
+    );
+  }
+
+  const detalle = faltantes > 0 ? `Me faltan ${faltantes} talle/color de este modelo.` : undefined;
+  const url = buildSupplierWhatsAppUrl(supplier, buildRestockMessage(BUSINESS_NAME, product.name, detalle));
+
+  return (
+    <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-stone-50 px-3 py-2">
+      <p className="min-w-0 text-xs text-stone-700">
+        Proveedor: <strong className="font-semibold">{supplier.name}</strong>
+      </p>
+      {url && (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex min-h-11 items-center text-xs font-semibold text-brand-700 hover:text-brand-800"
+        >
+          Pedir reposición
+        </a>
+      )}
+    </div>
+  );
+}

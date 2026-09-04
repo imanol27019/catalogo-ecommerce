@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import type { BulkPriceTier, Product, ProductColor } from '../../types/product';
+import type { Supplier } from '../../types/supplier';
 import { CATEGORY_LABELS } from '../../config/site.config';
 import { AdminImagesEditor } from './AdminImagesEditor';
 import { regenerateVariants, slugify } from './adminUtils';
@@ -10,6 +11,8 @@ import { INPUT_CLASS, INPUT_COMPACT_CLASS, LABEL_CLASS, LABEL_TEXT_CLASS, TEXTAR
 
 interface AdminProductFormProps {
   product: Product;
+  /** Proveedores cargados en el panel, para elegir a quién se le compra este producto. */
+  suppliers: Supplier[];
   adminPassword: string;
   onSave: (product: Product) => void;
   onCancel: () => void;
@@ -17,7 +20,7 @@ interface AdminProductFormProps {
 
 const SECTION_TITLE_CLASS = 'mb-1.5 text-xs font-semibold uppercase tracking-wide text-stone-600';
 
-export function AdminProductForm({ product, adminPassword, onSave, onCancel }: AdminProductFormProps) {
+export function AdminProductForm({ product, suppliers, adminPassword, onSave, onCancel }: AdminProductFormProps) {
   const [draft, setDraft] = useState<Product>(product);
   const [error, setError] = useState<string | null>(null);
 
@@ -144,6 +147,30 @@ export function AdminProductForm({ product, adminPassword, onSave, onCancel }: A
             <option value="draft">Borrador</option>
             <option value="archived">Archivado</option>
           </select>
+        </label>
+
+        <label className={LABEL_CLASS}>
+          <span className={LABEL_TEXT_CLASS}>Proveedor</span>
+          <select
+            value={draft.supplierId ?? ''}
+            onChange={(e) => setDraft((d) => ({ ...d, supplierId: e.target.value || undefined }))}
+            className={INPUT_CLASS}
+          >
+            <option value="">Sin asignar</option>
+            {suppliers.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+            {/* Si el proveedor guardado ya no existe (lo borraron), se muestra igual para no
+                perder el dato en silencio al guardar el producto. */}
+            {draft.supplierId && !suppliers.some((s) => s.id === draft.supplierId) && (
+              <option value={draft.supplierId}>Proveedor eliminado</option>
+            )}
+          </select>
+          {suppliers.length === 0 && (
+            <span className="text-xs text-stone-500">Cargá proveedores en la pestaña Proveedores.</span>
+          )}
         </label>
 
         <label className="flex min-h-11 items-center gap-2 text-sm text-stone-700 sm:pt-6">

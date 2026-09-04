@@ -1,14 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Product } from '../../types/product';
 import type { SiteSettings } from '../../types/settings';
+import type { Supplier } from '../../types/supplier';
 import { catalog, loadCatalog, saveCatalog } from '../../data/catalog';
 import { settings, saveSettings } from '../../data/settings';
 import { ApiError } from '../../data/apiClient';
+import { fetchSuppliers } from '../../data/suppliers';
 import { AdminSalesManager } from './AdminSalesManager';
 import { AdminStockManager } from './AdminStockManager';
 import { AdminProductTable } from './AdminProductTable';
 import { AdminProductForm } from './AdminProductForm';
 import { AdminSettingsForm } from './AdminSettingsForm';
+import { AdminSuppliersManager } from './AdminSuppliersManager';
 import { AdminLoginScreen } from './AdminLoginScreen';
 import { ExportJsonButton } from './ExportJsonButton';
 import { Alert } from '../ui/Alert';
@@ -42,7 +45,7 @@ function createBlankProduct(): Product {
   };
 }
 
-type Tab = 'sales' | 'stock' | 'products' | 'settings';
+type Tab = 'sales' | 'stock' | 'products' | 'suppliers' | 'settings';
 type Feedback = { tone: 'success' | 'error'; text: string } | null;
 
 export function AdminApp() {
@@ -58,6 +61,14 @@ export function AdminApp() {
   const [isPublishing, setPublishing] = useState(false);
   const [publishFeedback, setPublishFeedback] = useState<Feedback>(null);
 
+  /**
+   * Los proveedores se cargan acá y no dentro de su sección: la ficha de producto usa la misma
+   * lista para el selector, y con dos cargas separadas quedaba desactualizada al agregar uno.
+   */
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [isLoadingSuppliers, setLoadingSuppliers] = useState(true);
+  const [suppliersError, setSuppliersError] = useState<string | null>(null);
+
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => clone(settings));
   const [isSavingSettings, setSavingSettings] = useState(false);
   const [settingsFeedback, setSettingsFeedback] = useState<Feedback>(null);
@@ -66,6 +77,36 @@ export function AdminApp() {
     () => JSON.stringify(products) !== publishedSnapshot,
     [products, publishedSnapshot],
   );
+
+  /**
+   * Ningún `setState` corre de forma sincrónica acá: todos quedan después del `await`, para que
+   * llamarla desde el efecto no dispare un render en cascada. El estado ya arranca en "cargando".
+   */
+  const loadSuppliers = useCallback(async () => {
+    if (!adminPassword) return;
+    try {
+      const list = await fetchSuppliers(adminPassword);
+      setSuppliers(list);
+      setSuppliersError(null);
+    } catch (err) {
+      setSuppliersError(err instanceof ApiError ? err.userMessage : 'No se pudieron cargar los proveedores.');
+    } finally {
+      setLoadingSuppliers(false);
+    }
+  }, [adminPassword]);
+
+  useEffect(() => {
+    // La regla no puede ver dentro de la función async: acá no hay ningún setState sincrónico,
+    // todos ocurren después del await de la red, que es justamente el caso que la regla permite.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadSuppliers();
+  }, [loadSuppliers]);
+
+  /** Reintento manual: acá sí conviene volver a mostrar el estado de carga. */
+  function reloadSuppliers() {
+    setLoadingSuppliers(true);
+    void loadSuppliers();
+  }
 
   function handleLoginSuccess(password: string) {
     sessionStorage.setItem(ADMIN_PASSWORD_KEY, password);
@@ -183,6 +224,9 @@ export function AdminApp() {
         <TabButton isActive={tab === 'products'} onClick={() => setTab('products')}>
           Productos
         </TabButton>
+        <TabButton isActive={tab === 'suppliers'} onClick={() => setTab('suppliers')}>
+          Proveedores
+        </TabButton>
         <TabButton isActive={tab === 'settings'} onClick={() => setTab('settings')}>
           Configuración
         </TabButton>
@@ -197,7 +241,7 @@ export function AdminApp() {
         />
       )}
 
-      {tab === 'stock' && <AdminStockManager products={products} onChange={setProducts} />}
+      {tab === 'stock' && <AdminStockManager products={products} onChange={setProducts} suppliers={suppliers} />}
 
       {tab === 'products' && (
         <>
@@ -216,6 +260,7 @@ export function AdminApp() {
             <AdminProductForm
               key={editingProduct.id}
               product={editingProduct}
+              suppliers={suppliers}
               adminPassword={adminPassword}
               onSave={handleSaveProductDraft}
               onCancel={() => setEditingId(null)}
@@ -224,6 +269,19 @@ export function AdminApp() {
             <AdminProductTable products={products} onEdit={setEditingId} onDelete={handleDeleteProduct} />
           )}
         </>
+      )}
+
+      {tab === 'suppliers' && (
+        <AdminSuppliersManager
+          products={products}
+          suppliers={suppliers}
+          isLoading={isLoadingSuppliers}
+          loadError={suppliersError}
+          onReload={reloadSuppliers}
+          onSuppliersChange={setSuppliers}
+          adminPassword={adminPassword}
+          onAuthError={handleAuthError}
+        />
       )}
 
       {tab === 'settings' && (
