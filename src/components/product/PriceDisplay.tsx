@@ -21,8 +21,8 @@ export function PriceDisplay({ unitPrice, originalPrice, bulkPricing, qty }: Pri
     <div>
       <div className="flex flex-wrap items-baseline gap-2">
         <span className="font-heading text-2xl font-semibold text-brand-600">{formatCurrency(effectiveUnitPrice)}</span>
-        <span className="text-sm text-stone-500">/ unidad</span>
-        {showCrossedOut && <span className="text-sm text-stone-500 line-through">{formatCurrency(referencePrice)}</span>}
+        <span className="text-sm text-stone-600">/ unidad</span>
+        {showCrossedOut && <span className="text-sm text-stone-600 line-through">{formatCurrency(referencePrice)}</span>}
       </div>
       {next && (
         <p className="mt-1 text-xs text-brand-700">

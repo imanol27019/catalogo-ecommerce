@@ -134,13 +134,13 @@ export function AdminSalesManager({ products, adminPassword, onAuthError, onStoc
       )}
 
       {orders === null ? (
-        <p className="py-10 text-center text-sm text-stone-500">Cargando ventas…</p>
+        <p className="py-10 text-center text-sm text-stone-600">Cargando ventas…</p>
       ) : visible.length === 0 ? (
         <div className="rounded-lg border border-dashed border-stone-300 px-4 py-10 text-center">
           <p className="text-sm text-stone-600">
             {filter === 'pending' ? 'No hay pedidos web esperando.' : 'Todavía no hay ventas registradas.'}
           </p>
-          <p className="mt-1 text-xs text-stone-500">
+          <p className="mt-1 text-xs text-stone-600">
             Los pedidos que te hagan desde el catálogo aparecen acá. También podés cargar una venta de mostrador
             con "+ Cargar venta".
           </p>
@@ -176,9 +176,9 @@ function OrderCard({
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="font-heading text-sm font-semibold text-stone-900">
-            {order.customer.name} <span className="font-normal text-stone-500">· {order.code}</span>
+            {order.customer.name} <span className="font-normal text-stone-600">· {order.code}</span>
           </p>
-          <p className="text-xs text-stone-500">
+          <p className="text-xs text-stone-600">
             {date.toLocaleDateString('es-AR')} {date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
             {order.customer.locality && ` · ${order.customer.locality}`}
             {order.source === 'manual' ? ' · mostrador' : ' · web'}
@@ -192,7 +192,7 @@ function OrderCard({
           <li key={line.variantId} className="flex items-baseline justify-between gap-2">
             <span className="min-w-0 text-stone-700">
               <span className="font-semibold">{line.qty}x</span> {line.productName}
-              <span className="text-stone-500">
+              <span className="text-stone-600">
                 {' '}
                 ({line.size}/{line.color})
               </span>
@@ -203,16 +203,16 @@ function OrderCard({
       </ul>
 
       {order.customer.shippingMethodLabel && (
-        <p className="mt-2 text-xs text-stone-500">Envío: {order.customer.shippingMethodLabel}</p>
+        <p className="mt-2 text-xs text-stone-600">Envío: {order.customer.shippingMethodLabel}</p>
       )}
       {order.customer.comment && (
-        <p className="mt-1 text-xs text-stone-500">Comentario: {order.customer.comment}</p>
+        <p className="mt-1 text-xs text-stone-600">Comentario: {order.customer.comment}</p>
       )}
 
       <div className="mt-3 flex items-center justify-between gap-2 border-t border-stone-100 pt-3">
         <span className="font-heading text-base font-semibold text-brand-600">
           {formatCurrency(order.total)}
-          <span className="ml-1.5 text-xs font-normal text-stone-500">({order.itemCount} u.)</span>
+          <span className="ml-1.5 text-xs font-normal text-stone-600">({order.itemCount} u.)</span>
         </span>
 
         {order.status === 'pending' && (
@@ -228,7 +228,7 @@ function OrderCard({
       </div>
 
       {order.status === 'pending' && (
-        <p className="mt-2 text-xs text-stone-500">
+        <p className="mt-2 text-xs text-stone-600">
           Registrala cuando tengas la seña o el pago: ahí se descuenta el stock.
         </p>
       )}

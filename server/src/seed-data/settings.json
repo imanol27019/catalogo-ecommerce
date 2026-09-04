@@ -1,5 +1,5 @@
 {
-  "businessName": "Maim",
+  "businessName": "Love Alarm",
   "businessTagline": "Indumentaria de mujer por mayor",
   "whatsappNumber": "5491128577292",
   "whatsappContactMessage": "Hola Maim! Te escribo desde el catálogo web, quería hacerte una consulta.",
@@ -35,12 +35,17 @@
     "pantalones": "Pantalones",
     "camperas": "Camperas"
   },
-  "categoryOrder": ["remeras", "buzos", "pantalones", "camperas"],
+  "categoryOrder": [
+    "remeras",
+    "buzos",
+    "pantalones",
+    "camperas"
+  ],
   "syncFiltersToUrl": true,
   "maxWhatsAppMessageLength": 3000,
   "hero": {
     "eyebrow": "Temporada actual",
-    "heading": "Indumentaria de mujer por mayor",
+    "heading": "Ropa que enamora, por mayor",
     "subtext": "Precios y stock actualizados. Coordiná tu pedido por WhatsApp.",
     "ctaLabel": "Ver catálogo",
     "images": [

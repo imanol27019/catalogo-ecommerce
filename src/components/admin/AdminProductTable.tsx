@@ -24,14 +24,14 @@ export function AdminProductTable({ products, onEdit, onDelete }: AdminProductTa
         {products.map((product) => (
           <div key={product.id} className="rounded-xl border border-stone-200 bg-white p-3">
             <p className="font-heading text-sm font-semibold text-stone-900">{product.name}</p>
-            <p className="mt-0.5 text-xs text-stone-500">
+            <p className="mt-0.5 text-xs text-stone-600">
               {CATEGORY_LABELS[product.category] ?? product.category} · {STATUS_LABELS[product.status]} ·{' '}
               {product.variants.length} variantes
             </p>
             <p className="mt-1.5 font-heading text-base font-semibold text-brand-600">
               {formatCurrency(isOnSale(product) ? product.salePrice! : product.unitPrice)}
               {isOnSale(product) && (
-                <span className="ml-2 text-xs font-normal text-stone-500 line-through">
+                <span className="ml-2 text-xs font-normal text-stone-600 line-through">
                   {formatCurrency(product.unitPrice)}
                 </span>
               )}
@@ -51,7 +51,7 @@ export function AdminProductTable({ products, onEdit, onDelete }: AdminProductTa
       {/* Escritorio: tabla, más cómoda para comparar de un vistazo. */}
       <div className="hidden overflow-x-auto rounded-lg border border-stone-200 bg-white sm:block">
         <table className="w-full text-sm">
-          <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wide text-stone-500">
+          <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wide text-stone-600">
             <tr>
               <th className="px-3 py-2">Producto</th>
               <th className="px-3 py-2">Categoría</th>
@@ -69,7 +69,7 @@ export function AdminProductTable({ products, onEdit, onDelete }: AdminProductTa
                 <td className="whitespace-nowrap px-3 py-2 text-stone-600">
                   {formatCurrency(isOnSale(product) ? product.salePrice! : product.unitPrice)}
                   {isOnSale(product) && (
-                    <span className="ml-1.5 text-xs text-stone-500 line-through">
+                    <span className="ml-1.5 text-xs text-stone-600 line-through">
                       {formatCurrency(product.unitPrice)}
                     </span>
                   )}

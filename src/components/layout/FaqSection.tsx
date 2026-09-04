@@ -23,7 +23,7 @@ export function FaqSection() {
               >
                 {item.question}
                 <ChevronDownIcon
-                  className={`h-4 w-4 shrink-0 text-stone-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                  className={`h-4 w-4 shrink-0 text-stone-600 transition-transform ${isOpen ? 'rotate-180' : ''}`}
                 />
               </button>
               {isOpen && <p className="px-4 pb-4 text-sm text-stone-600">{item.answer}</p>}

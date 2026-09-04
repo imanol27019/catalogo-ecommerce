@@ -28,7 +28,7 @@ export function ShippingMethodPicker({ selectedId, onChange }: ShippingMethodPic
               />
               <span>
                 <span className="block font-semibold text-stone-900">{method.label}</span>
-                {method.description && <span className="block text-xs text-stone-500">{method.description}</span>}
+                {method.description && <span className="block text-xs text-stone-600">{method.description}</span>}
               </span>
             </label>
           );

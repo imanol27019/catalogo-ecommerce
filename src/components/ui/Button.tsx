@@ -7,11 +7,11 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANT_CLASSES: Record<Variant, string> = {
-  primary: 'bg-brand-600 text-white hover:bg-brand-700 disabled:bg-stone-200 disabled:text-stone-500',
+  primary: 'bg-brand-600 text-white hover:bg-brand-700 disabled:bg-stone-200 disabled:text-stone-600',
   secondary:
-    'border border-stone-300 bg-white text-stone-900 hover:bg-stone-50 disabled:bg-stone-100 disabled:text-stone-500',
-  ghost: 'bg-transparent text-stone-700 hover:bg-stone-100 disabled:text-stone-500',
-  danger: 'border border-stone-300 bg-white text-red-700 hover:bg-red-50 disabled:text-stone-500',
+    'border border-stone-300 bg-white text-stone-900 hover:bg-stone-50 disabled:bg-stone-100 disabled:text-stone-600',
+  ghost: 'bg-transparent text-stone-700 hover:bg-stone-100 disabled:text-stone-600',
+  danger: 'border border-stone-300 bg-white text-red-700 hover:bg-red-50 disabled:text-stone-600',
 };
 
 // min-h-11 = 44px, el mínimo recomendado para tocar con el dedo sin errarle. Hay un solo tamaño

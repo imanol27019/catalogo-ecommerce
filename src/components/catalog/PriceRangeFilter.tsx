@@ -10,7 +10,7 @@ interface PriceRangeFilterProps {
 export function PriceRangeFilter({ min, max, valueMin, valueMax, onChange }: PriceRangeFilterProps) {
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500">Precio unitario</p>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-600">Precio unitario</p>
       <div className="flex items-center gap-2">
         <input
           type="number"
@@ -21,7 +21,7 @@ export function PriceRangeFilter({ min, max, valueMin, valueMax, onChange }: Pri
           onChange={(e) => onChange(e.target.value ? Number(e.target.value) : undefined, valueMax)}
           className={INPUT_CLASS}
         />
-        <span className="shrink-0 text-stone-500">–</span>
+        <span className="shrink-0 text-stone-600">–</span>
         <input
           type="number"
           inputMode="numeric"

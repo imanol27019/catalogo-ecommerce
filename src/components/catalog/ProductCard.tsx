@@ -36,17 +36,17 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
         <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
           <StockBadge status={stock} qty={totalUnits} />
           {onSale && (
-            <span className="rounded-full bg-stone-900 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+            <span className="rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
               Oferta
             </span>
           )}
         </div>
       </div>
       <div className="flex flex-1 flex-col items-center gap-1 p-3">
-        <span className="text-[11px] font-medium uppercase tracking-wide text-stone-500">{categoryLabel}</span>
+        <span className="text-[11px] font-medium uppercase tracking-wide text-stone-600">{categoryLabel}</span>
         <h3 className="line-clamp-2 font-heading text-sm font-medium text-stone-900">{product.name}</h3>
         <div className="mt-1 flex items-baseline gap-2">
-          {onSale && <span className="text-xs text-stone-500 line-through">{formatCurrency(product.unitPrice)}</span>}
+          {onSale && <span className="text-xs text-stone-600 line-through">{formatCurrency(product.unitPrice)}</span>}
           <span className="font-heading text-lg font-semibold text-brand-600">{formatCurrency(price)}</span>
         </div>
         <span className="mt-2 w-full rounded-lg bg-brand-600 py-2 text-xs font-semibold text-white transition-colors group-hover:bg-brand-700">

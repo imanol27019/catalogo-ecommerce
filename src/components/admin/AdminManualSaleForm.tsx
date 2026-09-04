@@ -151,7 +151,7 @@ export function AdminManualSaleForm({
       </div>
 
       <div>
-        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-stone-500">Agregar productos</p>
+        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-stone-600">Agregar productos</p>
         <input
           type="search"
           value={search}
@@ -163,7 +163,7 @@ export function AdminManualSaleForm({
         {searchResults.map((product) => (
           <div key={product.id} className="mt-2 rounded-lg border border-stone-200 p-2.5">
             <p className="text-sm font-semibold text-stone-900">{product.name}</p>
-            <p className="mb-2 text-xs text-stone-500">{formatCurrency(getEffectivePrice(product))} c/u</p>
+            <p className="mb-2 text-xs text-stone-600">{formatCurrency(getEffectivePrice(product))} c/u</p>
             <div className="flex flex-wrap gap-1.5">
               {product.variants.map((variant) => (
                 <button
@@ -175,7 +175,7 @@ export function AdminManualSaleForm({
                   className="min-h-11 rounded-lg border border-stone-300 px-2.5 text-xs font-medium text-stone-700 hover:border-brand-500 hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {variant.size}/{variant.color}
-                  <span className="ml-1 text-stone-500">({variant.stockQty})</span>
+                  <span className="ml-1 text-stone-600">({variant.stockQty})</span>
                 </button>
               ))}
             </div>
@@ -185,7 +185,7 @@ export function AdminManualSaleForm({
 
       {lines.length > 0 && (
         <div className="rounded-lg border border-stone-200 bg-white p-3">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500">Detalle</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-600">Detalle</p>
           <div className="flex flex-col gap-2">
             {lines.map((line) => {
               const product = products.find((p) => p.id === line.productId);
@@ -195,7 +195,7 @@ export function AdminManualSaleForm({
               return (
                 <div key={line.variantId} className="flex flex-wrap items-center gap-2 text-sm">
                   <span className="min-w-0 flex-1 text-stone-700">
-                    {product.name} <span className="text-stone-500">({variant.size}/{variant.color})</span>
+                    {product.name} <span className="text-stone-600">({variant.size}/{variant.color})</span>
                   </span>
                   <input
                     type="number"
@@ -212,7 +212,7 @@ export function AdminManualSaleForm({
                   <button
                     type="button"
                     onClick={() => removeLine(line.variantId)}
-                    className="text-stone-500 hover:text-red-500"
+                    className="text-stone-600 hover:text-red-500"
                     aria-label="Quitar"
                   >
                     ×
@@ -243,7 +243,7 @@ export function AdminManualSaleForm({
           {isSaving ? 'Guardando…' : 'Registrar venta'}
         </Button>
       </div>
-      <p className="text-right text-xs text-stone-500">Al registrarla se descuenta el stock automáticamente.</p>
+      <p className="text-right text-xs text-stone-600">Al registrarla se descuenta el stock automáticamente.</p>
     </form>
   );
 }

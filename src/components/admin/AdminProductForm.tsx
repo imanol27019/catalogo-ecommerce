@@ -169,7 +169,7 @@ export function AdminProductForm({ product, suppliers, adminPassword, onSave, on
             )}
           </select>
           {suppliers.length === 0 && (
-            <span className="text-xs text-stone-500">Cargá proveedores en la pestaña Proveedores.</span>
+            <span className="text-xs text-stone-600">Cargá proveedores en la pestaña Proveedores.</span>
           )}
         </label>
 
@@ -227,7 +227,7 @@ function RemoveTagButton({ label, onClick }: { label: string; onClick: () => voi
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="flex h-6 w-6 items-center justify-center rounded-full text-stone-500 hover:bg-stone-200 hover:text-red-700"
+      className="flex h-6 w-6 items-center justify-center rounded-full text-stone-600 hover:bg-stone-200 hover:text-red-700"
     >
       ×
     </button>

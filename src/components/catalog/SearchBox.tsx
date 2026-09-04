@@ -23,20 +23,20 @@ export function SearchBox({ value, onChange }: SearchBoxProps) {
 
   return (
     <div className="relative">
-      <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500" />
+      <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-600" />
       <input
         type="search"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         placeholder="Buscar por nombre, categoría..."
-        className="min-h-11 w-full rounded-lg border border-stone-300 bg-white py-2 pl-9 pr-11 text-sm text-stone-900 placeholder:text-stone-500 focus:border-brand-500"
+        className="min-h-11 w-full rounded-lg border border-stone-300 bg-white py-2 pl-9 pr-11 text-sm text-stone-900 placeholder:text-stone-600 focus:border-brand-500"
       />
       {inputValue && (
         <button
           type="button"
           onClick={() => setInputValue('')}
           aria-label="Limpiar búsqueda"
-          className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100 hover:text-stone-700"
+          className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-stone-600 hover:bg-stone-100 hover:text-stone-700"
         >
           <CloseIcon className="h-4 w-4" />
         </button>

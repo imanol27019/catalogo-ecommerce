@@ -79,7 +79,7 @@ function ProductModalContent({ product, onClose }: { product: Product; onClose: 
 
         <div className="flex flex-col gap-4">
           <div>
-            <span className="text-xs font-medium uppercase tracking-wide text-stone-500">
+            <span className="text-xs font-medium uppercase tracking-wide text-stone-600">
               {CATEGORY_LABELS[product.category] ?? product.category}
             </span>
             <h3 className="font-heading text-lg font-semibold text-stone-900">{product.name}</h3>
@@ -119,7 +119,7 @@ function ProductModalContent({ product, onClose }: { product: Product; onClose: 
           </div>
 
           {product.minQtyPerProduct && (
-            <p className="text-xs text-stone-500">
+            <p className="text-xs text-stone-600">
               Este producto tiene un mínimo de {product.minQtyPerProduct} unidades combinando talles/colores.
             </p>
           )}
@@ -128,7 +128,7 @@ function ProductModalContent({ product, onClose }: { product: Product; onClose: 
             <div className="flex flex-wrap items-center gap-2">
               <StockBadge status={variant.stockStatus} qty={variant.stockQty} long />
               {variant.stockQty > 0 && (
-                <span className="text-xs text-stone-500">
+                <span className="text-xs text-stone-600">
                   en talle {variant.size} / {variant.color}
                 </span>
               )}

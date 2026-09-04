@@ -1,6 +1,6 @@
 import { BUSINESS_NAME, BUSINESS_TAGLINE } from '../../config/site.config';
 import { useCart } from '../../hooks/useCart';
-import { CartIcon } from '../ui/icons';
+import { CartIcon, HeartIcon } from '../ui/icons';
 
 export function Header() {
   const { totals, openDrawer } = useCart();
@@ -11,8 +11,11 @@ export function Header() {
       <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 sm:px-6">
         <div />
         <a href="#/" className="inline-flex min-h-11 min-w-0 flex-col justify-center text-center">
-          <p className="truncate font-heading text-xl font-semibold tracking-tight text-stone-900">{BUSINESS_NAME}</p>
-          <p className="truncate text-[11px] uppercase tracking-widest text-stone-500">{BUSINESS_TAGLINE}</p>
+          <p className="flex items-center justify-center gap-1.5 truncate font-heading text-xl font-semibold tracking-tight text-stone-900">
+            <HeartIcon className="h-4 w-4 shrink-0 text-brand-500" />
+            {BUSINESS_NAME}
+          </p>
+          <p className="truncate text-[11px] uppercase tracking-widest text-stone-600">{BUSINESS_TAGLINE}</p>
         </a>
         <div className="flex justify-end">
           <button

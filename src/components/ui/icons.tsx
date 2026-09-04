@@ -93,3 +93,11 @@ export function TrashIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+export function HeartIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 20.3c-.3 0-.6-.1-.83-.32l-7.3-6.9a4.6 4.6 0 0 1-.3-6.33 4.3 4.3 0 0 1 6.3-.2l2.13 2.06 2.13-2.07a4.3 4.3 0 0 1 6.3.21 4.6 4.6 0 0 1-.3 6.33l-7.3 6.9c-.23.21-.53.32-.83.32z" />
+    </svg>
+  );
+}

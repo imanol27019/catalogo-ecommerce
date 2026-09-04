@@ -10,7 +10,7 @@ interface OrderPreviewProps {
 export function OrderPreview({ items, totals }: OrderPreviewProps) {
   return (
     <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-500">Resumen del pedido</p>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-600">Resumen del pedido</p>
       <ul className="flex flex-col gap-1.5 text-sm">
         {items.map((item) => (
           <li key={item.lineId} className="flex items-center justify-between gap-2">

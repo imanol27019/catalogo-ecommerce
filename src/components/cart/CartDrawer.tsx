@@ -53,7 +53,7 @@ export function CartDrawer() {
             <button
               type="button"
               onClick={dismissRemovedNotice}
-              className="shrink-0 font-semibold text-stone-500 hover:text-stone-700"
+              className="shrink-0 font-semibold text-stone-600 hover:text-stone-700"
             >
               OK
             </button>
@@ -61,7 +61,7 @@ export function CartDrawer() {
         )}
 
         {items.length === 0 ? (
-          <p className="py-10 text-center text-sm text-stone-500">Todavía no agregaste productos.</p>
+          <p className="py-10 text-center text-sm text-stone-600">Todavía no agregaste productos.</p>
         ) : (
           <div className="flex flex-col gap-4">
             {validation.allMessages.length > 0 && <MinQtyWarning messages={validation.allMessages} />}

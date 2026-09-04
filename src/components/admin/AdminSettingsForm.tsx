@@ -287,7 +287,7 @@ function HeroImagesEditor({ images, onChange }: { images: string[]; onChange: (i
 
   return (
     <div>
-      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-stone-500">
+      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-stone-600">
         Fotos de fondo del banner (rotan automáticamente — vacío usa un degradé de marca)
       </p>
       <div className="mb-2 flex flex-wrap gap-2">
@@ -298,9 +298,10 @@ function HeroImagesEditor({ images, onChange }: { images: string[]; onChange: (i
               type="button"
               onClick={() => removeImage(index)}
               aria-label={`Quitar la foto ${index + 1} del banner`}
-              className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center text-lg text-white drop-shadow"
+              /* Círculo sólido detrás: la X va sobre una foto y su contraste no puede depender de ella. */
+              className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center text-lg text-white"
             >
-              ×
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-plum-900/80">×</span>
             </button>
           </div>
         ))}

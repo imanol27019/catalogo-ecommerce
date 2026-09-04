@@ -131,7 +131,7 @@ export function WhatsAppCheckoutModal({ isOpen, onClose }: WhatsAppCheckoutModal
           <button
             type="button"
             disabled
-            className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg bg-stone-300 px-4 py-3 text-sm font-semibold text-stone-500"
+            className="inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg bg-stone-300 px-4 py-3 text-sm font-semibold text-stone-600"
           >
             <WhatsAppIcon className="h-4 w-4" />
             {orderMinimum.isMet ? 'Completá nombre y localidad' : 'Todavía no llegás al mínimo de compra'}

@@ -3,27 +3,32 @@
 @theme {
   --font-sans: "Montserrat", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial,
     sans-serif;
-  --font-heading: "Jost", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial,
-    sans-serif;
+  /* Serif de moda para títulos: le da el aire romántico que pide la marca sin recargar el cuerpo
+     de texto, que sigue en Montserrat por legibilidad. */
+  --font-heading: "Playfair Display", Georgia, "Times New Roman", serif;
 
-  /* Acento terracota / rosa empolvado — estética boutique de indumentaria.
-     brand-600 y 700 son los únicos que se usan como fondo de texto blanco: ambos pasan WCAG AA
-     (4.53 y 6.22). */
-  --color-brand-50: #fbf4f1;
-  --color-brand-100: #f3e3dc;
-  --color-brand-200: #e6c7ba;
-  --color-brand-300: #d6a693;
-  --color-brand-400: #c8917a;
-  --color-brand-500: #c17c67;
-  --color-brand-600: #a8654f;
-  --color-brand-700: #8b5240;
-  --color-brand-800: #6f4234;
-  --color-brand-900: #58362b;
+  /* Rosa de la marca (Love Alarm). Los dos tonos que llevan texto encima pasan WCAG AA en ambos
+     sentidos: brand-600 da 5.66 (blanco sobre él y él sobre blanco) y brand-700 da 7.21. Los
+     tonos 300-500 son decorativos — degradés, bordes, corazones — y nunca llevan texto chico. */
+  --color-brand-50: #fff1f5;
+  --color-brand-100: #ffe0ea;
+  --color-brand-200: #fecdd9;
+  --color-brand-300: #fba4be;
+  --color-brand-400: #f871a0;
+  --color-brand-500: #e94c85;
+  --color-brand-600: #c2255c;
+  --color-brand-700: #a61e4d;
+  --color-brand-800: #8a1a40;
+  --color-brand-900: #6d1533;
+
+  /* Ciruela muy oscuro para el footer y la barra de anuncios: sigue la familia rosa en vez de
+     cortar con un gris neutro. Blanco encima da 16.28. */
+  --color-plum-900: #3d0f22;
 
   /* Semáforo de stock — independiente del acento para que no pierda sentido si cambia la paleta.
      Los tonos van oscurecidos a propósito: se usan como texto de 12px sobre su variante -soft y
-     con los valores anteriores (#16a34a / #d97706 / #78716c) el contraste quedaba en 3.0-4.4, por
-     debajo del 4.5 que pide WCAG AA. Estos dan 4.79 / 4.84 / 6.99. */
+     con los valores anteriores el contraste quedaba por debajo del 4.5 que pide WCAG AA.
+     Estos dan 4.79 / 4.84 / 6.99. */
   --color-stock-in: #15803d;
   --color-stock-in-soft: #f0fdf4;
   --color-stock-low: #b45309;
@@ -48,7 +53,8 @@
 
 @layer base {
   body {
-    @apply bg-stone-50 font-sans text-stone-900 antialiased;
+    /* Rosa muy pálido en vez del beige anterior: tiñe toda la página sin competir con las fotos. */
+    @apply bg-brand-50 font-sans text-stone-900 antialiased;
   }
 
   /*

@@ -23,7 +23,7 @@ export function CartLineItem({ item, onSetQty, onAdjustQty, onRemove }: CartLine
         <div className="flex items-start justify-between gap-2">
           <div>
             <p className="text-sm font-semibold text-stone-900">{item.productName}</p>
-            <p className="text-xs text-stone-500">
+            <p className="text-xs text-stone-600">
               Talle {item.size} · {item.color}
             </p>
           </div>
@@ -31,7 +31,7 @@ export function CartLineItem({ item, onSetQty, onAdjustQty, onRemove }: CartLine
             type="button"
             onClick={() => onRemove(item.lineId)}
             aria-label={`Quitar ${item.productName}`}
-            className="text-stone-500 hover:text-red-500"
+            className="text-stone-600 hover:text-red-500"
           >
             <TrashIcon className="h-4 w-4" />
           </button>
@@ -46,7 +46,7 @@ export function CartLineItem({ item, onSetQty, onAdjustQty, onRemove }: CartLine
         />
 
         <div className="flex items-center justify-between text-sm">
-          <span className="text-stone-500">{formatCurrency(unitPrice)} c/u</span>
+          <span className="text-stone-600">{formatCurrency(unitPrice)} c/u</span>
           <span className="font-semibold text-stone-900">{formatCurrency(subtotal)}</span>
         </div>
       </div>

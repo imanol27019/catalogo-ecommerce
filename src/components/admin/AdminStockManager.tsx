@@ -99,7 +99,7 @@ export function AdminStockManager({ products, onChange, suppliers }: AdminStockM
       </div>
 
       {visibleProducts.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-stone-300 px-4 py-10 text-center text-sm text-stone-500">
+        <p className="rounded-lg border border-dashed border-stone-300 px-4 py-10 text-center text-sm text-stone-600">
           No hay productos que coincidan.
         </p>
       ) : (
@@ -122,13 +122,13 @@ export function AdminStockManager({ products, onChange, suppliers }: AdminStockM
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-heading text-sm font-semibold text-stone-900">{product.name}</p>
-                  <p className="text-xs text-stone-500">
+                  <p className="text-xs text-stone-600">
                     {CATEGORY_LABELS[product.category] ?? product.category} · {totalUnits} u. en total
                     {outCount > 0 && ` · ${outCount} sin stock`}
                     {lowCount > 0 && ` · ${lowCount} por reponer`}
                   </p>
                 </div>
-                <span className={`shrink-0 text-stone-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}>▾</span>
+                <span className={`shrink-0 text-stone-600 transition-transform ${isOpen ? 'rotate-180' : ''}`}>▾</span>
               </button>
 
               {isOpen && (

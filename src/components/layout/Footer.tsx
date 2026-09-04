@@ -19,7 +19,7 @@ export function Footer({ categories, onSelectCategory }: FooterProps) {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-12 bg-stone-900 text-stone-300">
+    <footer className="mt-12 bg-plum-900 text-stone-300">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
         <div>
           <p className="font-heading text-lg font-semibold text-white">{BUSINESS_NAME}</p>
@@ -70,7 +70,7 @@ export function Footer({ categories, onSelectCategory }: FooterProps) {
         <NewsletterForm />
       </div>
 
-      <div className="border-t border-stone-800 px-4 py-4 text-center text-xs text-stone-400 sm:px-6">
+      <div className="border-t border-white/10 px-4 py-4 text-center text-xs text-stone-400 sm:px-6">
         © {year} {BUSINESS_NAME}. Precios mayoristas sujetos a stock — la compra se confirma por
         WhatsApp, no procesamos pagos online.
       </div>
