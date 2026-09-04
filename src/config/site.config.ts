@@ -54,3 +54,10 @@ export const SITE_META = {
 };
 
 export type { ShippingMethodOption } from '../types/settings';
+
+/**
+ * Máximo de caracteres del nombre de un producto. 60 es lo que usan la mayoría de los catálogos
+ * (MercadoLibre, Amazon) antes de cortar el título en la tarjeta: entra en dos renglones y sigue
+ * siendo descriptivo. La tarjeta igual recorta visualmente, por si quedan nombres viejos más largos.
+ */
+export const PRODUCT_NAME_MAX_LENGTH = 60;

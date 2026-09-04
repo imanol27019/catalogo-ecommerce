@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import type { BulkPriceTier, Product, ProductColor } from '../../types/product';
 import type { Supplier } from '../../types/supplier';
-import { CATEGORY_LABELS } from '../../config/site.config';
+import { CATEGORY_LABELS, PRODUCT_NAME_MAX_LENGTH } from '../../config/site.config';
 import { AdminImagesEditor } from './AdminImagesEditor';
 import { regenerateVariants, slugify } from './adminUtils';
 import { Button } from '../ui/Button';
@@ -56,12 +56,25 @@ export function AdminProductForm({ product, suppliers, adminPassword, onSave, on
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5 rounded-lg border border-stone-200 bg-white p-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <label className={LABEL_CLASS}>
-          <span className={LABEL_TEXT_CLASS}>Nombre</span>
+          <span className={`${LABEL_TEXT_CLASS} flex items-center justify-between gap-2`}>
+            Nombre
+            <span
+              className={`text-xs font-normal ${
+                draft.name.length > PRODUCT_NAME_MAX_LENGTH - 10 ? 'text-stock-low' : 'text-stone-600'
+              }`}
+            >
+              {draft.name.length}/{PRODUCT_NAME_MAX_LENGTH}
+            </span>
+          </span>
           <input
             value={draft.name}
+            maxLength={PRODUCT_NAME_MAX_LENGTH}
             onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
             className={INPUT_CLASS}
           />
+          <span className="text-xs text-stone-600">
+            En la tarjeta del catálogo se ven dos renglones; lo que exceda se corta con puntos suspensivos.
+          </span>
         </label>
 
         <label className={LABEL_CLASS}>

@@ -22,7 +22,7 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
     <button
       type="button"
       onClick={() => onSelect(product)}
-      className="group flex flex-col overflow-hidden rounded-xl bg-white text-center shadow-sm ring-1 ring-stone-200 transition-shadow hover:shadow-md"
+      className="group flex h-full flex-col overflow-hidden rounded-xl bg-white text-center shadow-sm ring-1 ring-stone-200 transition-shadow hover:shadow-md"
     >
       <div className="relative aspect-[3/4] w-full overflow-hidden bg-stone-100">
         <img
@@ -44,8 +44,16 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
       </div>
       <div className="flex flex-1 flex-col items-center gap-1 p-3">
         <span className="text-[11px] font-medium uppercase tracking-wide text-stone-600">{categoryLabel}</span>
-        <h3 className="line-clamp-2 font-heading text-sm font-medium text-stone-900">{product.name}</h3>
-        <div className="mt-1 flex items-baseline gap-2">
+        {/*
+          `leading-5 min-h-10` reserva exactamente dos renglones (20px cada uno) ocupe una línea o
+          dos, y `line-clamp-2` corta con puntos suspensivos si el nombre es más largo. Sin esto,
+          un nombre corto subía el precio y el botón, y las tarjetas del carrusel quedaban de
+          distinto alto entre sí.
+        */}
+        <h3 className="line-clamp-2 min-h-10 font-heading text-sm font-medium leading-5 text-stone-900">
+          {product.name}
+        </h3>
+        <div className="mt-auto flex items-baseline gap-2 pt-1">
           {onSale && <span className="text-xs text-stone-600 line-through">{formatCurrency(product.unitPrice)}</span>}
           <span className="font-heading text-lg font-semibold text-brand-600">{formatCurrency(price)}</span>
         </div>
