@@ -1,11 +1,14 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Montserrat", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial,
+  /* Inter para el cuerpo: es la sans de interfaz más legible en tamaños chicos, que es donde
+     vive casi todo el texto del catálogo (precios, talles, unidades). */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial,
     sans-serif;
-  /* Serif de moda para títulos: le da el aire romántico que pide la marca sin recargar el cuerpo
-     de texto, que sigue en Montserrat por legibilidad. */
-  --font-heading: "Playfair Display", Georgia, "Times New Roman", serif;
+  /* Outfit para títulos y botones: geométrica y algo redondeada, da el aire moderno sin volverse
+     fría. Reemplaza a Playfair Display, que leía elegante pero clásico. */
+  --font-heading: "Outfit", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial,
+    sans-serif;
 
   /* Rosa de la marca (Love Alarm). Los dos tonos que llevan texto encima pasan WCAG AA en ambos
      sentidos: brand-600 da 5.66 (blanco sobre él y él sobre blanco) y brand-700 da 7.21. Los
