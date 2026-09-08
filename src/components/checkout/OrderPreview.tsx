@@ -1,5 +1,5 @@
 import type { CartLineItem, CartTotals } from '../../types/cart';
-import { computeLineSubtotal } from '../../utils/pricing';
+import { computeUnitPriceByLine } from '../../utils/pricing';
 import { formatCurrency } from '../../utils/format';
 
 interface OrderPreviewProps {
@@ -8,6 +8,8 @@ interface OrderPreviewProps {
 }
 
 export function OrderPreview({ items, totals }: OrderPreviewProps) {
+  // El precio de cada línea depende de las unidades totales de su producto: se resuelve de una.
+  const precioPorLinea = computeUnitPriceByLine(items);
   return (
     <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
       <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-stone-600">Resumen del pedido</p>
@@ -17,7 +19,7 @@ export function OrderPreview({ items, totals }: OrderPreviewProps) {
             <span className="text-stone-700">
               {item.qty}x {item.productName} ({item.size}/{item.color})
             </span>
-            <span className="shrink-0 font-medium text-stone-900">{formatCurrency(computeLineSubtotal(item))}</span>
+            <span className="shrink-0 font-medium text-stone-900">{formatCurrency((precioPorLinea.get(item.lineId) ?? item.unitPrice) * item.qty)}</span>
           </li>
         ))}
       </ul>

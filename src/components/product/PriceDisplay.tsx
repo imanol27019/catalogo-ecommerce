@@ -1,5 +1,5 @@
 import type { BulkPriceTier } from '../../types/product';
-import { computeLineUnitPrice, nextBulkTier } from '../../utils/pricing';
+import { nextBulkTier, sortBulkTiers, unitPriceForQty } from '../../utils/pricing';
 import { formatCurrency } from '../../utils/format';
 
 interface PriceDisplayProps {
@@ -8,12 +8,20 @@ interface PriceDisplayProps {
   /** Precio de lista, se muestra tachado si termina siendo distinto del precio final. */
   originalPrice?: number;
   bulkPricing?: BulkPriceTier[];
+  /**
+   * Unidades TOTALES de este producto: las que ya están en el carrito más las que se están
+   * eligiendo ahora. El escalón se resuelve sobre este número, no sobre una sola línea.
+   */
+  productQty: number;
+  /** Unidades que se están agregando, para el subtotal de esta operación. */
   qty: number;
 }
 
-export function PriceDisplay({ unitPrice, originalPrice, bulkPricing, qty }: PriceDisplayProps) {
-  const effectiveUnitPrice = computeLineUnitPrice({ unitPrice, bulkPricing, qty });
-  const next = nextBulkTier({ unitPrice, bulkPricing, qty });
+export function PriceDisplay({ unitPrice, originalPrice, bulkPricing, productQty, qty }: PriceDisplayProps) {
+  const pricing = { unitPrice, bulkPricing };
+  const effectiveUnitPrice = unitPriceForQty(pricing, productQty);
+  const next = nextBulkTier(pricing, productQty);
+  const escalones = sortBulkTiers(bulkPricing);
   const referencePrice = originalPrice ?? unitPrice;
   const showCrossedOut = referencePrice !== effectiveUnitPrice;
 
@@ -26,8 +34,28 @@ export function PriceDisplay({ unitPrice, originalPrice, bulkPricing, qty }: Pri
       </div>
       {next && (
         <p className="mt-1 text-xs text-brand-700">
-          Llevando {next.minQty} o más unidades (mismo talle/color), el precio baja a {formatCurrency(next.price)} c/u.
+          Llevando {next.minQty} o más unidades de este modelo (sumando talles y colores), el precio baja a{' '}
+          {formatCurrency(next.price)} c/u.
         </p>
+      )}
+
+      {/* La escalera completa: que se vea de una cuánto conviene llevar. */}
+      {escalones.length > 0 && (
+        <ul className="mt-2 flex flex-wrap gap-1.5">
+          {escalones.map((tier) => {
+            const activo = productQty >= tier.minQty && effectiveUnitPrice === tier.price;
+            return (
+              <li
+                key={tier.minQty}
+                className={`rounded-lg border px-2 py-1 text-xs ${
+                  activo ? 'border-brand-600 bg-brand-50 font-semibold text-brand-700' : 'border-stone-200 text-stone-600'
+                }`}
+              >
+                {tier.minQty}+ u. · {formatCurrency(tier.price)}
+              </li>
+            );
+          })}
+        </ul>
       )}
       <p className="mt-1 text-sm font-semibold text-stone-700">Subtotal: {formatCurrency(effectiveUnitPrice * qty)}</p>
     </div>

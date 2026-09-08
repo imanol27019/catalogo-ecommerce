@@ -9,7 +9,7 @@ export function FaqSection() {
   if (!FAQ || FAQ.length === 0) return null;
 
   return (
-    <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+    <section id="preguntas" className="mx-auto max-w-3xl scroll-mt-24 px-4 py-12 sm:px-6">
       <h2 className="mb-6 text-center font-heading text-2xl font-semibold text-stone-900">Preguntas frecuentes</h2>
       <div className="flex flex-col gap-2">
         {FAQ.map((item, index) => {

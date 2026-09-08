@@ -1,5 +1,5 @@
 import type { CartLineItem as CartLineItemType } from '../../types/cart';
-import { computeLineSubtotal, computeLineUnitPrice } from '../../utils/pricing';
+
 import { formatCurrency } from '../../utils/format';
 import { resolveImageUrl } from '../../data/apiClient';
 import { QuantityStepper } from '../product/QuantityStepper';
@@ -7,14 +7,15 @@ import { TrashIcon } from '../ui/icons';
 
 interface CartLineItemProps {
   item: CartLineItemType;
+  /** Ya resuelto por el carrito contra las unidades totales del producto. */
+  unitPrice: number;
   onSetQty: (lineId: string, qty: number) => void;
   onAdjustQty: (lineId: string, delta: number) => void;
   onRemove: (lineId: string) => void;
 }
 
-export function CartLineItem({ item, onSetQty, onAdjustQty, onRemove }: CartLineItemProps) {
-  const unitPrice = computeLineUnitPrice(item);
-  const subtotal = computeLineSubtotal(item);
+export function CartLineItem({ item, unitPrice, onSetQty, onAdjustQty, onRemove }: CartLineItemProps) {
+  const subtotal = unitPrice * item.qty;
 
   return (
     <div className="flex gap-3 border-b border-stone-200 pb-4">

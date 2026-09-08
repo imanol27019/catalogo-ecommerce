@@ -59,7 +59,12 @@ interface CatalogProduct {
   variants: { id: string; size: string; color: string; stockQty: number }[];
 }
 
-function effectiveUnitPrice(product: CatalogProduct, qty: number): number {
+/**
+ * Precio unitario que corresponde a `productQty` unidades del producto.
+ * `productQty` son las unidades del producto ENTERO en el pedido, sumando todos sus talles y
+ * colores — no las de un solo renglón. Tiene que coincidir con `unitPriceForQty` del navegador.
+ */
+function effectiveUnitPrice(product: CatalogProduct, productQty: number): number {
   const base =
     typeof product.salePrice === 'number' && product.salePrice < product.unitPrice
       ? product.salePrice
@@ -67,7 +72,7 @@ function effectiveUnitPrice(product: CatalogProduct, qty: number): number {
   if (!product.bulkPricing?.length) return base;
   const tier = [...product.bulkPricing]
     .sort((a, b) => a.minQty - b.minQty)
-    .filter((t) => qty >= t.minQty)
+    .filter((t) => productQty >= t.minQty)
     .pop();
   return tier ? tier.price : base;
 }
@@ -92,7 +97,15 @@ export function buildOrder(
   const name = text(customerRaw.name, 120);
   if (!name) throw new OrderValidationError('Falta el nombre de quien compra.');
 
-  const lines: OrderLine[] = [];
+  /**
+   * Primero se valida cada renglón y se acumulan las unidades por producto; recién después se
+   * calcula el precio. El escalón por cantidad se resuelve sobre el total del producto (sumando
+   * sus talles y colores), así que no se puede saber el precio de un renglón hasta haber leído
+   * todos los demás.
+   */
+  const validadas: { product: CatalogProduct; variant: CatalogProduct['variants'][number]; qty: number }[] = [];
+  const qtyPorProducto = new Map<string, number>();
+
   for (const raw of linesRaw as Record<string, unknown>[]) {
     const product = catalogProducts.find((p) => p.id === raw.productId);
     if (!product) throw new OrderValidationError(`Producto inexistente: ${String(raw.productId)}`);
@@ -104,7 +117,13 @@ export function buildOrder(
       throw new OrderValidationError(`Cantidad inválida para ${product.name}.`);
     }
 
-    const unitPrice = effectiveUnitPrice(product, qty);
+    validadas.push({ product, variant, qty });
+    qtyPorProducto.set(product.id, (qtyPorProducto.get(product.id) ?? 0) + qty);
+  }
+
+  const lines: OrderLine[] = [];
+  for (const { product, variant, qty } of validadas) {
+    const unitPrice = effectiveUnitPrice(product, qtyPorProducto.get(product.id) ?? qty);
     lines.push({
       productId: product.id,
       productName: product.name,

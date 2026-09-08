@@ -10,6 +10,10 @@ interface AdminImagesEditorProps {
   images: string[];
   adminPassword: string;
   onChange: (images: string[]) => void;
+  /** Título de la sección. Por defecto, el de las fotos de un producto. */
+  label?: string;
+  /** Aclaración bajo el título (por ejemplo, cuál es la foto de portada). */
+  hint?: string;
 }
 
 /**
@@ -17,7 +21,7 @@ interface AdminImagesEditorProps {
  * calidad que ve la clienta es la misma del archivo original. La primera de la lista es la que
  * aparece en la grilla del catálogo.
  */
-export function AdminImagesEditor({ images, adminPassword, onChange }: AdminImagesEditorProps) {
+export function AdminImagesEditor({ images, adminPassword, onChange, label = 'Fotos', hint }: AdminImagesEditorProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +73,10 @@ export function AdminImagesEditor({ images, adminPassword, onChange }: AdminImag
   return (
     <div>
       <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-stone-600">
-        Fotos {images.length > 0 && <span className="font-normal normal-case">· la primera es la de portada</span>}
+        {label}
+        {images.length > 0 && (
+          <span className="font-normal normal-case"> · {hint ?? 'la primera es la de portada'}</span>
+        )}
       </p>
 
       {images.length > 0 && (
@@ -81,7 +88,7 @@ export function AdminImagesEditor({ images, adminPassword, onChange }: AdminImag
                 alt={`Foto ${index + 1}`}
                 className="h-24 w-20 rounded-lg object-cover ring-1 ring-stone-200"
               />
-              {index === 0 && (
+              {index === 0 && !hint && (
                 <span className="absolute left-1 top-1 rounded bg-stone-900/80 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
                   Portada
                 </span>

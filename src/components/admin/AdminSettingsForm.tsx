@@ -1,16 +1,24 @@
 import { useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import type { FaqItem, ShippingMethodOption, SiteSettings } from '../../types/settings';
+import { AdminImagesEditor } from './AdminImagesEditor';
 import { Button } from '../ui/Button';
 import { INPUT_CLASS, INPUT_COMPACT_CLASS, LABEL_CLASS, LABEL_TEXT_CLASS, TEXTAREA_CLASS } from '../ui/formStyles';
 
 interface AdminSettingsFormProps {
   settings: SiteSettings;
+  /** Necesario para subir fotos del banner y del lookbook desde el panel. */
+  adminPassword: string;
   onSave: (settings: SiteSettings) => void;
   saveLabel?: string;
 }
 
-export function AdminSettingsForm({ settings, onSave, saveLabel = 'Guardar cambios' }: AdminSettingsFormProps) {
+export function AdminSettingsForm({
+  settings,
+  adminPassword,
+  onSave,
+  saveLabel = 'Guardar cambios',
+}: AdminSettingsFormProps) {
   const [draft, setDraft] = useState<SiteSettings>(settings);
 
   function update<K extends keyof SiteSettings>(key: K, value: SiteSettings[K]) {
@@ -90,7 +98,40 @@ export function AdminSettingsForm({ settings, onSave, saveLabel = 'Guardar cambi
           </label>
         </div>
         <div className="mt-4">
-          <HeroImagesEditor images={draft.hero.images} onChange={(images) => update('hero', { ...draft.hero, images })} />
+          <AdminImagesEditor
+            images={draft.hero.images}
+            adminPassword={adminPassword}
+            onChange={(images) => update('hero', { ...draft.hero, images })}
+            label="Fotos de fondo del banner"
+            hint="rotan automáticamente; sin fotos se usa un degradé de marca"
+          />
+        </div>
+      </Fieldset>
+
+      <Fieldset title="Galería de temporada (lookbook)">
+        <p className="mb-3 text-xs text-stone-600">
+          Fotos de campaña que se muestran en un mosaico, sin precios. Si no cargás ninguna, la sección no aparece.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <TextField
+            label="Título"
+            value={draft.lookbook.title}
+            onChange={(v) => update('lookbook', { ...draft.lookbook, title: v })}
+          />
+          <TextField
+            label="Subtítulo"
+            value={draft.lookbook.subtitle}
+            onChange={(v) => update('lookbook', { ...draft.lookbook, subtitle: v })}
+          />
+        </div>
+        <div className="mt-4">
+          <AdminImagesEditor
+            images={draft.lookbook.images}
+            adminPassword={adminPassword}
+            onChange={(images) => update('lookbook', { ...draft.lookbook, images })}
+            label="Fotos de la galería"
+            hint="la primera se muestra más grande"
+          />
         </div>
       </Fieldset>
 
@@ -272,57 +313,3 @@ function FaqEditor({ items, onChange }: { items: FaqItem[]; onChange: (items: Fa
   );
 }
 
-function HeroImagesEditor({ images, onChange }: { images: string[]; onChange: (images: string[]) => void }) {
-  const [draft, setDraft] = useState('');
-
-  function addImage() {
-    const trimmed = draft.trim();
-    if (trimmed) onChange([...images, trimmed]);
-    setDraft('');
-  }
-
-  function removeImage(index: number) {
-    onChange(images.filter((_, i) => i !== index));
-  }
-
-  return (
-    <div>
-      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-stone-600">
-        Fotos de fondo del banner (rotan automáticamente — vacío usa un degradé de marca)
-      </p>
-      <div className="mb-2 flex flex-wrap gap-2">
-        {images.map((src, index) => (
-          <div key={src} className="relative h-16 w-16 overflow-hidden rounded-lg ring-1 ring-stone-200">
-            <img src={src} alt="" className="h-full w-full object-cover" />
-            <button
-              type="button"
-              onClick={() => removeImage(index)}
-              aria-label={`Quitar la foto ${index + 1} del banner`}
-              /* Círculo sólido detrás: la X va sobre una foto y su contraste no puede depender de ella. */
-              className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center text-lg text-white"
-            >
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-plum-900/80">×</span>
-            </button>
-          </div>
-        ))}
-      </div>
-      <div className="flex gap-2">
-        <input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              addImage();
-            }
-          }}
-          placeholder="URL de la imagen"
-          className={`${INPUT_COMPACT_CLASS} flex-1`}
-        />
-        <Button type="button" variant="secondary" onClick={addImage}>
-          Agregar
-        </Button>
-      </div>
-    </div>
-  );
-}

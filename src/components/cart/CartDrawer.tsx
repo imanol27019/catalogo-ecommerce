@@ -5,6 +5,7 @@ import { evaluateOrderMinimum } from '../../utils/orderMinimum';
 import { Drawer } from '../ui/Drawer';
 import { Button } from '../ui/Button';
 import { CartLineItem } from './CartLineItem';
+import { computeUnitPriceByLine } from '../../utils/pricing';
 import { CartSummary } from './CartSummary';
 import { MinQtyWarning } from './MinQtyWarning';
 import { OrderMinimumNotice } from './OrderMinimumNotice';
@@ -24,6 +25,10 @@ export function CartDrawer() {
     removedNotice,
     dismissRemovedNotice,
   } = useCart();
+
+  // Los escalones se calculan sobre las unidades totales de cada producto, así que el precio
+  // de cada línea se resuelve de una sola vez para todo el carrito.
+  const precioPorLinea = computeUnitPriceByLine(items);
   const [isCheckoutOpen, setCheckoutOpen] = useState(false);
 
   const orderMinimum = evaluateOrderMinimum(totals.itemCount, totals.grandTotal, MIN_ORDER_QTY, MIN_ORDER_TOTAL);
@@ -69,6 +74,7 @@ export function CartDrawer() {
               <CartLineItem
                 key={item.lineId}
                 item={item}
+            unitPrice={precioPorLinea.get(item.lineId) ?? item.unitPrice}
                 onSetQty={updateQty}
                 onAdjustQty={adjustQty}
                 onRemove={removeItem}

@@ -13,6 +13,9 @@ export async function loadSettings(): Promise<void> {
     if (data && Object.keys(data).length > 0) {
       Object.assign(settings, data);
     }
+    // La base puede venir de una versión anterior y no traer bloques nuevos. Se reponen desde los
+    // valores empaquetados para que el panel no se rompa al leerlos.
+    if (!settings.lookbook) settings.lookbook = (settingsData as SiteSettings).lookbook;
     isUsingFallbackSettings = false;
   } catch (err) {
     isUsingFallbackSettings = true;

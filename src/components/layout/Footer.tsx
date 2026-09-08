@@ -19,7 +19,7 @@ export function Footer({ categories, onSelectCategory }: FooterProps) {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-12 bg-plum-900 text-stone-300">
+    <footer id="contacto" className="mt-12 scroll-mt-24 bg-plum-900 text-stone-300">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
         <div>
           <p className="font-heading text-lg font-semibold text-white">{BUSINESS_NAME}</p>

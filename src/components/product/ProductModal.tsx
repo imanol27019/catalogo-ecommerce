@@ -10,7 +10,7 @@ import { QuantityStepper } from './QuantityStepper';
 import { PriceDisplay } from './PriceDisplay';
 import { CATEGORY_LABELS } from '../../config/site.config';
 import { effectiveMinQty, findVariant } from '../../utils/stock';
-import { getEffectivePrice, isOnSale } from '../../utils/pricing';
+import { computeQtyByProduct, getEffectivePrice, isOnSale } from '../../utils/pricing';
 import { useCart } from '../../hooks/useCart';
 
 interface ProductModalProps {
@@ -30,11 +30,18 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
 }
 
 function ProductModalContent({ product, onClose }: { product: Product; onClose: () => void }) {
-  const { addItem } = useCart();
+  const { addItem, items } = useCart();
   const initial = useMemo(() => pickInitialVariant(product), [product]);
   const [selectedSize, setSelectedSize] = useState(initial.size);
   const [selectedColor, setSelectedColor] = useState(initial.color);
   const [qty, setQty] = useState(1);
+
+  /**
+   * El escalón se resuelve sobre las unidades totales del modelo: las que ya hay en el carrito
+   * (cualquier talle o color) más las que se están eligiendo ahora. Si no, el precio que se ve acá
+   * no coincidiría con el que termina cobrando el carrito.
+   */
+  const qtyEnCarrito = product ? (computeQtyByProduct(items).get(product.id) ?? 0) : 0;
 
   const variant = findVariant(product, selectedSize, selectedColor);
   const isOutOfStock = !variant || variant.stockStatus === 'out_of_stock';
@@ -90,6 +97,7 @@ function ProductModalContent({ product, onClose }: { product: Product; onClose: 
             unitPrice={getEffectivePrice(product)}
             originalPrice={isOnSale(product) ? product.unitPrice : undefined}
             bulkPricing={product.bulkPricing}
+            productQty={qtyEnCarrito + qty}
             qty={qty}
           />
 

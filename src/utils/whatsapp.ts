@@ -2,7 +2,7 @@ import type { CartLineItem, CartTotals } from '../types/cart';
 import type { OrderFormData } from '../types/order';
 import type { CartValidationResult } from './validation';
 import { BUSINESS_NAME, MAX_WHATSAPP_MESSAGE_LENGTH, SHIPPING_METHODS, WHATSAPP_NUMBER } from '../config/site.config';
-import { computeLineUnitPrice } from './pricing';
+import { computeUnitPriceByLine } from './pricing';
 import { formatCurrency } from './format';
 
 /** Quita `* _ ~` de texto libre para que no rompa el formato de negrita/itálica de WhatsApp. */
@@ -31,8 +31,9 @@ export function buildOrderMessage(
     '*Detalle del pedido:*',
   ];
 
+  const precioPorLinea = computeUnitPriceByLine(items);
   const itemGroups = items.map((item, idx) => {
-    const unitPrice = computeLineUnitPrice(item);
+    const unitPrice = precioPorLinea.get(item.lineId) ?? item.unitPrice;
     return [
       `${idx + 1}. ${item.productName} - Talle ${item.size} / Color ${item.color}`,
       `   Cantidad: ${item.qty} u. x ${formatCurrency(unitPrice)} = ${formatCurrency(unitPrice * item.qty)}`,

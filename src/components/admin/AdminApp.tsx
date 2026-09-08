@@ -296,6 +296,7 @@ export function AdminApp() {
           )}
           <AdminSettingsForm
             settings={siteSettings}
+            adminPassword={adminPassword}
             onSave={handlePublishSettings}
             saveLabel={isSavingSettings ? 'Publicando…' : 'Publicar cambios'}
           />

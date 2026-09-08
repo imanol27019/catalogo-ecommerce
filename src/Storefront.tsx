@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { catalog, isUsingFallbackCatalog } from './data/catalog';
 import { Alert } from './components/ui/Alert';
 import { AnnouncementBar } from './components/layout/AnnouncementBar';
-import { Header } from './components/layout/Header';
+import { NavBar } from './components/layout/NavBar';
 import { HeroBanner } from './components/layout/HeroBanner';
+import { LookbookGallery } from './components/layout/LookbookGallery';
+import { HowToBuySection } from './components/layout/HowToBuySection';
 import { FaqSection } from './components/layout/FaqSection';
 import { Footer } from './components/layout/Footer';
 import { FloatingCartButton } from './components/layout/FloatingCartButton';
 import { WhatsAppContactButton } from './components/layout/WhatsAppContactButton';
-import { CategoryNav } from './components/catalog/CategoryNav';
 import { FeaturedProducts } from './components/catalog/FeaturedProducts';
 import { FiltersBar } from './components/catalog/FiltersBar';
 import { ProductGrid } from './components/catalog/ProductGrid';
@@ -28,10 +29,14 @@ export function Storefront() {
   return (
     <div className="flex min-h-screen flex-col">
       <AnnouncementBar />
-      <Header />
+      <NavBar
+        categories={facets.categories}
+        activeCategories={filters.categories}
+        onSelectCategory={selectCategory}
+      />
       <HeroBanner />
+      <LookbookGallery />
       <FeaturedProducts products={catalog.products} onSelectProduct={setSelectedProduct} />
-      <CategoryNav categories={facets.categories} activeCategories={filters.categories} onSelect={selectCategory} />
 
       <main id="catalogo" className="mx-auto w-full max-w-6xl flex-1 scroll-mt-16 px-4 py-8 sm:px-6">
         {/*
@@ -58,6 +63,7 @@ export function Storefront() {
         <ProductGrid products={filteredProducts} onSelectProduct={setSelectedProduct} onClearFilters={resetFilters} />
       </main>
 
+      <HowToBuySection />
       <FaqSection />
       <Footer categories={facets.categories} onSelectCategory={selectCategory} />
       <FloatingCartButton />

@@ -4,7 +4,7 @@ import type { Product } from '../../types/product';
 import { createManualSale } from '../../data/orders';
 import { ApiError } from '../../data/apiClient';
 import { formatCurrency } from '../../utils/format';
-import { computeLineUnitPrice, getEffectivePrice } from '../../utils/pricing';
+import { getEffectivePrice, unitPriceForQty } from '../../utils/pricing';
 import { STOCK_LABELS } from '../../utils/stock';
 import { Button } from '../ui/Button';
 import { Alert } from '../ui/Alert';
@@ -52,21 +52,31 @@ export function AdminManualSaleForm({
   }, [activeProducts, search]);
 
   /**
-   * Mismo cálculo que hace el servidor al registrar la venta (oferta + precio por bulto), para que
-   * el total que se ve acá sea exactamente el que queda guardado.
+   * Unidades por producto sumando todos sus talles y colores: el escalón se resuelve sobre ese
+   * total, igual que en el carrito y que en el servidor.
    */
-  function lineUnitPrice(product: Product, qty: number): number {
-    return computeLineUnitPrice({ unitPrice: getEffectivePrice(product), bulkPricing: product.bulkPricing, qty });
+  const qtyPorProducto = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const line of lines) map.set(line.productId, (map.get(line.productId) ?? 0) + line.qty);
+    return map;
+  }, [lines]);
+
+  /** Mismo cálculo que hace el servidor, para que el total que se ve sea el que queda guardado. */
+  function lineUnitPrice(product: Product): number {
+    return unitPriceForQty(
+      { unitPrice: getEffectivePrice(product), bulkPricing: product.bulkPricing },
+      qtyPorProducto.get(product.id) ?? 0,
+    );
   }
 
   const total = useMemo(
     () =>
       lines.reduce((sum, line) => {
         const product = products.find((p) => p.id === line.productId);
-        return product ? sum + lineUnitPrice(product, line.qty) * line.qty : sum;
+        return product ? sum + lineUnitPrice(product) * line.qty : sum;
       }, 0),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [lines, products],
+    [lines, products, qtyPorProducto],
   );
 
   function addVariant(productId: string, variantId: string) {
@@ -207,7 +217,7 @@ export function AdminManualSaleForm({
                     }`}
                   />
                   <span className="w-24 shrink-0 text-right font-medium text-stone-900">
-                    {formatCurrency(lineUnitPrice(product, line.qty) * line.qty)}
+                    {formatCurrency(lineUnitPrice(product) * line.qty)}
                   </span>
                   <button
                     type="button"

@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import type { BulkPriceTier, Product, ProductColor } from '../../types/product';
 import type { Supplier } from '../../types/supplier';
 import { CATEGORY_LABELS, PRODUCT_NAME_MAX_LENGTH } from '../../config/site.config';
+import { MAX_BULK_TIERS, getEffectivePrice, validateBulkTiers } from '../../utils/pricing';
 import { AdminImagesEditor } from './AdminImagesEditor';
 import { regenerateVariants, slugify } from './adminUtils';
 import { Button } from '../ui/Button';
@@ -45,6 +46,11 @@ export function AdminProductForm({ product, suppliers, adminPassword, onSave, on
     }
     if (draft.salePrice != null && draft.salePrice >= draft.unitPrice) {
       setError('El precio de oferta tiene que ser menor al precio de lista.');
+      return;
+    }
+    const problemaEscalones = validateBulkTiers(draft.bulkPricing ?? [], getEffectivePrice(draft));
+    if (problemaEscalones) {
+      setError(problemaEscalones);
       return;
     }
 
@@ -219,7 +225,13 @@ export function AdminProductForm({ product, suppliers, adminPassword, onSave, on
 
       <BulkPricingEditor
         tiers={draft.bulkPricing ?? []}
-        onChange={(bulkPricing) => setDraft((d) => ({ ...d, bulkPricing: bulkPricing.length ? bulkPricing : undefined }))}
+        precioBase={getEffectivePrice(draft)}
+        onChange={(updater) =>
+          setDraft((d) => {
+            const next = updater(d.bulkPricing ?? []);
+            return { ...d, bulkPricing: next.length > 0 ? next : undefined };
+          })
+        }
       />
 
       {error && <Alert tone="error">{error}</Alert>}
@@ -353,14 +365,47 @@ function ColorsEditor({ colors, onChange }: { colors: ProductColor[]; onChange: 
   );
 }
 
-function BulkPricingEditor({ tiers, onChange }: { tiers: BulkPriceTier[]; onChange: (tiers: BulkPriceTier[]) => void }) {
+function BulkPricingEditor({
+  tiers,
+  precioBase,
+  onChange,
+}: {
+  tiers: BulkPriceTier[];
+  precioBase: number;
+  /**
+   * Recibe la lista anterior y devuelve la nueva. Es funcional a propósito: si se calculara sobre
+   * el prop, varios clics seguidos en "Agregar escalón" se pisarían entre sí y se perdería alguno.
+   */
+  onChange: (updater: (prev: BulkPriceTier[]) => BulkPriceTier[]) => void;
+}) {
   function updateTier(index: number, patch: Partial<BulkPriceTier>) {
-    onChange(tiers.map((t, i) => (i === index ? { ...t, ...patch } : t)));
+    onChange((prev) => prev.map((t, i) => (i === index ? { ...t, ...patch } : t)));
   }
+
+  function removeTier(index: number) {
+    onChange((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function addTier() {
+    onChange((prev) => {
+      if (prev.length >= MAX_BULK_TIERS) return prev;
+      const ultimo = [...prev].sort((a, b) => a.minQty - b.minQty).pop();
+      // Se propone un escalón coherente con el anterior para no arrancar de un estado inválido.
+      const minQty = ultimo ? ultimo.minQty * 2 : 6;
+      const price = Math.max(1, Math.round((ultimo ? ultimo.price : precioBase) * 0.9));
+      return [...prev, { minQty, price }];
+    });
+  }
+
+  const aviso = validateBulkTiers(tiers, precioBase);
 
   return (
     <div>
-      <p className={SECTION_TITLE_CLASS}>Precio por bulto (opcional)</p>
+      <p className={SECTION_TITLE_CLASS}>Precio por cantidad (opcional)</p>
+      <p className="mb-2 text-xs text-stone-600">
+        Hasta {MAX_BULK_TIERS} escalones. Las unidades se cuentan por modelo, sumando todos sus talles y colores.
+      </p>
+
       <div className="flex flex-col gap-2">
         {tiers.map((tier, index) => (
           <div key={index} className="flex flex-wrap items-center gap-2">
@@ -369,8 +414,8 @@ function BulkPricingEditor({ tiers, onChange }: { tiers: BulkPriceTier[]; onChan
               type="number"
               min={2}
               value={tier.minQty}
-              onChange={(e) => updateTier(index, { minQty: Number(e.target.value) || 2 })}
-              aria-label="Cantidad mínima del escalón"
+              onChange={(e) => updateTier(index, { minQty: Number(e.target.value) || 0 })}
+              aria-label={`Cantidad mínima del escalón ${index + 1}`}
               className={`${INPUT_COMPACT_CLASS} w-20`}
             />
             <span className="text-sm text-stone-600">u. a</span>
@@ -379,25 +424,23 @@ function BulkPricingEditor({ tiers, onChange }: { tiers: BulkPriceTier[]; onChan
               min={0}
               value={tier.price}
               onChange={(e) => updateTier(index, { price: Number(e.target.value) || 0 })}
-              aria-label="Precio por unidad del escalón"
+              aria-label={`Precio por unidad del escalón ${index + 1}`}
               className={`${INPUT_COMPACT_CLASS} w-28`}
             />
             <span className="text-sm text-stone-600">c/u</span>
-            <RemoveTagButton
-              label="Quitar escalón de precio"
-              onClick={() => onChange(tiers.filter((_, i) => i !== index))}
-            />
+            <RemoveTagButton label={`Quitar el escalón ${index + 1}`} onClick={() => removeTier(index)} />
           </div>
         ))}
-        <Button
-          type="button"
-          variant="secondary"
-         
-          className="self-start"
-          onClick={() => onChange([...tiers, { minQty: 6, price: 0 }])}
-        >
-          + Agregar escalón de precio
-        </Button>
+
+        {aviso && <Alert tone="warning">{aviso}</Alert>}
+
+        {tiers.length < MAX_BULK_TIERS ? (
+          <Button type="button" variant="secondary" className="self-start" onClick={addTier}>
+            + Agregar escalón ({tiers.length}/{MAX_BULK_TIERS})
+          </Button>
+        ) : (
+          <p className="text-xs text-stone-600">Llegaste al máximo de {MAX_BULK_TIERS} escalones.</p>
+        )}
       </div>
     </div>
   );
