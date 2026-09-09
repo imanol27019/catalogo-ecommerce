@@ -18,14 +18,6 @@ export interface HeroContent {
   images: string[];
 }
 
-/** Galería editorial de temporada: fotos de campaña, sin precios ni botones de compra. */
-export interface LookbookContent {
-  title: string;
-  subtitle: string;
-  /** Fotos que carga el negocio. Vacío = la sección no se muestra. */
-  images: string[];
-}
-
 export interface NewsletterSettings {
   enabled: boolean;
   title: string;
@@ -56,7 +48,6 @@ export interface SiteSettings {
   syncFiltersToUrl: boolean;
   maxWhatsAppMessageLength: number;
   hero: HeroContent;
-  lookbook: LookbookContent;
   faq: FaqItem[];
   newsletter: NewsletterSettings;
 }

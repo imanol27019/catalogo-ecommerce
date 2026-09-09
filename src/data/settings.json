@@ -78,16 +78,5 @@
     "enabled": true,
     "title": "Sumate a las promociones",
     "subtext": "Dejanos tu mail y te avisamos de nuevas colecciones y ofertas."
-  },
-  "lookbook": {
-    "title": "Última temporada",
-    "subtitle": "Las prendas que están saliendo esta temporada. Consultá stock y precios por WhatsApp.",
-    "images": [
-      "https://images.unsplash.com/photo-1495121605193-b116b5b9c5fe?auto=format&fit=crop&w=1920&q=75",
-      "https://images.unsplash.com/photo-1612423284934-2850a4ea6b0f?auto=format&fit=crop&w=1920&q=75",
-      "https://images.unsplash.com/photo-1582719188393-bb71ca45dbb9?auto=format&fit=crop&w=1920&q=75",
-      "https://images.unsplash.com/photo-1603400521630-9f2de124b33b?auto=format&fit=crop&w=1920&q=75",
-      "https://images.unsplash.com/photo-1532453288672-3a27e9be9efd?auto=format&fit=crop&w=1920&q=75"
-    ]
   }
 }

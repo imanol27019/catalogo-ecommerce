@@ -4,7 +4,6 @@ import { Alert } from './components/ui/Alert';
 import { AnnouncementBar } from './components/layout/AnnouncementBar';
 import { NavBar } from './components/layout/NavBar';
 import { HeroBanner } from './components/layout/HeroBanner';
-import { LookbookGallery } from './components/layout/LookbookGallery';
 import { HowToBuySection } from './components/layout/HowToBuySection';
 import { FaqSection } from './components/layout/FaqSection';
 import { Footer } from './components/layout/Footer';
@@ -35,7 +34,6 @@ export function Storefront() {
         onSelectCategory={selectCategory}
       />
       <HeroBanner />
-      <LookbookGallery />
       <FeaturedProducts products={catalog.products} onSelectProduct={setSelectedProduct} />
 
       <main id="catalogo" className="mx-auto w-full max-w-6xl flex-1 scroll-mt-16 px-4 py-8 sm:px-6">

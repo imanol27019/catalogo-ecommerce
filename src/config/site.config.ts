@@ -45,7 +45,6 @@ export const SYNC_FILTERS_TO_URL = settings.syncFiltersToUrl;
 export const MAX_WHATSAPP_MESSAGE_LENGTH = settings.maxWhatsAppMessageLength;
 
 export const HERO = settings.hero;
-export const LOOKBOOK = settings.lookbook;
 export const FAQ = settings.faq;
 export const NEWSLETTER = settings.newsletter;
 

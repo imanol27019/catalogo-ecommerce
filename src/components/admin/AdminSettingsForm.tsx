@@ -7,7 +7,7 @@ import { INPUT_CLASS, INPUT_COMPACT_CLASS, LABEL_CLASS, LABEL_TEXT_CLASS, TEXTAR
 
 interface AdminSettingsFormProps {
   settings: SiteSettings;
-  /** Necesario para subir fotos del banner y del lookbook desde el panel. */
+  /** Necesario para subir las fotos del banner desde el panel. */
   adminPassword: string;
   onSave: (settings: SiteSettings) => void;
   saveLabel?: string;
@@ -103,34 +103,7 @@ export function AdminSettingsForm({
             adminPassword={adminPassword}
             onChange={(images) => update('hero', { ...draft.hero, images })}
             label="Fotos de fondo del banner"
-            hint="rotan automáticamente; sin fotos se usa un degradé de marca"
-          />
-        </div>
-      </Fieldset>
-
-      <Fieldset title="Galería de temporada (lookbook)">
-        <p className="mb-3 text-xs text-stone-600">
-          Fotos de campaña que se muestran en un mosaico, sin precios. Si no cargás ninguna, la sección no aparece.
-        </p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <TextField
-            label="Título"
-            value={draft.lookbook.title}
-            onChange={(v) => update('lookbook', { ...draft.lookbook, title: v })}
-          />
-          <TextField
-            label="Subtítulo"
-            value={draft.lookbook.subtitle}
-            onChange={(v) => update('lookbook', { ...draft.lookbook, subtitle: v })}
-          />
-        </div>
-        <div className="mt-4">
-          <AdminImagesEditor
-            images={draft.lookbook.images}
-            adminPassword={adminPassword}
-            onChange={(images) => update('lookbook', { ...draft.lookbook, images })}
-            label="Fotos de la galería"
-            hint="la primera se muestra más grande"
+            hint="se muestran como carrusel; sin fotos se usa un degradé de marca"
           />
         </div>
       </Fieldset>

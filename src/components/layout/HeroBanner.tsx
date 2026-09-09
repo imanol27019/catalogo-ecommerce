@@ -1,35 +1,69 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { HERO } from '../../config/site.config';
+import { resolveImageUrl } from '../../data/apiClient';
+import { ChevronDownIcon } from '../ui/icons';
 
 const SLIDE_DURATION_MS = 5000;
 
+/**
+ * Banner de temporada: carrusel de fotos con el texto de la marca encima.
+ *
+ * Avanza solo, pero además se puede manejar a mano con las flechas o los puntos, que es lo que
+ * espera cualquiera de un carrusel. El avance automático se frena mientras el mouse está encima o
+ * algo adentro tiene el foco, para no mover la foto justo cuando alguien la está mirando o
+ * navegando con el teclado.
+ */
 export function HeroBanner() {
   const images = HERO.images ?? [];
-  const hasGallery = images.length > 0;
+  const total = images.length;
+  const hasCarousel = total > 0;
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isPaused, setPaused] = useState(false);
+
+  /**
+   * La pausa por mouse solo se engancha en dispositivos que realmente tienen puntero.
+   * En una pantalla táctil, tocar el banner puede disparar `mouseenter` sin que después llegue
+   * nunca un `mouseleave`, y el carrusel quedaría frenado para siempre en ese celular.
+   */
+  const puedeHacerHover =
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(hover: hover)').matches
+      : false;
+
+  const goTo = useCallback((index: number) => setActiveIndex(((index % total) + total) % total), [total]);
+  const next = useCallback(() => setActiveIndex((i) => (i + 1) % total), [total]);
+  const prev = useCallback(() => setActiveIndex((i) => (i - 1 + total) % total), [total]);
 
   useEffect(() => {
-    if (images.length < 2) return;
-    const interval = setInterval(() => {
-      setActiveIndex((i) => (i + 1) % images.length);
-    }, SLIDE_DURATION_MS);
+    if (total < 2 || isPaused) return;
+    // Quien pidió menos movimiento en su sistema no debería ver el carrusel moverse solo.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const interval = setInterval(() => setActiveIndex((i) => (i + 1) % total), SLIDE_DURATION_MS);
     return () => clearInterval(interval);
-  }, [images.length]);
+  }, [total, isPaused]);
 
   return (
     <section
-      className={`relative flex min-h-[320px] items-center justify-center overflow-hidden px-6 py-16 text-center text-white sm:min-h-[420px] ${
-        hasGallery ? '' : 'bg-gradient-to-br from-brand-700 via-brand-600 to-brand-400'
+      id="temporada"
+      aria-roledescription={hasCarousel ? 'carrusel' : undefined}
+      aria-label={hasCarousel ? HERO.eyebrow : undefined}
+      onMouseEnter={puedeHacerHover ? () => setPaused(true) : undefined}
+      onMouseLeave={puedeHacerHover ? () => setPaused(false) : undefined}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={() => setPaused(false)}
+      className={`relative flex min-h-[380px] scroll-mt-20 items-center justify-center overflow-hidden px-6 py-16 text-center text-white sm:min-h-[460px] ${
+        hasCarousel ? '' : 'bg-gradient-to-br from-brand-700 via-brand-600 to-brand-400'
       }`}
     >
-      {hasGallery && (
+      {hasCarousel && (
         <div className="absolute inset-0">
           {images.map((src, index) => (
             <img
-              key={src}
-              src={src}
+              key={`${src}-${index}`}
+              src={resolveImageUrl(src)}
               alt=""
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
+              aria-hidden="true"
+              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
                 index === activeIndex ? 'opacity-100' : 'opacity-0'
               }`}
             />
@@ -54,6 +88,50 @@ export function HeroBanner() {
           {HERO.ctaLabel}
         </a>
       </div>
+
+      {total > 1 && (
+        <>
+          {/* Los chevrones son verticales: se rotan para que apunten a los costados. */}
+          <CarouselArrow side="left" label="Foto anterior" onClick={prev} />
+          <CarouselArrow side="right" label="Foto siguiente" onClick={next} />
+
+          <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-1">
+            {images.map((src, index) => (
+              <button
+                key={`punto-${src}-${index}`}
+                type="button"
+                onClick={() => goTo(index)}
+                aria-label={`Ver la foto ${index + 1} de ${total}`}
+                aria-current={index === activeIndex ? 'true' : undefined}
+                // El área táctil es de 44px aunque el punto sea chico: el punto va adentro.
+                className="flex h-11 w-6 items-center justify-center"
+              >
+                <span
+                  aria-hidden="true"
+                  className={`block h-1.5 rounded-full transition-all ${
+                    index === activeIndex ? 'w-5 bg-white' : 'w-1.5 bg-white/55'
+                  }`}
+                />
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </section>
+  );
+}
+
+function CarouselArrow({ side, label, onClick }: { side: 'left' | 'right'; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className={`absolute top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-stone-900/45 text-white backdrop-blur transition-colors hover:bg-stone-900/70 ${
+        side === 'left' ? 'left-2 sm:left-4' : 'right-2 sm:right-4'
+      }`}
+    >
+      <ChevronDownIcon className={`h-5 w-5 ${side === 'left' ? 'rotate-90' : '-rotate-90'}`} />
+    </button>
   );
 }
