@@ -19,7 +19,8 @@ const FADE_MS = 1000;
  *
  * El texto NO va encima de la foto: así se ve a brillo pleno, sin el velo oscuro que antes hacía
  * falta para que el texto blanco se leyera sobre cualquier imagen. En celular se apila —texto
- * arriba, fotos abajo—, y el borde de la foto se difumina hacia el fondo (ver `.hero-fade`).
+ * arriba, fotos abajo—, y los cuatro bordes de la foto se difuminan contra el fondo de la página
+ * (ver `.hero-fade` en index.css).
  */
 export function HeroBanner() {
   const images = HERO.images ?? [];

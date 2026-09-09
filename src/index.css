@@ -104,26 +104,29 @@
 
 @layer components {
   /*
-    Difuminado del borde del carrusel hacia el fondo de la página, para que la foto no corte con
-    un borde duro contra el texto.
+    Difuminado de los cuatro bordes de la foto del banner, para que se disuelva contra el fondo
+    en vez de cortar con un borde duro.
 
-    Va acá y no como clase de utilidad porque el degradé cambia de dirección según el ancho: en
-    celular las fotos van debajo del texto, así que el difuminado tiene que ser desde arriba; en
-    escritorio van al costado y tiene que ser desde la izquierda. Eso necesita una media query.
+    Son dos degradés —uno horizontal y otro vertical— combinados con `mask-composite: intersect`:
+    la máscara final es la intersección de ambos, así que cada lado se desvanece. Con la suma
+    (que es lo que hacen por defecto) el resultado sería la unión y no se difuminaría casi nada.
 
-    La referencia (jamachi.com.ar) consigue este efecto con las fotos ya recortadas y desvanecidas
-    en el editor de imágenes, no con CSS. Acá se hace con una máscara para que funcione con
-    cualquier foto que suba el negocio, sin tener que retocarla antes.
+    Va acá y no como clase de utilidad porque necesita dos capas de máscara y su modo de
+    composición, que no se expresan bien en una clase suelta.
+
+    La referencia (jamachi.com.ar) consigue algo parecido con las fotos ya recortadas y
+    desvanecidas en el editor de imágenes, no con CSS. Acá se hace con una máscara para que
+    funcione con cualquier foto que suba el negocio, sin retocarla antes.
+
+    Si un navegador viejo no entiende `mask-composite`, las capas se suman y simplemente no se ve
+    el difuminado: la foto queda con el borde duro de antes, que es una degradación aceptable.
   */
   .hero-fade {
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 18%);
-    mask-image: linear-gradient(to bottom, transparent 0%, #000 18%);
-  }
-
-  @media (min-width: 1024px) {
-    .hero-fade {
-      -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 22%);
-      mask-image: linear-gradient(to right, transparent 0%, #000 22%);
-    }
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
   }
 }
