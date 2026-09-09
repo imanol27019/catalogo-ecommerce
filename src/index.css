@@ -101,3 +101,29 @@
     max-width: 100%;
   }
 }
+
+@layer components {
+  /*
+    Difuminado del borde del carrusel hacia el fondo de la página, para que la foto no corte con
+    un borde duro contra el texto.
+
+    Va acá y no como clase de utilidad porque el degradé cambia de dirección según el ancho: en
+    celular las fotos van debajo del texto, así que el difuminado tiene que ser desde arriba; en
+    escritorio van al costado y tiene que ser desde la izquierda. Eso necesita una media query.
+
+    La referencia (jamachi.com.ar) consigue este efecto con las fotos ya recortadas y desvanecidas
+    en el editor de imágenes, no con CSS. Acá se hace con una máscara para que funcione con
+    cualquier foto que suba el negocio, sin tener que retocarla antes.
+  */
+  .hero-fade {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 18%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 18%);
+  }
+
+  @media (min-width: 1024px) {
+    .hero-fade {
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 22%);
+      mask-image: linear-gradient(to right, transparent 0%, #000 22%);
+    }
+  }
+}
