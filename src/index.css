@@ -89,16 +89,15 @@
 
 @layer components {
   /*
-    Difuminado del carrusel, distinto según dónde queda la foto respecto del texto.
+    Difuminado del carrusel, según dónde queda la foto respecto del texto.
 
-    En celular las fotos van DEBAJO del texto, así que se desvanecen arriba y abajo, que son los
-    bordes que dan contra el resto de la página. A los costados no, porque ahí terminan contra el
-    margen del contenedor.
+    En celular las fotos van DEBAJO del texto: se desvanecen arriba y abajo, que son los bordes
+    que dan contra el resto de la página.
 
-    En escritorio van AL LADO del texto: se desvanecen a izquierda y derecha, y arriba y abajo
-    quedan a ras del borde de la caja, alineados con la columna del texto.
-
-    Como cada caso usa un solo degradé, no hace falta combinar capas ni `mask-composite`.
+    En escritorio la foto llega hasta el borde derecho de la pantalla, así que solo se difumina la
+    IZQUIERDA, que es el lado que da contra el texto. Difuminar también la derecha dejaría una
+    franja de fondo pegada al borde, que es justamente lo que se quiso sacar al hacerla de ancho
+    completo. Arriba y abajo quedan a ras de la caja.
 
     La referencia (jamachi.com.ar) consigue algo parecido con las fotos ya recortadas y
     desvanecidas en el editor de imágenes, no con CSS. Acá se hace con una máscara para que
@@ -111,8 +110,8 @@
 
   @media (min-width: 1024px) {
     .hero-fade {
-      -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
-      mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 14%);
+      mask-image: linear-gradient(to right, transparent 0%, #000 14%);
     }
   }
 }

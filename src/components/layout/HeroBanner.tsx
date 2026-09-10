@@ -20,11 +20,20 @@ const FADE_MS = 1000;
  * El texto NO va encima de la foto: así se ve a brillo pleno, sin el velo oscuro que antes hacía
  * falta para que el texto blanco se leyera sobre cualquier imagen.
  *
- * En escritorio la foto ocupa el alto completo de la caja, a ras con la columna del texto, y se
- * difumina solo a los costados. En celular se apila debajo del texto y se difumina arriba y abajo.
- * Los degradés están en `.hero-fade` (index.css); acá va la parte del alto:
- * `items-stretch` + `lg:h-full` hacen que la foto se estire hasta los bordes de la caja, y el
- * relleno vertical vive en la columna del texto para que no separe la foto del borde.
+ * La sección ocupa TODO el ancho de la pantalla, no un contenedor centrado: encerrada en 1152px
+ * dejaba franjas de fondo enormes a los costados en pantallas grandes o al alejar el zoom. La foto
+ * llega hasta el borde derecho.
+ *
+ * Para que el texto quede alineado con la barra de navegación —que sí vive en un contenedor de
+ * 72rem— hay una columna vacía que hace de margen. Se calcula con `100%` del ancho de la sección
+ * y no con `100vw` a propósito: `vw` incluye la barra de desplazamiento, y con eso el texto queda
+ * unos píxeles corrido respecto del logo.
+ *
+ * El alto lo fija `lg:min-h-[38rem]` (unos 610px), que es el orden de magnitud de un banner
+ * principal de ecommerce; antes lo definía el largo del texto y quedaba bajo. En pantallas muy
+ * anchas sube a 42rem, si no queda achatado respecto del alto de la ventana. Con `items-stretch`
+ * + `lg:h-full` la foto se estira hasta los bordes de la caja, y el relleno vertical vive en la
+ * columna del texto para que no separe la foto del borde.
  */
 export function HeroBanner() {
   const images = HERO.images ?? [];
@@ -63,15 +72,17 @@ export function HeroBanner() {
   return (
     <section id="temporada" className="w-full min-w-0 scroll-mt-20 bg-brand-50">
       <div
-        // La foto se lleva 3 de cada 5 partes del ancho: es la que tiene que pesar, el texto
-        // entra cómodo igual. Antes iban mitad y mitad y el carrusel quedaba angosto.
-        className={`mx-auto grid max-w-6xl gap-6 lg:items-stretch lg:gap-10 ${
-          hasCarousel ? 'lg:grid-cols-[2fr_3fr]' : ''
+        // Columna espaciadora + texto + foto. La foto se lleva más ancho y llega al borde.
+        className={`grid gap-6 lg:min-h-[38rem] lg:items-stretch lg:gap-0 xl:min-h-[42rem] ${
+          hasCarousel
+            ? 'lg:grid-cols-[max(1.5rem,calc((100%-72rem)/2+1.5rem))_minmax(0,1fr)_minmax(0,1.35fr)]'
+            : ''
         }`}
       >
+        {hasCarousel && <div aria-hidden="true" className="hidden lg:block" />}
         <div
-          className={`flex flex-col items-start justify-center gap-3 px-4 pt-12 sm:px-6 lg:py-16 ${
-            hasCarousel ? 'pb-0 lg:pb-16' : 'mx-auto max-w-2xl items-center pb-12 text-center'
+          className={`flex flex-col items-start justify-center gap-3 px-4 pt-12 sm:px-6 lg:py-20 lg:pl-0 lg:pr-12 ${
+            hasCarousel ? 'pb-0 lg:pb-20' : 'mx-auto max-w-2xl items-center pb-12 text-center'
           }`}
         >
           <span className="font-heading text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
@@ -103,7 +114,7 @@ export function HeroBanner() {
             onBlur={() => setPaused(false)}
             // Las proporciones siguen a la referencia: casi cuadrada y algo alta en celular,
             // un poco más ancha en escritorio.
-            className="hero-fade relative block aspect-[9/10] w-full min-w-0 cursor-pointer overflow-hidden sm:aspect-[11/10] lg:aspect-auto lg:h-full disabled:cursor-default"
+            className="hero-fade relative block aspect-[3/4] w-full min-w-0 cursor-pointer overflow-hidden sm:aspect-[4/3] lg:aspect-auto lg:h-full disabled:cursor-default"
           >
             {images.map((src, index) => (
               <img
