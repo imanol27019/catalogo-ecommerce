@@ -48,20 +48,6 @@
 }
 
 /*
-  Barra de progreso del banner: se llena mientras dura cada foto. Va como keyframe suelto y no
-  como token de Tailwind porque la duración se pasa desde el componente, que es quien conoce cada
-  cuánto cambia la foto.
-*/
-@keyframes progreso-banner {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
-}
-
-/*
   ESCALA DE Z-INDEX — mantener estos cuatro niveles y no inventar valores sueltos:
     z-10  contenido por encima de un fondo decorativo (texto del banner sobre la foto)
     z-20  barras fijas y botones flotantes (carrito flotante, contacto, barra de publicar)

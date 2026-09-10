@@ -9,7 +9,6 @@ import { FaqSection } from './components/layout/FaqSection';
 import { Footer } from './components/layout/Footer';
 import { FloatingCartButton } from './components/layout/FloatingCartButton';
 import { WhatsAppContactButton } from './components/layout/WhatsAppContactButton';
-import { CategoryTiles } from './components/catalog/CategoryTiles';
 import { FeaturedProducts } from './components/catalog/FeaturedProducts';
 import { FiltersBar } from './components/catalog/FiltersBar';
 import { ProductGrid } from './components/catalog/ProductGrid';
@@ -35,7 +34,6 @@ export function Storefront() {
         onSelectCategory={selectCategory}
       />
       <HeroBanner />
-      <CategoryTiles products={catalog.products} onSelectCategory={selectCategory} />
       <FeaturedProducts products={catalog.products} onSelectProduct={setSelectedProduct} />
 
       <main id="catalogo" className="mx-auto w-full max-w-6xl flex-1 scroll-mt-16 px-4 py-8 sm:px-6">
