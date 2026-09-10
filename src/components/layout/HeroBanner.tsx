@@ -18,9 +18,13 @@ const FADE_MS = 1000;
  * responde a Enter y a la barra espaciadora, y recibe el foco al navegar con el teclado.
  *
  * El texto NO va encima de la foto: así se ve a brillo pleno, sin el velo oscuro que antes hacía
- * falta para que el texto blanco se leyera sobre cualquier imagen. En celular se apila —texto
- * arriba, fotos abajo—, y los cuatro bordes de la foto se difuminan contra el fondo de la página
- * (ver `.hero-fade` en index.css).
+ * falta para que el texto blanco se leyera sobre cualquier imagen.
+ *
+ * En escritorio la foto ocupa el alto completo de la caja, a ras con la columna del texto, y se
+ * difumina solo a los costados. En celular se apila debajo del texto y se difumina arriba y abajo.
+ * Los degradés están en `.hero-fade` (index.css); acá va la parte del alto:
+ * `items-stretch` + `lg:h-full` hacen que la foto se estire hasta los bordes de la caja, y el
+ * relleno vertical vive en la columna del texto para que no separe la foto del borde.
  */
 export function HeroBanner() {
   const images = HERO.images ?? [];
@@ -59,13 +63,13 @@ export function HeroBanner() {
   return (
     <section id="temporada" className="w-full min-w-0 scroll-mt-20 bg-brand-50">
       <div
-        className={`mx-auto grid max-w-6xl items-center gap-6 px-4 pt-12 sm:px-6 lg:gap-14 lg:py-16 ${
-          hasCarousel ? 'pb-0 lg:grid-cols-2' : 'pb-12'
+        className={`mx-auto grid max-w-6xl gap-6 lg:items-stretch lg:gap-14 ${
+          hasCarousel ? 'lg:grid-cols-2' : ''
         }`}
       >
         <div
-          className={`flex flex-col items-start gap-3 ${
-            hasCarousel ? '' : 'mx-auto max-w-2xl items-center text-center'
+          className={`flex flex-col items-start justify-center gap-3 px-4 pt-12 sm:px-6 lg:py-16 ${
+            hasCarousel ? 'pb-0 lg:pb-16' : 'mx-auto max-w-2xl items-center pb-12 text-center'
           }`}
         >
           <span className="font-heading text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
@@ -97,7 +101,7 @@ export function HeroBanner() {
             onBlur={() => setPaused(false)}
             // Las proporciones siguen a la referencia: casi cuadrada y algo alta en celular,
             // un poco más ancha en escritorio.
-            className="hero-fade relative block aspect-[9/10] w-full min-w-0 cursor-pointer overflow-hidden sm:aspect-[11/10] disabled:cursor-default"
+            className="hero-fade relative block aspect-[9/10] w-full min-w-0 cursor-pointer overflow-hidden sm:aspect-[11/10] lg:aspect-auto lg:h-full disabled:cursor-default"
           >
             {images.map((src, index) => (
               <img
