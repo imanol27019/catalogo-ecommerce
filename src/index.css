@@ -42,7 +42,7 @@
   /* Aparición suave de la respuesta de una pregunta frecuente. Se anima opacidad y un
      desplazamiento corto —no la altura—: animar `height` hacia un valor automático no es fiable
      sin medir el contenido, y el truco de `grid-template-rows: 0fr -> 1fr` acá resolvía a 0. */
-  --animate-reveal: reveal 180ms ease-out;
+  --animate-reveal: reveal 1000ms ease-out;
 
   @keyframes reveal {
     from {
