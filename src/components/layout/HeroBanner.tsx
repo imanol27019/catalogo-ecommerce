@@ -3,11 +3,12 @@ import { HERO } from '../../config/site.config';
 import { resolveImageUrl } from '../../data/apiClient';
 
 /**
- * Tiempos tomados del carrusel de referencia (jamachi.com.ar): la foto cambia cada 2 segundos y
- * el cruce entre una y otra dura 1 segundo. Como el fundido dura la mitad del intervalo, la
- * transición se percibe casi continua en vez de como saltos.
+ * La foto cambia cada 5 segundos con un cruce de 1. Antes eran 2 segundos, copiados de la página
+ * de referencia, pero ahí la imagen pasaba la mitad del tiempo en transición y nunca terminaba de
+ * asentarse: para mirar una prenda resultaba inquieto. Con 5 segundos la foto se sostiene y el
+ * cruce sigue siendo suave.
  */
-const SLIDE_DURATION_MS = 2000;
+const SLIDE_DURATION_MS = 5000;
 const FADE_MS = 1000;
 
 /**
@@ -111,6 +112,30 @@ export function HeroBanner() {
               />
             ))}
           </button>
+        )}
+
+        {/*
+          Indicador de progreso: va DEBAJO de la foto y no encima, porque el difuminado de los
+          cuatro bordes también desvanecería las barras. No es un selector —eso se sacó a
+          propósito—, solo avisa que hay más fotos y cuánto falta para la próxima.
+        */}
+        {total > 1 && (
+          <div aria-hidden="true" className="col-start-1 flex gap-1.5 pb-12 lg:col-start-2 lg:pb-0">
+            {images.map((src, index) => (
+              <span key={`barra-${src}-${index}`} className="h-0.5 flex-1 overflow-hidden rounded-full bg-brand-200">
+                {index === activeIndex && (
+                  <span
+                    key={activeIndex}
+                    style={{
+                      animation: `progreso-banner ${SLIDE_DURATION_MS}ms linear forwards`,
+                      animationPlayState: isPaused ? 'paused' : 'running',
+                    }}
+                    className="block h-full w-full origin-left bg-brand-600"
+                  />
+                )}
+              </span>
+            ))}
+          </div>
         )}
       </div>
     </section>
