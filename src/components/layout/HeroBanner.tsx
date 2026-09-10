@@ -13,9 +13,9 @@ const FADE_MS = 1000;
 /**
  * Banner de temporada: texto de la marca a un lado y carrusel de fotos al otro.
  *
- * El carrusel es automático y sin controles, igual que el de la referencia. Las fotos son
- * decorativas —no aportan información que no esté en el texto—, así que van fuera del árbol de
- * accesibilidad en vez de anunciarse como un carrusel que no se puede operar.
+ * Avanza solo, y además se puede tocar la foto para pasar a la siguiente. Eso lo hace un control
+ * de verdad, así que el contenedor es un `button` y no un `div` con un onClick: así también
+ * responde a Enter y a la barra espaciadora, y recibe el foco al navegar con el teclado.
  *
  * El texto NO va encima de la foto: así se ve a brillo pleno, sin el velo oscuro que antes hacía
  * falta para que el texto blanco se leyera sobre cualquier imagen. En celular se apila —texto
@@ -39,13 +39,22 @@ export function HeroBanner() {
       ? window.matchMedia('(hover: hover)').matches
       : false;
 
+  function next() {
+    setActiveIndex((i) => (i + 1) % total);
+  }
+
+  /**
+   * `activeIndex` está entre las dependencias a propósito: así el contador se reinicia con cada
+   * cambio de foto. Para el avance automático es lo mismo, pero al tocar la foto evita que la
+   * siguiente salte enseguida porque el intervalo ya venía corriendo.
+   */
   useEffect(() => {
     if (total < 2 || isPaused) return;
     // Quien pidió menos movimiento en su sistema no debería ver el carrusel moverse solo.
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const interval = setInterval(() => setActiveIndex((i) => (i + 1) % total), SLIDE_DURATION_MS);
-    return () => clearInterval(interval);
-  }, [total, isPaused]);
+    const timer = setTimeout(() => setActiveIndex((i) => (i + 1) % total), SLIDE_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [total, isPaused, activeIndex]);
 
   return (
     <section id="temporada" className="w-full min-w-0 scroll-mt-20 bg-brand-50">
@@ -75,13 +84,20 @@ export function HeroBanner() {
         </div>
 
         {hasCarousel && (
-          <div
-            aria-hidden="true"
+          <button
+            type="button"
+            onClick={next}
+            aria-label={total > 1 ? 'Ver la próxima foto' : undefined}
+            disabled={total < 2}
             onMouseEnter={puedeHacerHover ? () => setPaused(true) : undefined}
             onMouseLeave={puedeHacerHover ? () => setPaused(false) : undefined}
+            // Ahora que el carrusel recibe foco, se frena también al llegar con el teclado: si no,
+            // la foto cambiaría sola justo mientras alguien está por activarla.
+            onFocus={() => setPaused(true)}
+            onBlur={() => setPaused(false)}
             // Las proporciones siguen a la referencia: casi cuadrada y algo alta en celular,
             // un poco más ancha en escritorio.
-            className="hero-fade relative aspect-[9/10] w-full min-w-0 overflow-hidden sm:aspect-[11/10]"
+            className="hero-fade relative block aspect-[9/10] w-full min-w-0 cursor-pointer overflow-hidden sm:aspect-[11/10] disabled:cursor-default"
           >
             {images.map((src, index) => (
               <img
@@ -94,7 +110,7 @@ export function HeroBanner() {
                 }`}
               />
             ))}
-          </div>
+          </button>
         )}
       </div>
     </section>
