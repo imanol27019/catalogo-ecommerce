@@ -111,8 +111,14 @@ function FaqRow({
         style={{ height: isOpen ? contentHeight : 0 }}
         className="overflow-hidden transition-[height] duration-300 ease-out"
       >
+        {/* La respuesta acompaña con un desvanecido la animación de altura, así el texto no
+            aparece de golpe apenas se abre el hueco. */}
         <div ref={contentRef}>
-          <p className="border-t border-brand-100 bg-brand-50/50 px-4 py-3.5 text-sm leading-relaxed text-stone-700">
+          <p
+            className={`border-t border-brand-100 bg-brand-50/50 px-4 py-3.5 text-sm leading-relaxed text-stone-700 transition-opacity duration-300 ${
+              isOpen ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
             {item.answer}
           </p>
         </div>
