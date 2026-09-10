@@ -58,7 +58,7 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
           <span className="font-heading text-lg font-semibold text-brand-600">{formatCurrency(price)}</span>
         </div>
         <span className="mt-2 w-full rounded-lg bg-brand-600 py-2 text-xs font-semibold text-white transition-colors group-hover:bg-brand-700">
-          Añadir al carrito
+          Elegir color y talle
         </span>
       </div>
     </button>
