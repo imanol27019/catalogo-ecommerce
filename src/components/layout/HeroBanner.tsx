@@ -63,8 +63,10 @@ export function HeroBanner() {
   return (
     <section id="temporada" className="w-full min-w-0 scroll-mt-20 bg-brand-50">
       <div
-        className={`mx-auto grid max-w-6xl gap-6 lg:items-stretch lg:gap-14 ${
-          hasCarousel ? 'lg:grid-cols-2' : ''
+        // La foto se lleva 3 de cada 5 partes del ancho: es la que tiene que pesar, el texto
+        // entra cómodo igual. Antes iban mitad y mitad y el carrusel quedaba angosto.
+        className={`mx-auto grid max-w-6xl gap-6 lg:items-stretch lg:gap-10 ${
+          hasCarousel ? 'lg:grid-cols-[2fr_3fr]' : ''
         }`}
       >
         <div
