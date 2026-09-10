@@ -70,7 +70,10 @@ export function HeroBanner() {
   }, [total, isPaused, activeIndex]);
 
   return (
-    <section id="temporada" className="w-full min-w-0 scroll-mt-20 bg-brand-50">
+        // Fondo un tono más intenso que el de la página (brand-100 contra brand-50): lo suficiente
+    // para que el banner se lea como una pieza aparte, sin salirse de la paleta. brand-200 quedaba
+    // descartado porque bajaba el antetítulo a 4.03 de contraste.
+    <section id="temporada" className="w-full min-w-0 scroll-mt-20 bg-brand-100">
       <div
         // Columna espaciadora + texto + foto. La foto se lleva más ancho y llega al borde.
         className={`grid gap-6 lg:min-h-[38rem] lg:items-stretch lg:gap-0 xl:min-h-[42rem] ${
@@ -85,7 +88,7 @@ export function HeroBanner() {
             hasCarousel ? 'pb-0 lg:pb-20' : 'mx-auto max-w-2xl items-center pb-12 text-center'
           }`}
         >
-          <span className="font-heading text-xs font-semibold uppercase tracking-[0.2em] text-brand-600">
+          <span className="font-heading text-xs font-semibold uppercase tracking-[0.2em] text-brand-700">
             {HERO.eyebrow}
           </span>
           <h1 className="font-heading text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl lg:text-5xl">
