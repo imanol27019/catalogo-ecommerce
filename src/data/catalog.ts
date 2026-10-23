@@ -32,3 +32,9 @@ export async function saveCatalog(products: Product[], adminPassword: string): P
   catalog.products = data.products;
   isUsingFallbackCatalog = false;
 }
+
+/** Lee el catálogo actual del servidor sin tocar el objeto compartido `catalog`. */
+export async function fetchCatalogProducts(): Promise<Product[]> {
+  const data = await apiGet<ProductCatalog>('/api/products');
+  return data.products;
+}

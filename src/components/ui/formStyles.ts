@@ -11,7 +11,7 @@ export const INPUT_CLASS =
 
 /** Campo compacto para grillas densas del panel (cantidades, escalones de precio). */
 export const INPUT_COMPACT_CLASS =
-  'min-h-11 rounded-lg border border-stone-300 bg-white px-2.5 py-1.5 text-sm text-stone-900 focus:border-brand-500';
+  'min-h-11 rounded-lg border border-stone-300 bg-white px-2.5 py-1.5 text-sm text-stone-900 placeholder:text-stone-500 focus:border-brand-500';
 
 export const TEXTAREA_CLASS = `${INPUT_CLASS} resize-none`;
 

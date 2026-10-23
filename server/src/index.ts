@@ -4,10 +4,13 @@ import dns from 'node:dns';
 import express from 'express';
 import cors from 'cors';
 import { connectDb } from './db';
-import { requireAdmin } from './auth';
+import { requireAdmin, requireStaff, roleOf } from './auth';
 import { DEFAULT_LOW_STOCK_THRESHOLD, normalizeCatalogStock } from './stock';
-import { applyStockForOrder, buildOrder, OrderValidationError } from './orders';
-import type { Order, OrderStatus } from './orders';
+import { OrderValidationError, type CatalogProduct } from './orders';
+import { ClientValidationError } from './clients';
+import { SalesConfigValidationError } from './salesConfig';
+import { registerSalesRoutes } from './salesRoutes';
+import { asyncRoute, HttpError } from './http';
 import { ALLOWED_IMAGE_TYPES, ImageValidationError, MAX_IMAGE_BYTES, storeImage } from './images';
 
 // Muchos entornos de contenedores en la nube (Render incluido) resuelven DNS pero no tienen
@@ -24,18 +27,6 @@ function readSeedJson<T>(fileName: string): T {
   return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as T;
 }
 
-type AsyncRoute = (req: express.Request, res: express.Response) => Promise<unknown>;
-
-/**
- * Express 4 no captura promesas rechazadas: sin esto, un error de Mongo dentro de una ruta async
- * deja la petición colgada hasta que expira. Acá se derivan al manejador de errores.
- */
-function asyncRoute(handler: AsyncRoute): express.RequestHandler {
-  return (req, res, next) => {
-    handler(req, res).catch(next);
-  };
-}
-
 async function main() {
   const db = await connectDb();
   const catalogCollection = db.collection('catalog');
@@ -43,7 +34,8 @@ async function main() {
   const ordersCollection = db.collection('orders');
   const imagesCollection = db.collection('images');
   const suppliersCollection = db.collection('suppliers');
-  await ordersCollection.createIndex({ createdAt: -1 });
+  const clientsCollection = db.collection('clients');
+  const salesConfigCollection = db.collection('salesConfig');
 
   // Primer arranque: si la base está vacía, la poblamos con los datos de muestra del proyecto.
   const existingCatalog = await catalogCollection.findOne({ _id: 'catalog' as never });
@@ -66,9 +58,15 @@ async function main() {
     return typeof value === 'number' && value >= 0 ? value : DEFAULT_LOW_STOCK_THRESHOLD;
   }
 
-  async function getCatalogProducts(): Promise<Record<string, unknown>[]> {
+  async function getCatalogProducts(): Promise<CatalogProduct[]> {
     const doc = await catalogCollection.findOne({ _id: 'catalog' as never });
-    return (doc?.products ?? []) as Record<string, unknown>[];
+    return (doc?.products ?? []) as CatalogProduct[];
+  }
+
+  async function getCategoryLabels(): Promise<Record<string, string>> {
+    const doc = await settingsCollection.findOne({ _id: 'settings' as never });
+    const labels = doc?.categoryLabels;
+    return labels && typeof labels === 'object' ? (labels as Record<string, string>) : {};
   }
 
   const app = express();
@@ -79,9 +77,13 @@ async function main() {
     res.json({ ok: true });
   });
 
-  /** Verifica la contraseña sin modificar nada: lo usa el login del panel. */
-  app.get('/api/admin/verify', requireAdmin, (_req, res) => {
-    res.json({ ok: true });
+  /**
+   * Verifica la contraseña sin modificar nada: lo usa el login del panel. Devuelve el rol para que
+   * el panel muestre solo las secciones que corresponden (la dueña ve todo; las vendedoras, ventas
+   * y clientas).
+   */
+  app.get('/api/admin/verify', requireStaff, (_req, res) => {
+    res.json({ ok: true, role: roleOf(res) });
   });
 
   // --- Imágenes de producto -------------------------------------------------
@@ -125,12 +127,18 @@ async function main() {
 
   // --- Catálogo -------------------------------------------------------------
 
+  /**
+   * El estado de cada variante (en stock / poco / sin stock) se deriva de las unidades al leer:
+   * las ventas mueven solo las unidades, con operaciones atómicas, y así el estado nunca queda
+   * desfasado aunque se registren varias ventas a la vez.
+   */
   app.get(
     '/api/products',
     asyncRoute(async (_req, res) => {
       const doc = await catalogCollection.findOne({ _id: 'catalog' as never });
       const { _id, ...rest } = doc ?? { updatedAt: new Date().toISOString(), products: [] };
-      res.json(rest);
+      const threshold = await getLowStockThreshold();
+      res.json({ ...rest, products: normalizeCatalogStock((rest.products ?? []) as never[], threshold) });
     }),
   );
 
@@ -220,92 +228,14 @@ async function main() {
     }),
   );
 
-  // --- Ventas ---------------------------------------------------------------
-
-  /** Público: lo llama el navegador al finalizar el pedido. Queda pendiente hasta que el negocio confirme. */
-  app.post(
-    '/api/orders',
-    asyncRoute(async (req, res) => {
-      try {
-        const products = await getCatalogProducts();
-        const order = buildOrder(req.body, products as never[], 'whatsapp', 'pending');
-        await ordersCollection.insertOne({ _id: order.id as never, ...order });
-        res.status(201).json(order);
-      } catch (err) {
-        if (err instanceof OrderValidationError) {
-          res.status(400).json({ error: err.message });
-          return;
-        }
-        throw err;
-      }
-    }),
-  );
-
-  /** Venta cargada a mano desde el panel (mostrador): entra ya confirmada y descuenta stock. */
-  app.post(
-    '/api/sales',
-    requireAdmin,
-    asyncRoute(async (req, res) => {
-      try {
-        const products = await getCatalogProducts();
-        const order = buildOrder(req.body, products as never[], 'manual', 'confirmed');
-        await ordersCollection.insertOne({ _id: order.id as never, ...order });
-        await applyStockForOrder(catalogCollection, order, await getLowStockThreshold());
-        res.status(201).json(order);
-      } catch (err) {
-        if (err instanceof OrderValidationError) {
-          res.status(400).json({ error: err.message });
-          return;
-        }
-        throw err;
-      }
-    }),
-  );
-
-  app.get(
-    '/api/orders',
-    requireAdmin,
-    asyncRoute(async (_req, res) => {
-      const docs = await ordersCollection.find({}).sort({ createdAt: -1 }).limit(300).toArray();
-      res.json(docs.map(({ _id, ...rest }) => rest));
-    }),
-  );
-
-  /** Confirmar descuenta stock una sola vez; cancelar no lo toca. */
-  app.patch(
-    '/api/orders/:id',
-    requireAdmin,
-    asyncRoute(async (req, res) => {
-      const { status } = req.body as { status?: OrderStatus };
-      if (status !== 'confirmed' && status !== 'cancelled') {
-        res.status(400).json({ error: 'El estado debe ser "confirmed" o "cancelled".' });
-        return;
-      }
-
-      const doc = await ordersCollection.findOne({ _id: req.params.id as never });
-      if (!doc) {
-        res.status(404).json({ error: 'No encontramos esa venta. Puede que se haya borrado.' });
-        return;
-      }
-
-      const { _id, ...order } = doc as unknown as Order & { _id: unknown };
-      if (order.status !== 'pending') {
-        res.status(409).json({
-          error: `Esta venta ya figura como ${order.status === 'confirmed' ? 'vendida' : 'descartada'}.`,
-        });
-        return;
-      }
-
-      const resolvedAt = new Date().toISOString();
-      await ordersCollection.updateOne({ _id: req.params.id as never }, { $set: { status, resolvedAt } });
-
-      if (status === 'confirmed') {
-        await applyStockForOrder(catalogCollection, order, await getLowStockThreshold());
-      }
-
-      res.json({ ...order, status, resolvedAt });
-    }),
-  );
+  await registerSalesRoutes(app, {
+    ordersCollection,
+    clientsCollection,
+    salesConfigCollection,
+    catalogCollection,
+    getCatalogProducts,
+    getCategoryLabels,
+  });
 
   app.use((req, res) => {
     res.status(404).json({ error: `No existe la ruta ${req.method} ${req.path}.` });
@@ -325,6 +255,18 @@ async function main() {
     ) => {
       if (err?.type === 'entity.too.large') {
         res.status(413).json({ error: 'El archivo es demasiado grande.' });
+        return;
+      }
+      if (err instanceof HttpError) {
+        res.status(err.status).json({ error: err.message });
+        return;
+      }
+      if (
+        err instanceof OrderValidationError ||
+        err instanceof ClientValidationError ||
+        err instanceof SalesConfigValidationError
+      ) {
+        res.status(400).json({ error: err.message });
         return;
       }
       console.error('Error no controlado:', err);

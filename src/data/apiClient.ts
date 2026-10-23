@@ -15,7 +15,7 @@ export class ApiError extends Error {
   /** Mensaje listo para mostrarle a una persona, sin jerga técnica. */
   get userMessage(): string {
     if (this.isNetwork) return 'No pudimos conectarnos con el servidor. Revisá tu conexión.';
-    if (this.status === 401) return 'La contraseña de administrador no es correcta.';
+    if (this.status === 401) return 'La contraseña no es correcta.';
     if (this.status === 413) return 'El archivo es demasiado grande.';
     if (this.status >= 500) return 'El servidor tuvo un problema. Volvé a intentar en un momento.';
     return this.message;
@@ -62,6 +62,10 @@ export function apiPatch<T>(path: string, body: unknown, adminPassword: string):
 
 export function apiPut<T>(path: string, body: unknown, adminPassword: string): Promise<T> {
   return request<T>('PUT', path, { headers: jsonHeaders(adminPassword), body: JSON.stringify(body) });
+}
+
+export function apiDelete<T>(path: string, adminPassword: string): Promise<T> {
+  return request<T>('DELETE', path, { headers: { 'X-Admin-Password': adminPassword } });
 }
 
 /** Sube el archivo tal cual, sin recomprimir, para no perder calidad de la foto. */

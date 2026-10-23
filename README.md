@@ -44,25 +44,59 @@ Para ver logs de la API o pararla: `docker compose logs -f api` / `docker compos
 
 ## Panel de administración (`/#/admin`)
 
-Pide una contraseña (`ADMIN_PASSWORD` del `.env`) antes de mostrar el editor. Dos pestañas:
+Pide una contraseña antes de mostrar nada. Hay dos accesos:
 
-- **Productos**: alta/edición/borrado, precio, **precio de oferta** (si es menor al de lista se
-  muestra tachado + badge "Oferta"), categoría, descripción, talles, colores, mínimos, precio por
-  bulto, si aparece en **Destacados** (la vidriera de la portada), y una grilla para marcar el
-  stock de cada combinación talle×color.
-- **Configuración**: nombre del negocio, WhatsApp, contacto, métodos de envío, los dos mínimos de
-  compra (cantidad y monto), banner de portada, FAQ y newsletter — ver detalle de cada campo más
-  abajo.
+- **Administradora** (`ADMIN_PASSWORD` del `.env`): ve todo.
+- **Vendedoras**: una clave que la administradora crea en *Configuración → Ventas*. Solo ve
+  **Ventas** y **Clientas**: no ve costos, ganancias ni reportes, no toca productos ni
+  configuración, y no puede cancelar una venta que ya tiene cobros.
 
-El botón **"Publicar cambios"** de cada pestaña guarda directo en MongoDB — se ve reflejado al
-instante para cualquiera que entre al sitio, sin rebuild ni redeploy. **"Exportar backup (JSON)"**
-sigue estando como respaldo manual (por ejemplo, antes de un cambio grande), pero ya no hace falta
-para que los cambios se publiquen.
+Pestañas:
 
-**Sobre la contraseña de admin**: es la única protección de escritura — no hay usuarios ni
-permisos por rol. Cambiala en `.env` (`ADMIN_PASSWORD`) antes de exponer el sitio más allá de tu
-propia máquina, y no compartas esa URL/contraseña más de lo necesario. Los endpoints de **lectura**
-del catálogo son públicos a propósito (son los mismos datos que ya se ven en la web).
+- **Ventas**: el sistema de gestión de ventas (ver abajo).
+- **Reportes**: vendido por día/mes, por canal, por medio de pago, por vendedora, por día de la
+  semana y por categoría; productos más vendidos, mejores clientas, ticket promedio, clientas
+  nuevas, lo cobrado y lo que falta cobrar, ganancia estimada (con los costos cargados) y
+  comparación contra el período anterior.
+- **Clientas**: fichas (nombre, @TikTok, WhatsApp, localidad, notas) con su historial, lo que
+  compró en total, lo que debe y lo que más le compra. Filtros por las que más compran, las que
+  deben y las que no compran hace más de 30 días.
+- **Stock**, **Productos**, **Proveedores**: el catálogo. Al publicar, el panel trae el stock
+  actual del servidor y respeta las ventas que se hayan registrado mientras se editaba.
+- **Configuración**: *Sitio y catálogo* (nombre del negocio, WhatsApp, mínimos, banner, FAQ…) y
+  *Ventas* (vendedoras, medios de pago por cuenta, clave de vendedoras y costo de cada prenda).
+
+### Ventas
+
+Una sola carga de productos sirve para todo: las ventas del local, de los lives de TikTok y de
+WhatsApp usan el mismo catálogo y descuentan del mismo stock.
+
+- **Nueva venta**: canal (local / TikTok live / WhatsApp), clienta (se busca por nombre, @usuario o
+  WhatsApp, o se crea en el momento), prendas del catálogo (o un artículo fuera del catálogo),
+  precio especial por renglón si hace falta, descuento, envío cobrado, pago (todo / seña / nada
+  todavía, con uno o más medios), entrega (retira o envío) y quién vendió. El stock se descuenta al
+  registrarla, así una prenda reservada en un live no se vende dos veces.
+- Si la clienta ya tiene una venta abierta (sin enviar), el formulario lo avisa y permite sumar
+  las prendas a esa venta.
+- **Hoy**: lo vendido en el día y el **cierre de caja** (lo que entró, por medio de pago, incluidos
+  saldos de ventas anteriores).
+- **Pendientes**: pedidos del catálogo web sin confirmar, ventas con saldo por cobrar y ventas
+  pagadas por enviar o entregar.
+- **Historial**: por rango de fechas, canal y búsqueda, con descarga a Excel (CSV, un renglón por
+  prenda).
+- Desde cada venta: **Cobrar** (registra un pago; cobrar la seña de un pedido web lo confirma),
+  marcar enviada/entregada, mandarle el **resumen por WhatsApp** a la clienta, editar (el stock se
+  ajusta por la diferencia) o cancelar (las prendas vuelven al stock).
+
+Los pedidos que llegan del catálogo web no tocan el stock hasta que se confirman o se cobra la seña.
+
+Los costos, las vendedoras y los medios de pago viven en la colección `salesConfig`, separada de
+`settings` porque esa es pública. Las ventas están en `orders` y las clientas en `clients`.
+
+**Sobre las contraseñas**: la de administradora es la protección principal de escritura.
+Cambiala en `.env` (`ADMIN_PASSWORD`) antes de exponer el sitio más allá de tu propia máquina. Los
+endpoints de **lectura** del catálogo son públicos a propósito (son los mismos datos que ya se ven
+en la web).
 
 ## Configuración del negocio
 
@@ -196,4 +230,4 @@ docker-compose.yml              # mongodb + api
 
 - Pasarela de pago o checkout con tarjeta: el pedido siempre se cierra por WhatsApp.
 - Login de comprador o cuentas de cliente.
-- Roles o usuarios de admin — una sola contraseña compartida protege las escrituras de la API.
+- Usuarios individuales: las vendedoras comparten una clave y eligen su nombre al cargar cada venta.

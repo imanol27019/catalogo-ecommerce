@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { verifyAdminPassword } from '../../data/admin';
+import { verifyStaffPassword } from '../../data/admin';
+import type { StaffRole } from '../../types/sales';
 import { ApiError } from '../../data/apiClient';
 import { Button } from '../ui/Button';
 import { Alert } from '../ui/Alert';
 import { INPUT_CLASS } from '../ui/formStyles';
 
 interface AdminLoginScreenProps {
-  onSuccess: (password: string) => void;
+  onSuccess: (password: string, role: StaffRole) => void;
   /** Mensaje de una sesión anterior (por ejemplo, si la contraseña dejó de ser válida). */
   initialError?: string | null;
 }
@@ -28,8 +29,8 @@ export function AdminLoginScreen({ onSuccess, initialError }: AdminLoginScreenPr
     setChecking(true);
     setError(null);
     try {
-      await verifyAdminPassword(password);
-      onSuccess(password);
+      const role = await verifyStaffPassword(password);
+      onSuccess(password, role);
     } catch (err) {
       setError(err instanceof ApiError ? err.userMessage : 'No se pudo verificar la contraseña.');
     } finally {
@@ -41,7 +42,7 @@ export function AdminLoginScreen({ onSuccess, initialError }: AdminLoginScreenPr
     <div className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-4">
       <h1 className="mb-1 text-center font-heading text-lg font-semibold text-stone-900">Panel de administración</h1>
       <p className="mb-6 text-center text-sm text-stone-600">
-        Ingresá la contraseña de administrador para continuar.
+        Ingresá tu contraseña: la de administradora o la clave de vendedoras.
       </p>
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
         <label className="flex flex-col gap-1 text-sm">
