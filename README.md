@@ -61,7 +61,9 @@ Pestañas:
 - **Clientas**: fichas (nombre, @TikTok, WhatsApp, localidad, notas) con su historial, lo que
   compró en total, lo que debe y lo que más le compra. Filtros por las que más compran, las que
   deben y las que no compran hace más de 30 días.
-- **Stock**, **Productos**, **Proveedores**: el catálogo. Al publicar, el panel trae el stock
+- **Stock**, **Productos**, **Proveedores**: el catálogo. En Stock, "Cargar ingreso de mercadería"
+  suma de una vez lo que entró de cada talle/color, y "Para reponer" no saca un producto de la lista
+  mientras se lo está reponiendo. Al publicar, el panel trae el stock
   actual del servidor y respeta las ventas que se hayan registrado mientras se editaba.
 - **Configuración**: *Sitio y catálogo* (nombre del negocio, WhatsApp, mínimos, banner, FAQ…) y
   *Ventas* (vendedoras, medios de pago por cuenta, clave de vendedoras y costo de cada prenda).
@@ -78,6 +80,10 @@ WhatsApp usan el mismo catálogo y descuentan del mismo stock.
   registrarla, así una prenda reservada en un live no se vende dos veces.
 - Si la clienta ya tiene una venta abierta (sin enviar), el formulario lo avisa y permite sumar
   las prendas a esa venta.
+- **Bolsas** (lives de TikTok): cuando llega la seña se abre la bolsa de la clienta y durante unos
+  días (configurable, 5 por defecto) se le van sumando las prendas que pide con un toque; el stock
+  baja en el momento. La seña puede superar lo que lleva por ahora (queda a favor). Las bolsas
+  vencidas quedan marcadas; al cerrarla pasa a por cobrar / por despachar.
 - **Hoy**: lo vendido en el día y el **cierre de caja** (lo que entró, por medio de pago, incluidos
   saldos de ventas anteriores).
 - **Pendientes**: pedidos del catálogo web sin confirmar, ventas con saldo por cobrar y ventas
@@ -85,7 +91,8 @@ WhatsApp usan el mismo catálogo y descuentan del mismo stock.
 - **Historial**: por rango de fechas, canal y búsqueda, con descarga a Excel (CSV, un renglón por
   prenda).
 - Desde cada venta: **Cobrar** (registra un pago; cobrar la seña de un pedido web lo confirma),
-  marcar enviada/entregada, mandarle el **resumen por WhatsApp** a la clienta, editar (el stock se
+  **Despacho realizado** (Vía Cargo, Correo Argentino, entrega en el local, Andreani u otro, con
+  código de seguimiento y si el envío se pagó antes o se paga al recibirlo), mandarle el **resumen por WhatsApp** a la clienta, editar (el stock se
   ajusta por la diferencia) o cancelar (las prendas vuelven al stock).
 
 Los pedidos que llegan del catálogo web no tocan el stock hasta que se confirman o se cobra la seña.

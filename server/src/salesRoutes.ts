@@ -7,7 +7,10 @@ import { isIsoDate, daysInRange, addDays, toArDate } from './dates';
 import { buildClient, type Client } from './clients';
 import {
   applyStockChanges,
+  buildDelivery,
   buildPayment,
+  changeSaleItem,
+  isBagOpen,
   buildSale,
   buildWebOrder,
   generateOrderCode,
@@ -93,6 +96,7 @@ export async function registerSalesRoutes(app: express.Express, deps: SalesRoute
     return {
       sellers: config.sellers,
       paymentMethods: config.paymentMethods,
+      bagDays: config.bagDays,
       hasSellerKey: Boolean(config.sellerKeyHash),
       ...(role === 'admin' ? { costs: config.costs } : {}),
     };
@@ -143,7 +147,8 @@ export async function registerSalesRoutes(app: express.Express, deps: SalesRoute
   async function clientStats(): Promise<Map<string, Document>> {
     const rows = await ordersCollection
       .aggregate([
-        { $match: { status: 'confirmed', clientId: { $type: 'string' } } },
+        // Una bolsa recién abierta, todavía sin prendas, no cuenta como compra.
+        { $match: { status: 'confirmed', clientId: { $type: 'string' }, itemCount: { $gt: 0 } } },
         {
           $group: {
             _id: '$clientId',
@@ -306,7 +311,7 @@ export async function registerSalesRoutes(app: express.Express, deps: SalesRoute
       ]);
       const order = buildSale(
         body,
-        { products, costs: config.costs, paymentMethods: config.paymentMethods, client },
+        { products, costs: config.costs, paymentMethods: config.paymentMethods, client, bagDays: config.bagDays },
         { code: await generateOrderCode(ordersCollection) },
       );
       await ordersCollection.insertOne({ _id: order.id as never, ...order });
@@ -329,7 +334,11 @@ export async function registerSalesRoutes(app: express.Express, deps: SalesRoute
         getSalesConfig(),
         loadClient(body.clientId),
       ]);
-      const order = buildSale(body, { products, costs: config.costs, paymentMethods: config.paymentMethods, client }, existing);
+      const order = buildSale(
+        body,
+        { products, costs: config.costs, paymentMethods: config.paymentMethods, client, bagDays: config.bagDays },
+        existing,
+      );
       await saveOrder(order);
       if (existing.status === 'confirmed') {
         await applyStockChanges(catalogCollection, stockChangesBetween(existing.lines, order.lines));
@@ -386,8 +395,9 @@ export async function registerSalesRoutes(app: express.Express, deps: SalesRoute
 
       const config = await getSalesConfig();
       const payment = buildPayment(req.body, config.paymentMethods, toArDate());
+      // En una bolsa abierta se puede señar de más: lo que sobra queda a favor para las próximas prendas.
       const balance = order.total - order.paidAmount;
-      if (payment.amount > balance) {
+      if (!isBagOpen(order) && payment.amount > balance) {
         throw new HttpError(400, `El cobro supera lo que falta pagar (${balance.toLocaleString('es-AR')}).`);
       }
 
@@ -429,19 +439,84 @@ export async function registerSalesRoutes(app: express.Express, deps: SalesRoute
     asyncRoute(async (req, res) => {
       const order = await loadOrder(req.params.id);
       if (order.status !== 'confirmed') throw new HttpError(409, 'Primero confirmá la venta.');
+      if (isBagOpen(order)) throw new HttpError(409, 'La bolsa sigue abierta: cerrala antes de despacharla.');
       const body = (req.body ?? {}) as Record<string, unknown>;
       const status = body.status === 'delivered' ? 'delivered' : 'pending';
-      const note = typeof body.note === 'string' ? body.note.trim().slice(0, 200) : order.delivery.note;
+      if (status === 'delivered' && !body.carrier) throw new HttpError(400, 'Elegí cómo se despachó.');
       const updated: Order = {
         ...order,
-        delivery: {
-          method: order.delivery.method,
-          status,
-          ...(status === 'delivered' ? { deliveredAt: isIsoDate(body.deliveredAt) ? body.deliveredAt : toArDate() } : {}),
-          ...(note ? { note } : {}),
-        },
+        delivery: buildDelivery(
+          { ...body, status, deliveredAt: isIsoDate(body.deliveredAt) ? body.deliveredAt : toArDate() },
+          { method: order.delivery.method, status: 'pending', ...(order.delivery.note ? { note: order.delivery.note } : {}) },
+          toArDate(),
+        ),
         updatedAt: new Date().toISOString(),
       };
+      await saveOrder(updated);
+      res.json(forRole(updated, roleOf(res)));
+    }),
+  );
+
+  /**
+   * Modo live: suma (o resta) una prenda a la venta con un toque. El stock se mueve en el momento,
+   * así la prenda que se guardó en la bolsa de una clienta ya no le aparece disponible a otra.
+   */
+  app.post(
+    '/api/sales/:id/items',
+    requireStaff,
+    asyncRoute(async (req, res) => {
+      const order = await loadOrder(req.params.id);
+      if (order.status === 'cancelled') throw new HttpError(409, 'Esta venta está cancelada.');
+      const [products, config] = await Promise.all([deps.getCatalogProducts(), getSalesConfig()]);
+      const body = (req.body ?? {}) as Record<string, unknown>;
+      const updated = changeSaleItem(
+        order,
+        { productId: body.productId, variantId: body.variantId, qty: body.qty },
+        { products, costs: config.costs },
+      );
+      await saveOrder(updated);
+      if (order.status === 'confirmed') {
+        await applyStockChanges(catalogCollection, stockChangesBetween(order.lines, updated.lines));
+      }
+      res.json(forRole(updated, roleOf(res)));
+    }),
+  );
+
+  /**
+   * Cerrar la bolsa: deja de sumar prendas y pasa a ser una venta normal (por cobrar el saldo y por
+   * despachar). Si se cerró por error, se puede reabrir mientras no se haya despachado.
+   */
+  app.patch(
+    '/api/sales/:id/bag',
+    requireStaff,
+    asyncRoute(async (req, res) => {
+      const order = await loadOrder(req.params.id);
+      if (!order.bag) throw new HttpError(400, 'Esta venta no es una bolsa.');
+      if (order.status === 'cancelled') throw new HttpError(409, 'Esta venta está cancelada.');
+      const body = (req.body ?? {}) as Record<string, unknown>;
+      const now = new Date().toISOString();
+      let bag = order.bag;
+
+      if (body.action === 'close') {
+        if (order.lines.length === 0) {
+          throw new HttpError(400, 'La bolsa está vacía. Si no se llevó nada, cancelala.');
+        }
+        if (order.paidAmount > order.total) {
+          throw new HttpError(
+            400,
+            `Pagó ${(order.paidAmount - order.total).toLocaleString('es-AR')} más de lo que suma la bolsa. Sumá prendas o corregí el cobro antes de cerrarla.`,
+          );
+        }
+        bag = { ...bag, closedAt: now };
+      } else if (body.action === 'reopen') {
+        if (order.delivery.status === 'delivered') throw new HttpError(409, 'Ya se despachó: no se puede reabrir.');
+        const { closedAt: _closedAt, ...rest } = bag;
+        bag = { ...rest, closesOn: isIsoDate(body.closesOn) ? body.closesOn : rest.closesOn };
+      } else {
+        throw new HttpError(400, 'Acción inválida.');
+      }
+
+      const updated: Order = { ...order, bag, updatedAt: now };
       await saveOrder(updated);
       res.json(forRole(updated, roleOf(res)));
     }),

@@ -18,6 +18,12 @@ export type SaleChannel = 'presencial' | 'tiktok' | 'whatsapp' | 'web';
 export type DeliveryMethod = 'pickup' | 'shipping';
 export type DeliveryStatus = 'pending' | 'delivered';
 
+/** Cómo salió el pedido. `local` es la entrega en mano en el local. */
+export type Carrier = 'via-cargo' | 'correo-argentino' | 'local' | 'andreani' | 'otro';
+
+/** Quién paga el envío: la clienta antes del despacho, o al recibirlo (pago en destino). */
+export type ShippingPayment = 'prepaid' | 'on_delivery';
+
 export interface OrderLine {
   /** Vacío en un artículo fuera del catálogo: no tiene stock que mover. */
   productId: string;
@@ -55,9 +61,26 @@ export interface SalePayment {
 export interface OrderDelivery {
   method: DeliveryMethod;
   status: DeliveryStatus;
+  /** Día del despacho (o de la entrega en el local). */
   deliveredAt?: string;
-  /** Transporte, número de seguimiento, quién retira… */
+  carrier?: Carrier;
+  /** De qué se trató el despacho cuando `carrier` es `otro`. */
+  carrierOther?: string;
+  trackingCode?: string;
+  shippingPayment?: ShippingPayment;
+  /** Quién retira, a qué sucursal… */
   note?: string;
+}
+
+/**
+ * Bolsa de un live: la clienta seña y durante unos días se le van guardando las prendas que pide.
+ * Mientras está abierta puede estar vacía y lo señado puede superar lo que suma (queda a favor).
+ */
+export interface OrderBag {
+  /** Último día de la bolsa abierta (AAAA-MM-DD). */
+  closesOn: string;
+  /** Cuándo se cerró. Sin esto, la bolsa sigue abierta. */
+  closedAt?: string;
 }
 
 export interface Order {
@@ -83,6 +106,7 @@ export interface Order {
   payments: SalePayment[];
   paidAmount: number;
   delivery: OrderDelivery;
+  bag?: OrderBag;
   notes?: string;
   resolvedAt?: string;
   cancelledAt?: string;
@@ -124,6 +148,21 @@ export interface SalePayload {
   shippingCost: number;
   /** Solo al crear: los cobros de una venta existente se manejan aparte. */
   payments?: NewPaymentPayload[];
-  delivery: { method: DeliveryMethod; status: DeliveryStatus; note?: string };
+  delivery: DispatchPayload & { method: DeliveryMethod };
   notes?: string;
+  /** Solo al crear: abre una bolsa de live (puede arrancar sin prendas, solo con la seña). */
+  openBag?: boolean;
+  /** Para correr la fecha de cierre de una bolsa abierta. */
+  bagClosesOn?: string;
+}
+
+/** Datos del despacho, tal como se cargan al marcarlo realizado. */
+export interface DispatchPayload {
+  status: DeliveryStatus;
+  carrier?: Carrier;
+  carrierOther?: string;
+  trackingCode?: string;
+  shippingPayment?: ShippingPayment;
+  deliveredAt?: string;
+  note?: string;
 }

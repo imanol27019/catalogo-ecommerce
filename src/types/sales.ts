@@ -11,6 +11,8 @@ export interface PaymentMethod {
 export interface SalesConfig {
   sellers: string[];
   paymentMethods: PaymentMethod[];
+  /** Cuántos días queda abierta la bolsa de una clienta de live. */
+  bagDays: number;
   /** Si hay una clave de vendedoras definida (la clave en sí nunca vuelve del servidor). */
   hasSellerKey: boolean;
   /** Costo por unidad de cada producto. Solo llega si entró la administradora. */
@@ -20,6 +22,7 @@ export interface SalesConfig {
 export interface SalesConfigPayload {
   sellers: string[];
   paymentMethods: PaymentMethod[];
+  bagDays: number;
   costs: Record<string, number>;
   /** `undefined` = no cambiarla, `null` = quitarla, texto = clave nueva. */
   sellerKey?: string | null;

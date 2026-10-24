@@ -23,6 +23,7 @@ export function AdminSalesSettings({ config, products, onSaved }: AdminSalesSett
   const [sellers, setSellers] = useState<string[]>(config.sellers);
   const [methods, setMethods] = useState<PaymentMethod[]>(config.paymentMethods);
   const [costs, setCosts] = useState<Record<string, number>>(config.costs ?? {});
+  const [bagDays, setBagDays] = useState(config.bagDays);
   const [sellerKey, setSellerKey] = useState('');
   const [removeKey, setRemoveKey] = useState(false);
   const [costSearch, setCostSearch] = useState('');
@@ -48,6 +49,10 @@ export function AdminSalesSettings({ config, products, onSaved }: AdminSalesSett
       setFeedback({ tone: 'error', text: 'Tiene que haber al menos un medio de pago.' });
       return;
     }
+    if (!Number.isInteger(bagDays) || bagDays < 1 || bagDays > 60) {
+      setFeedback({ tone: 'error', text: 'Los días de bolsa abierta tienen que ser entre 1 y 60.' });
+      return;
+    }
     if (sellerKey && sellerKey.trim().length < 6) {
       setFeedback({ tone: 'error', text: 'La clave de vendedoras tiene que tener al menos 6 caracteres.' });
       return;
@@ -59,6 +64,7 @@ export function AdminSalesSettings({ config, products, onSaved }: AdminSalesSett
         {
           sellers: sellers.map((s) => s.trim()).filter(Boolean),
           paymentMethods: cleanMethods,
+          bagDays,
           costs,
           ...(removeKey ? { sellerKey: null } : sellerKey.trim() ? { sellerKey: sellerKey.trim() } : {}),
         },
@@ -130,6 +136,26 @@ export function AdminSalesSettings({ config, products, onSaved }: AdminSalesSett
         <p className="mt-2 text-xs text-stone-600">
           Renombrar un medio no cambia los cobros viejos: quedan con el nombre que tenían ese día.
         </p>
+      </Fieldset>
+
+      <Fieldset title="Bolsas de live">
+        <p className="mb-3 text-xs text-stone-600">
+          Cuando una clienta seña en un live se le abre una bolsa, y durante estos días se le siguen sumando prendas. Al
+          vencer, la bolsa aparece marcada para cerrarla (cobrar el saldo y despachar), extenderla o cancelarla.
+        </p>
+        <label className={`${LABEL_CLASS} sm:max-w-xs`}>
+          <span className={LABEL_TEXT_CLASS}>Días que queda abierta una bolsa</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={60}
+            value={bagDays || ''}
+            onChange={(e) => setBagDays(Math.round(Number(e.target.value)) || 0)}
+            className={INPUT_CLASS}
+          />
+        </label>
+        <p className="mt-2 text-xs text-stone-600">Cambiarlo vale para las bolsas nuevas; las abiertas mantienen su fecha.</p>
       </Fieldset>
 
       <Fieldset title="Acceso de vendedoras">

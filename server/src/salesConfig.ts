@@ -16,6 +16,8 @@ export interface SalesConfig {
   paymentMethods: PaymentMethod[];
   /** Costo por unidad de cada producto del catálogo (clave = id del producto). */
   costs: Record<string, number>;
+  /** Cuántos días queda abierta la bolsa de una clienta de live para seguir sumando prendas. */
+  bagDays: number;
   /** Hash de la clave de vendedoras (ver `auth.ts`). Nunca se devuelve al navegador. */
   sellerKeyHash: string | null;
   updatedAt?: string;
@@ -28,6 +30,7 @@ export const DEFAULT_SALES_CONFIG: SalesConfig = {
     { id: 'transferencia', label: 'Transferencia / Mercado Pago' },
   ],
   costs: {},
+  bagDays: 5,
   sellerKeyHash: null,
 };
 
@@ -56,6 +59,7 @@ export function withDefaults(doc: Partial<SalesConfig> | null | undefined): Sale
         ? doc.paymentMethods
         : DEFAULT_SALES_CONFIG.paymentMethods,
     costs: doc?.costs && typeof doc.costs === 'object' ? doc.costs : {},
+    bagDays: typeof doc?.bagDays === 'number' && doc.bagDays > 0 ? doc.bagDays : DEFAULT_SALES_CONFIG.bagDays,
     sellerKeyHash: typeof doc?.sellerKeyHash === 'string' ? doc.sellerKeyHash : null,
     ...(doc?.updatedAt ? { updatedAt: doc.updatedAt } : {}),
   };
@@ -67,7 +71,7 @@ export function withDefaults(doc: Partial<SalesConfig> | null | undefined): Sale
  */
 export function sanitizeSalesConfig(
   body: unknown,
-): Pick<SalesConfig, 'sellers' | 'paymentMethods' | 'costs'> {
+): Pick<SalesConfig, 'sellers' | 'paymentMethods' | 'costs' | 'bagDays'> {
   const raw = (body ?? {}) as Record<string, unknown>;
 
   const sellers = [
@@ -104,5 +108,10 @@ export function sanitizeSalesConfig(
     if (productId && Number.isFinite(cost) && cost > 0 && cost <= MAX_COST) costs[productId.slice(0, 80)] = cost;
   }
 
-  return { sellers, paymentMethods, costs };
+  const bagDays = raw.bagDays === undefined ? DEFAULT_SALES_CONFIG.bagDays : Math.round(Number(raw.bagDays));
+  if (!Number.isFinite(bagDays) || bagDays < 1 || bagDays > 60) {
+    throw new SalesConfigValidationError('Los días de bolsa abierta tienen que ser entre 1 y 60.');
+  }
+
+  return { sellers, paymentMethods, costs, bagDays };
 }

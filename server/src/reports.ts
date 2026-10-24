@@ -119,7 +119,8 @@ export function buildSalesReport(input: ReportInput): SalesReport {
   let costedRevenue = 0;
   let grossRevenue = 0;
 
-  for (const order of sales) {
+  // Una bolsa recién abierta, sin prendas todavía, no es una venta (su seña sí cuenta como cobro).
+  for (const order of sales.filter((o) => o.itemCount > 0)) {
     const revenue = netRevenue(order);
     totals.revenue += revenue;
     totals.salesCount += 1;

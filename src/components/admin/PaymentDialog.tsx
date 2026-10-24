@@ -4,7 +4,7 @@ import type { Order } from '../../types/order';
 import type { PaymentMethod } from '../../types/sales';
 import { addPayment } from '../../data/orders';
 import { formatCurrency } from '../../utils/format';
-import { balanceOf, todayAr } from '../../utils/sales';
+import { balanceOf, creditOf, isBagOpen, todayAr } from '../../utils/sales';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Chip } from '../ui/Chip';
@@ -32,6 +32,8 @@ export function PaymentDialog({ order, methods, onClose, onSaved }: PaymentDialo
 function PaymentForm({ order, methods, onClose, onSaved }: Omit<PaymentDialogProps, 'order'> & { order: Order }) {
   const session = useAdminSession();
   const balance = balanceOf(order);
+  // En una bolsa abierta se puede señar de más: lo que sobra queda a favor para las próximas prendas.
+  const bagOpen = isBagOpen(order);
   const [amount, setAmount] = useState(balance);
   const [methodId, setMethodId] = useState(methods[0]?.id ?? '');
   const [date, setDate] = useState(todayAr());
@@ -45,7 +47,7 @@ function PaymentForm({ order, methods, onClose, onSaved }: Omit<PaymentDialogPro
       setError('Poné cuánto pagó.');
       return;
     }
-    if (amount > balance) {
+    if (!bagOpen && amount > balance) {
       setError(`No puede pagar más de lo que debe (${formatCurrency(balance)}).`);
       return;
     }
@@ -65,9 +67,11 @@ function PaymentForm({ order, methods, onClose, onSaved }: Omit<PaymentDialogPro
       <div className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-stone-700">
         <p className="font-semibold text-stone-900">{order.customer.name}</p>
         <p>
-          Total {formatCurrency(order.total)} · pagó {formatCurrency(order.paidAmount)} ·{' '}
-          <strong className="font-semibold text-stock-low">debe {formatCurrency(balance)}</strong>
+          Total {formatCurrency(order.total)} · pagó {formatCurrency(order.paidAmount)}
+          {balance > 0 && <strong className="font-semibold text-stock-low"> · debe {formatCurrency(balance)}</strong>}
+          {creditOf(order) > 0 && <span> · {formatCurrency(creditOf(order))} a favor</span>}
         </p>
+        {bagOpen && <p className="mt-0.5 text-xs text-stone-600">Bolsa abierta: puede pagar de más y queda a favor.</p>}
       </div>
 
       {order.status === 'pending' && (

@@ -1,4 +1,4 @@
-import type { NewOrderPayload, NewPaymentPayload, Order, SalePayload } from '../types/order';
+import type { DispatchPayload, NewOrderPayload, NewPaymentPayload, Order, SalePayload } from '../types/order';
 import { apiDelete, apiGet, apiPatch, apiPost, apiPut } from './apiClient';
 
 /** Registra el pedido hecho desde el sitio. Queda pendiente hasta que el negocio lo confirme. */
@@ -42,10 +42,24 @@ export async function deletePayment(id: string, paymentId: string, password: str
   return apiDelete<Order>(`/api/sales/${id}/payments/${paymentId}`, password);
 }
 
-export async function setDeliveryStatus(
+/** Despacho realizado: cómo salió, seguimiento y quién paga el envío. */
+export async function dispatchSale(id: string, dispatch: DispatchPayload, password: string): Promise<Order> {
+  return apiPatch<Order>(`/api/sales/${id}/delivery`, dispatch, password);
+}
+
+/** Suma (o resta, con `qty` negativa) una prenda a la venta: lo usa el modo live. */
+export async function changeSaleItem(
   id: string,
-  delivery: { status: 'pending' | 'delivered'; note?: string },
+  item: { productId: string; variantId: string; qty: number },
   password: string,
 ): Promise<Order> {
-  return apiPatch<Order>(`/api/sales/${id}/delivery`, delivery, password);
+  return apiPost<Order>(`/api/sales/${id}/items`, item, password);
+}
+
+export async function updateBag(
+  id: string,
+  change: { action: 'close' } | { action: 'reopen'; closesOn?: string },
+  password: string,
+): Promise<Order> {
+  return apiPatch<Order>(`/api/sales/${id}/bag`, change, password);
 }

@@ -3,18 +3,20 @@ import type { ReactNode } from 'react';
 import type { Order, SaleChannel } from '../../types/order';
 import type { Product } from '../../types/product';
 import type { CashSummary, Client, ClientPayload, ClientWithStats, SalesConfig } from '../../types/sales';
-import { deletePayment, fetchOrders, setDeliveryStatus, updateOrderStatus } from '../../data/orders';
+import { deletePayment, fetchOrders, updateBag, updateOrderStatus } from '../../data/orders';
 import { fetchCashSummary } from '../../data/sales';
 import { BUSINESS_NAME } from '../../config/site.config';
 import { formatCurrency, plural } from '../../utils/format';
 import {
   addDays,
+  bagDaysLeft,
   balanceOf,
   buildSaleSummaryMessage,
   buildWhatsAppChatUrl,
   CHANNEL_LABELS,
   downloadTextFile,
   endOfMonth,
+  isBagOpen,
   normalizeSearch,
   ordersToCsv,
   startOfMonth,
@@ -27,6 +29,8 @@ import { Alert } from '../ui/Alert';
 import { INPUT_CLASS, LABEL_CLASS, LABEL_TEXT_CLASS } from '../ui/formStyles';
 import { AdminSaleForm, type DraftLine } from './AdminSaleForm';
 import { PaymentDialog } from './PaymentDialog';
+import { DispatchDialog } from './DispatchDialog';
+import { BagItemsDialog, OpenBagDialog } from './BagDialogs';
 import { SaleCard, type SaleAction } from './SaleCard';
 import { describeApiError, useAdminSession } from './adminSession';
 
@@ -41,7 +45,7 @@ interface AdminSalesManagerProps {
   onStockChanged: () => void;
 }
 
-type View = 'today' | 'pending' | 'history';
+type View = 'today' | 'bags' | 'pending' | 'history';
 type FormState = { mode: 'new' } | { mode: 'edit'; order: Order; appendLines?: DraftLine[] } | null;
 
 export function AdminSalesManager({
@@ -59,6 +63,11 @@ export function AdminSalesManager({
   const [view, setView] = useState<View>('today');
   const [form, setForm] = useState<FormState>(null);
   const [paying, setPaying] = useState<Order | null>(null);
+  const [dispatching, setDispatching] = useState<Order | null>(null);
+  const [isOpeningBag, setOpeningBag] = useState(false);
+  const [addingTo, setAddingTo] = useState<Order | null>(null);
+  /** Si en la ventana de la bolsa se sumó o sacó algo: al cerrarla hay que refrescar stock y listas. */
+  const [bagChanged, setBagChanged] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savedNotice, setSavedNotice] = useState<Order | null>(null);
@@ -148,12 +157,28 @@ export function AdminSalesManager({
       case 'edit':
         setForm({ mode: 'edit', order });
         return;
-      case 'deliver':
+      case 'dispatch':
+        setDispatching(order);
+        return;
+      case 'addItems':
+        setAddingTo(order);
+        return;
+      case 'closeBag': {
+        const balance = balanceOf(order);
+        const question =
+          `¿Cerrar la bolsa de ${order.customer.name}? Lleva ${plural(order.itemCount, 'prenda', 'prendas')} por ${formatCurrency(order.total)}.` +
+          (balance > 0 ? `\nQueda debiendo ${formatCurrency(balance)}.` : '\nEstá toda paga.') +
+          '\n\nDespués ya no se le suman prendas y pasa a "por despachar".';
+        if (!window.confirm(question)) return;
+        void runAction(order, () => updateBag(order.id, { action: 'close' }, session.password), false, 'No se pudo cerrar la bolsa.');
+        return;
+      }
+      case 'reopenBag':
         void runAction(
           order,
-          () => setDeliveryStatus(order.id, { status: 'delivered' }, session.password),
+          () => updateBag(order.id, { action: 'reopen', closesOn: addDays(today, config.bagDays) }, session.password),
           false,
-          'No se pudo marcar la entrega.',
+          'No se pudo reabrir la bolsa.',
         );
         return;
       case 'confirm':
@@ -215,14 +240,20 @@ export function AdminSalesManager({
     );
   }
 
-  const pendingWeb = (pendingOrders ?? []).filter((o) => o.status === 'pending');
-  const toCollect = (pendingOrders ?? [])
+  // Las bolsas abiertas tienen su propia vista: no son "pendientes" hasta que se cierran.
+  const openBags = (pendingOrders ?? [])
+    .filter((o) => isBagOpen(o))
+    .sort((a, b) => (a.bag?.closesOn ?? '').localeCompare(b.bag?.closesOn ?? ''));
+  const notBags = (pendingOrders ?? []).filter((o) => !isBagOpen(o));
+  const pendingWeb = notBags.filter((o) => o.status === 'pending');
+  const toCollect = notBags
     .filter((o) => o.status === 'confirmed' && balanceOf(o) > 0)
     .sort((a, b) => a.saleDate.localeCompare(b.saleDate));
-  const toDeliver = (pendingOrders ?? [])
+  const toDeliver = notBags
     .filter((o) => o.status === 'confirmed' && balanceOf(o) === 0 && o.delivery.status === 'pending')
     .sort((a, b) => a.saleDate.localeCompare(b.saleDate));
   const pendingCount = pendingWeb.length + toCollect.length + toDeliver.length;
+  const expiredBags = openBags.filter((o) => bagDaysLeft(o, today) < 0).length;
 
   const renderCards = (list: Order[]) =>
     list.map((order) => (
@@ -243,6 +274,9 @@ export function AdminSalesManager({
         <div className="flex flex-wrap gap-2" role="group" aria-label="Vista de ventas">
           <Chip isActive={view === 'today'} onClick={() => setView('today')}>
             Hoy
+          </Chip>
+          <Chip isActive={view === 'bags'} onClick={() => setView('bags')}>
+            {`Bolsas${openBags.length > 0 ? ` (${openBags.length})` : ''}`}
           </Chip>
           <Chip isActive={view === 'pending'} onClick={() => setView('pending')}>
             {`Pendientes${pendingCount > 0 ? ` (${pendingCount})` : ''}`}
@@ -279,6 +313,31 @@ export function AdminSalesManager({
         />
       )}
 
+      {view === 'bags' && (
+        <>
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white p-3">
+            <p className="min-w-0 flex-1 text-sm text-stone-700">
+              Cuando llega la seña de un live, abrí la bolsa de la clienta y andá sumando lo que pide. Queda abierta{' '}
+              {plural(config.bagDays, 'día', 'días')}.
+            </p>
+            <Button onClick={() => setOpeningBag(true)}>+ Abrir bolsa</Button>
+          </div>
+          {expiredBags > 0 && (
+            <Alert tone="warning">
+              {expiredBags === 1 ? 'Hay 1 bolsa vencida' : `Hay ${expiredBags} bolsas vencidas`}: cerralas para cobrar el saldo y
+              despachar, extendelas desde “Editar” o cancelalas si no pagaron.
+            </Alert>
+          )}
+          {pendingOrders === null ? (
+            <Loading />
+          ) : openBags.length === 0 ? (
+            <Empty title="No hay bolsas abiertas.">Se abren con “+ Abrir bolsa” cuando una clienta seña.</Empty>
+          ) : (
+            renderCards(openBags)
+          )}
+        </>
+      )}
+
       {view === 'pending' &&
         (pendingOrders === null ? (
           <Loading />
@@ -303,7 +362,7 @@ export function AdminSalesManager({
               </Group>
             )}
             {toDeliver.length > 0 && (
-              <Group title="Pagadas, por enviar o entregar" detail={`${toDeliver.length}`}>
+              <Group title="Pagadas, por despachar" detail={`${toDeliver.length}`}>
                 {renderCards(toDeliver)}
               </Group>
             )}
@@ -335,6 +394,49 @@ export function AdminSalesManager({
           setSavedNotice(null);
           afterChange(wasPending);
         }}
+      />
+
+      <DispatchDialog
+        order={dispatching}
+        onClose={() => setDispatching(null)}
+        onSaved={() => {
+          setDispatching(null);
+          afterChange(false);
+        }}
+      />
+
+      <OpenBagDialog
+        isOpen={isOpeningBag}
+        clients={clients}
+        config={config}
+        openBags={openBags}
+        onCreateClient={onCreateClient}
+        onClose={() => setOpeningBag(false)}
+        onOpened={(order) => {
+          // Recién abierta, lo siguiente es sumarle lo que pide: se pasa directo a la bolsa.
+          setOpeningBag(false);
+          setView('bags');
+          setAddingTo(order);
+          afterChange(false);
+        }}
+        onUseExisting={(order) => {
+          setOpeningBag(false);
+          setView('bags');
+          setAddingTo(order);
+        }}
+      />
+
+      <BagItemsDialog
+        order={addingTo}
+        products={products}
+        onClose={() => {
+          setAddingTo(null);
+          if (bagChanged) {
+            setBagChanged(false);
+            afterChange(true);
+          }
+        }}
+        onChanged={() => setBagChanged(true)}
       />
     </div>
   );
@@ -379,7 +481,8 @@ function TodayView({
   const [showCashDetail, setShowCashDetail] = useState(false);
   if (orders === null) return <Loading />;
 
-  const confirmed = orders.filter((o) => o.status === 'confirmed');
+  // Una bolsa recién abierta, sin prendas todavía, no es una venta.
+  const confirmed = orders.filter((o) => o.status === 'confirmed' && o.itemCount > 0);
   const sold = confirmed.reduce((s, o) => s + Math.max(0, o.subtotal - o.discount), 0);
   const units = confirmed.reduce((s, o) => s + o.itemCount, 0);
   const visible = orders.filter((o) => o.status !== 'cancelled');

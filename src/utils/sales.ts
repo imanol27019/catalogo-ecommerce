@@ -1,4 +1,4 @@
-import type { Order, SaleChannel } from '../types/order';
+import type { Carrier, Order, SaleChannel, ShippingPayment } from '../types/order';
 import type { Client } from '../types/sales';
 import { formatCurrency, plural } from './format';
 import { normalizeWhatsapp } from './supplier';
@@ -13,6 +13,27 @@ export const CHANNEL_LABELS: Record<SaleChannel, string> = {
 
 /** Canales que se eligen al cargar una venta a mano. `web` solo entra por el catálogo. */
 export const MANUAL_CHANNELS: SaleChannel[] = ['presencial', 'tiktok', 'whatsapp'];
+
+/** En el orden en que aparecen al marcar un despacho. */
+export const CARRIER_LABELS: Record<Carrier, string> = {
+  'via-cargo': 'Vía Cargo',
+  'correo-argentino': 'Correo Argentino',
+  local: 'Entrega en el local',
+  andreani: 'Andreani',
+  otro: 'Otro',
+};
+
+export const SHIPPING_PAYMENT_LABELS: Record<ShippingPayment, string> = {
+  prepaid: 'Pagó el envío antes del despacho',
+  on_delivery: 'Paga el envío cuando lo recibe',
+};
+
+/** "Andreani", o lo que se escribió en "Otro". */
+export function carrierName(delivery: Order['delivery']): string {
+  if (!delivery.carrier) return '';
+  if (delivery.carrier === 'otro') return delivery.carrierOther || 'Otro';
+  return CARRIER_LABELS[delivery.carrier];
+}
 
 // --- Fechas ----------------------------------------------------------------
 // Las ventas se fechan con el día calendario de Argentina (`AAAA-MM-DD`), igual que en el servidor.
@@ -94,6 +115,32 @@ export function balanceOf(order: Pick<Order, 'total' | 'paidAmount'>): number {
   return Math.max(0, order.total - order.paidAmount);
 }
 
+/** Lo señado de más en una bolsa: queda a favor de la clienta para las próximas prendas. */
+export function creditOf(order: Pick<Order, 'total' | 'paidAmount'>): number {
+  return Math.max(0, order.paidAmount - order.total);
+}
+
+// --- Bolsas de live ------------------------------------------------------------
+
+export function isBagOpen(order: Pick<Order, 'bag' | 'status'>): boolean {
+  return Boolean(order.bag && !order.bag.closedAt && order.status !== 'cancelled');
+}
+
+/** Días que le quedan a una bolsa abierta (negativo si ya venció). */
+export function bagDaysLeft(order: Pick<Order, 'bag'>, today = todayAr()): number {
+  return order.bag ? daysBetween(today, order.bag.closesOn) : 0;
+}
+
+/** "Abierta hasta el mié 29/10 · quedan 3 días" / "Venció el mié 29/10". */
+export function describeBagDeadline(order: Pick<Order, 'bag'>, today = todayAr()): string {
+  if (!order.bag) return '';
+  const left = bagDaysLeft(order, today);
+  const date = formatDayLabel(order.bag.closesOn);
+  if (left < 0) return `Venció el ${date}`;
+  if (left === 0) return `Cierra hoy (${date})`;
+  return `Abierta hasta el ${date} · ${left === 1 ? 'queda 1 día' : `quedan ${left} días`}`;
+}
+
 export function paymentStateOf(order: Pick<Order, 'total' | 'paidAmount'>): PaymentState {
   if (order.paidAmount >= order.total) return 'paid';
   return order.paidAmount > 0 ? 'partial' : 'unpaid';
@@ -118,9 +165,12 @@ export function buildSaleSummaryMessage(order: Order, businessName: string): str
     return `• ${line.qty}x ${sanitizeForWhatsApp(line.productName)}${variant ? ` (${variant})` : ''} — ${formatCurrency(line.subtotal)}`;
   });
   const balance = balanceOf(order);
+  const credit = creditOf(order);
+  const carrier = carrierName(order.delivery);
+  const dispatched = order.delivery.status === 'delivered' && order.delivery.carrier && order.delivery.carrier !== 'local';
 
   return [
-    `Hola${firstName ? ` ${firstName}` : ''}! Te paso el resumen de tu compra en ${businessName} (pedido ${order.code}):`,
+    `Hola${firstName ? ` ${firstName}` : ''}! Te paso el resumen de tu ${isBagOpen(order) ? 'bolsa' : 'compra'} en ${businessName} (pedido ${order.code}):`,
     '',
     ...lines,
     '',
@@ -128,7 +178,20 @@ export function buildSaleSummaryMessage(order: Order, businessName: string): str
     ...(order.shippingCost > 0 ? [`Envío: ${formatCurrency(order.shippingCost)}`] : []),
     `*Total: ${formatCurrency(order.total)}* (${plural(order.itemCount, 'prenda', 'prendas')})`,
     ...(order.paidAmount > 0 ? [`Ya pagaste: ${formatCurrency(order.paidAmount)}`] : []),
-    balance > 0 ? `*Te queda por pagar: ${formatCurrency(balance)}*` : '¡Está todo pago! Gracias 💕',
+    balance > 0
+      ? `*Te queda por pagar: ${formatCurrency(balance)}*`
+      : credit > 0
+        ? `Te quedan ${formatCurrency(credit)} a favor para seguir sumando prendas.`
+        : '¡Está todo pago! Gracias 💕',
+    ...(isBagOpen(order) && order.bag ? ['', `Tu bolsa queda abierta hasta el ${formatDayLabel(order.bag.closesOn)}.`] : []),
+    ...(dispatched
+      ? [
+          '',
+          `Tu pedido salió por ${sanitizeForWhatsApp(carrier)}.`,
+          ...(order.delivery.trackingCode ? [`Código de seguimiento: ${sanitizeForWhatsApp(order.delivery.trackingCode)}`] : []),
+          ...(order.delivery.shippingPayment === 'on_delivery' ? ['El envío se paga al recibirlo.'] : []),
+        ]
+      : []),
   ].join('\n');
 }
 
@@ -174,16 +237,19 @@ export function ordersToCsv(orders: Order[], includeCosts: boolean): string {
     'Estado de pago',
     'Medios de pago',
     'Entrega',
+    'Despacho',
+    'Seguimiento',
+    'Pago del envío',
   ];
 
   const rows = orders.flatMap((order) => {
     const methods = [...new Set(order.payments.map((p) => p.methodLabel))].join(' + ');
-    const delivery =
-      order.delivery.status === 'delivered'
-        ? 'Entregada'
-        : order.delivery.method === 'shipping'
-          ? 'Envío pendiente'
-          : 'Retiro pendiente';
+    const delivery = isBagOpen(order)
+      ? 'Bolsa abierta'
+      : order.delivery.status === 'delivered'
+        ? `Despachada ${order.delivery.deliveredAt ? formatShortDate(order.delivery.deliveredAt) : ''}`.trim()
+        : 'Por despachar';
+    const shippingPayment = order.delivery.shippingPayment ? SHIPPING_PAYMENT_LABELS[order.delivery.shippingPayment] : '';
     return order.lines.map((line, index) => {
       const isFirst = index === 0;
       return [
@@ -211,6 +277,9 @@ export function ordersToCsv(orders: Order[], includeCosts: boolean): string {
         PAYMENT_STATE_LABELS[paymentStateOf(order)],
         methods,
         delivery,
+        carrierName(order.delivery),
+        order.delivery.trackingCode ?? '',
+        shippingPayment,
       ];
     });
   });

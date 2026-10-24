@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Collection } from 'mongodb';
-import { isIsoDate, toArDate } from './dates';
+import { addDays, isIsoDate, toArDate } from './dates';
 import type { Client } from './clients';
 import type { PaymentMethod } from './salesConfig';
 
@@ -12,6 +12,13 @@ export const SALE_CHANNELS: readonly SaleChannel[] = ['presencial', 'tiktok', 'w
 
 export type DeliveryMethod = 'pickup' | 'shipping';
 export type DeliveryStatus = 'pending' | 'delivered';
+
+/** Cómo salió el pedido. `local` es la entrega en mano en el local. */
+export type Carrier = 'via-cargo' | 'correo-argentino' | 'local' | 'andreani' | 'otro';
+export const CARRIERS: readonly Carrier[] = ['via-cargo', 'correo-argentino', 'local', 'andreani', 'otro'];
+
+/** Quién paga el envío: la clienta antes del despacho, o al recibirlo (pago en destino). */
+export type ShippingPayment = 'prepaid' | 'on_delivery';
 
 export interface OrderLine {
   /** Vacío en un artículo fuera del catálogo: no tiene stock que mover. */
@@ -51,9 +58,26 @@ export interface SalePayment {
 export interface OrderDelivery {
   method: DeliveryMethod;
   status: DeliveryStatus;
+  /** Día del despacho (o de la entrega en el local). */
   deliveredAt?: string;
-  /** Transporte, número de seguimiento, quién retira… */
+  carrier?: Carrier;
+  /** De qué se trató el despacho cuando `carrier` es `otro`. */
+  carrierOther?: string;
+  trackingCode?: string;
+  shippingPayment?: ShippingPayment;
+  /** Quién retira, a qué sucursal… */
   note?: string;
+}
+
+/**
+ * Bolsa de un live: la clienta seña y durante unos días se le van guardando las prendas que pide.
+ * Mientras está abierta puede estar vacía y lo señado puede superar lo que suma (queda a favor).
+ */
+export interface OrderBag {
+  /** Último día de la bolsa abierta (AAAA-MM-DD). Pasada esa fecha queda "vencida" hasta que se cierre. */
+  closesOn: string;
+  /** Cuándo se cerró. Sin esto, la bolsa sigue abierta. */
+  closedAt?: string;
 }
 
 export interface Order {
@@ -81,6 +105,7 @@ export interface Order {
   payments: SalePayment[];
   paidAmount: number;
   delivery: OrderDelivery;
+  bag?: OrderBag;
   notes?: string;
   /** Cuándo se confirmó (y por lo tanto cuándo se descontó el stock). */
   resolvedAt?: string;
@@ -134,6 +159,8 @@ function effectiveUnitPrice(product: CatalogProduct, productQty: number): number
 interface ResolveLinesOptions {
   /** Solo el panel puede poner un precio distinto al de lista o cargar artículos sueltos. */
   allowOverrides: boolean;
+  /** Una bolsa abierta puede no tener prendas todavía (se abre con la seña). */
+  allowEmpty?: boolean;
   costs?: Record<string, number>;
   previousLines?: OrderLine[];
 }
@@ -148,7 +175,7 @@ interface ResolveLinesOptions {
  */
 function resolveLines(linesRaw: unknown, products: CatalogProduct[], options: ResolveLinesOptions): OrderLine[] {
   const rawList = Array.isArray(linesRaw) ? (linesRaw as Record<string, unknown>[]) : [];
-  if (rawList.length === 0) throw new OrderValidationError('La venta no tiene productos.');
+  if (rawList.length === 0 && !options.allowEmpty) throw new OrderValidationError('La venta no tiene productos.');
   if (rawList.length > MAX_LINES) throw new OrderValidationError('La venta tiene demasiados renglones.');
 
   type Pending =
@@ -304,19 +331,45 @@ export function buildPayment(raw: unknown, methods: PaymentMethod[], fallbackDat
   };
 }
 
-function buildDelivery(raw: unknown, fallback: OrderDelivery, saleDate: string): OrderDelivery {
+/**
+ * Lee los datos del despacho. "Entrega en el local" es retiro; cualquier transporte es envío. El
+ * seguimiento y quién paga el envío solo tienen sentido cuando sale por un transporte.
+ */
+export function buildDelivery(raw: unknown, fallback: OrderDelivery, saleDate: string): OrderDelivery {
   const body = (raw ?? {}) as Record<string, unknown>;
-  const method: DeliveryMethod = body.method === 'pickup' || body.method === 'shipping' ? body.method : fallback.method;
   const status: DeliveryStatus = body.status === 'pending' || body.status === 'delivered' ? body.status : fallback.status;
+  let method: DeliveryMethod = body.method === 'pickup' || body.method === 'shipping' ? body.method : fallback.method;
   const note = text(body.note, 200);
+
+  if (status !== 'delivered') return { method, status, ...(note ? { note } : {}) };
+
+  const carrier: Carrier = CARRIERS.includes(body.carrier as Carrier)
+    ? (body.carrier as Carrier)
+    : (fallback.carrier ?? (method === 'pickup' ? 'local' : 'otro'));
+  method = carrier === 'local' ? 'pickup' : 'shipping';
+  const carrierOther = carrier === 'otro' ? text(body.carrierOther, 120) || fallback.carrierOther || '' : '';
+  const trackingCode = carrier === 'local' ? '' : text(body.trackingCode, 80);
+  const shippingPayment =
+    carrier === 'local'
+      ? undefined
+      : body.shippingPayment === 'prepaid' || body.shippingPayment === 'on_delivery'
+        ? body.shippingPayment
+        : fallback.shippingPayment;
+
   return {
     method,
     status,
-    ...(status === 'delivered'
-      ? { deliveredAt: isIsoDate(body.deliveredAt) ? body.deliveredAt : (fallback.deliveredAt ?? saleDate) }
-      : {}),
+    deliveredAt: isIsoDate(body.deliveredAt) ? body.deliveredAt : (fallback.deliveredAt ?? saleDate),
+    carrier,
+    ...(carrierOther ? { carrierOther } : {}),
+    ...(trackingCode ? { trackingCode } : {}),
+    ...(shippingPayment ? { shippingPayment } : {}),
     ...(note ? { note } : {}),
   };
+}
+
+export function isBagOpen(order: Pick<Order, 'bag' | 'status'>): boolean {
+  return Boolean(order.bag && !order.bag.closedAt && order.status !== 'cancelled');
 }
 
 export interface SaleContext {
@@ -325,6 +378,8 @@ export interface SaleContext {
   paymentMethods: PaymentMethod[];
   /** Ficha de la clienta, si la venta está vinculada a una. */
   client: Client | null;
+  /** Cuántos días queda abierta una bolsa nueva. */
+  bagDays: number;
 }
 
 /**
@@ -343,8 +398,16 @@ export function buildSale(payload: unknown, ctx: SaleContext, base: { code: stri
     : (existing?.channel ?? 'presencial');
   const saleDate = isIsoDate(body.saleDate) ? body.saleDate : (existing?.saleDate ?? toArDate(now));
 
+  // Bolsa de live: se abre al crear (con `openBag`) y se conserva al editar. La fecha de cierre se
+  // puede correr si la clienta pide unos días más.
+  let bag: OrderBag | undefined = existing?.bag;
+  if (!existing && body.openBag === true) bag = { closesOn: addDays(saleDate, ctx.bagDays) };
+  if (bag && !bag.closedAt && isIsoDate(body.bagClosesOn)) bag = { ...bag, closesOn: body.bagClosesOn };
+  const bagIsOpen = Boolean(bag && !bag.closedAt);
+
   const lines = resolveLines(body.lines, ctx.products, {
     allowOverrides: true,
+    allowEmpty: bagIsOpen,
     costs: ctx.costs,
     previousLines: existing?.lines,
   });
@@ -362,7 +425,9 @@ export function buildSale(payload: unknown, ctx: SaleContext, base: { code: stri
 
   const defaultDelivery: OrderDelivery =
     existing?.delivery ??
-    (channel === 'presencial' ? { method: 'pickup', status: 'delivered' } : { method: 'shipping', status: 'pending' });
+    (channel === 'presencial' && !bagIsOpen
+      ? { method: 'pickup', status: 'delivered', carrier: 'local' }
+      : { method: 'shipping', status: 'pending' });
   const delivery = buildDelivery(body.delivery, defaultDelivery, saleDate);
 
   const payments = existing
@@ -390,15 +455,58 @@ export function buildSale(payload: unknown, ctx: SaleContext, base: { code: stri
     shippingCost,
     payments,
     delivery,
+    ...(bag ? { bag } : {}),
     ...(notes ? { notes } : {}),
     ...(existing?.resolvedAt ? { resolvedAt: existing.resolvedAt } : existing ? {} : { resolvedAt: now }),
     ...(existing?.cancelledAt ? { cancelledAt: existing.cancelledAt } : {}),
   });
 
-  if (order.paidAmount > order.total) {
+  // En una bolsa abierta la seña puede superar lo que se lleva por ahora: es saldo a favor.
+  if (!bagIsOpen && order.paidAmount > order.total) {
     throw new OrderValidationError('Lo cobrado supera el total de la venta. Revisá los montos.');
   }
   return order;
+}
+
+/** Renglones de una venta como los mandaría el panel, conservando precios especiales y artículos sueltos. */
+function linesAsPayload(lines: OrderLine[]): Record<string, unknown>[] {
+  return lines.map((l) =>
+    l.productId
+      ? { productId: l.productId, variantId: l.variantId, qty: l.qty, ...(l.unitPrice !== l.listPrice ? { unitPrice: l.unitPrice } : {}) }
+      : { productId: '', name: l.productName, qty: l.qty, unitPrice: l.unitPrice, unitCost: l.unitCost },
+  );
+}
+
+/**
+ * Suma (o resta, con `qty` negativa) unidades de un talle/color a una venta existente. Es lo que
+ * usa el modo live: cada prenda que pide la clienta entra a su bolsa con un toque. Los precios se
+ * recalculan con el total del producto, así el escalón por cantidad se aplica solo.
+ */
+export function changeSaleItem(
+  order: Order,
+  item: { productId: unknown; variantId: unknown; qty: unknown },
+  ctx: Pick<SaleContext, 'products' | 'costs'>,
+): Order {
+  const delta = Math.trunc(Number(item.qty));
+  if (!Number.isFinite(delta) || delta === 0 || Math.abs(delta) > MAX_QTY_PER_LINE) {
+    throw new OrderValidationError('Cantidad inválida.');
+  }
+  const raw = linesAsPayload(order.lines);
+  const same = raw.find((r) => r.productId === item.productId && r.variantId === item.variantId);
+  if (same) same.qty = Number(same.qty) + delta;
+  else if (delta > 0) raw.push({ productId: item.productId, variantId: item.variantId, qty: delta });
+  else throw new OrderValidationError('Esa prenda no está en la venta.');
+
+  const lines = resolveLines(
+    raw.filter((r) => Number(r.qty) > 0),
+    ctx.products,
+    { allowOverrides: true, allowEmpty: isBagOpen(order), costs: ctx.costs, previousLines: order.lines },
+  );
+  const updated = withTotals({ ...order, lines, updatedAt: new Date().toISOString() });
+  if (!isBagOpen(order) && updated.paidAmount > updated.total) {
+    throw new OrderValidationError('Ya se cobró más de lo que quedaría. Corregí los cobros antes de sacar prendas.');
+  }
+  return updated;
 }
 
 /**

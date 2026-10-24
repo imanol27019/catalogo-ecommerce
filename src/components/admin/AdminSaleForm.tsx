@@ -9,6 +9,8 @@ import { formatCurrency, plural } from '../../utils/format';
 import { getEffectivePrice, unitPriceForQty } from '../../utils/pricing';
 import {
   CHANNEL_LABELS,
+  describeBagDeadline,
+  isBagOpen,
   MANUAL_CHANNELS,
   normalizeSearch,
   readDeviceSeller,
@@ -24,6 +26,8 @@ import { Alert } from '../ui/Alert';
 import { MoneyInput } from '../ui/MoneyInput';
 import { INPUT_CLASS, INPUT_COMPACT_CLASS, LABEL_CLASS, LABEL_TEXT_CLASS, TEXTAREA_CLASS } from '../ui/formStyles';
 import { ClientPicker } from './ClientPicker';
+import { DispatchFields } from './DispatchDialog';
+import { dispatchDraftFrom, dispatchPayloadFrom, validateDispatch, type DispatchDraft } from '../../utils/dispatch';
 import { describeApiError, useAdminSession } from './adminSession';
 
 /** Renglón en edición. Sin `productId` es un artículo fuera del catálogo. */
@@ -119,6 +123,8 @@ export function AdminSaleForm({
   const session = useAdminSession();
   const isEdit = Boolean(initial);
   const isConfirmed = initial?.status === 'confirmed';
+  /** Bolsa de live todavía abierta: puede estar vacía y la seña puede superar lo que suma. */
+  const bagOpen = initial ? isBagOpen(initial) : false;
 
   const [channel, setChannel] = useState<SaleChannel>(initial?.channel ?? readLastChannel());
   const [saleDate, setSaleDate] = useState(initial?.saleDate ?? todayAr());
@@ -142,6 +148,10 @@ export function AdminSaleForm({
     initial ? initial.delivery.status === 'delivered' : readLastChannel() === 'presencial',
   );
   const [deliveryNote, setDeliveryNote] = useState(initial?.delivery.note ?? '');
+  const [dispatch, setDispatch] = useState<DispatchDraft>(() =>
+    dispatchDraftFrom(initial?.delivery ?? { method: 'shipping', status: 'pending' }),
+  );
+  const [bagClosesOn, setBagClosesOn] = useState(initial?.bag?.closesOn ?? '');
   const [notes, setNotes] = useState(initial?.notes ?? '');
 
   const firstMethod = config.paymentMethods[0]?.id ?? '';
@@ -255,7 +265,7 @@ export function AdminSaleForm({
   }
 
   function validate(): string | null {
-    if (lines.length === 0) return 'Agregá al menos una prenda.';
+    if (lines.length === 0 && !bagOpen) return 'Agregá al menos una prenda.';
     for (const line of lines) {
       if (!line.productId && !line.name.trim()) return 'Poné el nombre del artículo fuera del catálogo.';
       if (!line.productId && !(line.priceOverride && line.priceOverride > 0)) {
@@ -274,7 +284,11 @@ export function AdminSaleForm({
         return 'Revisá los montos: con dos medios de pago, cada uno tiene que ser mayor a cero.';
       }
     }
-    if (isEdit && initial && total < initial.paidAmount) {
+    if (isDelivered && deliveryMethod === 'shipping') {
+      const dispatchProblem = validateDispatch(dispatch);
+      if (dispatchProblem) return dispatchProblem;
+    }
+    if (isEdit && initial && !bagOpen && total < initial.paidAmount) {
       return `Ya se cobraron ${formatCurrency(initial.paidAmount)}: el total no puede quedar por debajo de eso.`;
     }
     return null;
@@ -313,7 +327,17 @@ export function AdminSaleForm({
       ),
       discount: appliedDiscount,
       shippingCost: appliedShipping,
-      delivery: { method: deliveryMethod, status: isDelivered ? 'delivered' : 'pending', note: deliveryNote.trim() },
+      delivery: {
+        method: deliveryMethod,
+        note: deliveryNote.trim(),
+        // Retiro en el local: no hay transporte que elegir. Envío: lo que se cargó del despacho.
+        ...(!isDelivered
+          ? { status: 'pending' as const }
+          : deliveryMethod === 'pickup'
+            ? { status: 'delivered' as const, carrier: 'local' as const, deliveredAt: dispatch.deliveredAt }
+            : dispatchPayloadFrom(dispatch)),
+      },
+      ...(bagOpen && bagClosesOn ? { bagClosesOn } : {}),
       notes: notes.trim(),
       ...(isEdit
         ? {}
@@ -621,27 +645,48 @@ export function AdminSaleForm({
         )}
       </Section>
 
-      <Section title="Entrega">
-        <div className="flex flex-wrap gap-2">
-          <Chip isActive={deliveryMethod === 'pickup'} onClick={() => setDeliveryMethod('pickup')}>
-            Retira / se lo lleva
-          </Chip>
-          <Chip isActive={deliveryMethod === 'shipping'} onClick={() => setDeliveryMethod('shipping')}>
-            Envío
-          </Chip>
-        </div>
-        <label className="mt-2 flex min-h-11 items-center gap-2 text-sm text-stone-700">
-          <input type="checkbox" className="h-5 w-5" checked={isDelivered} onChange={(e) => setDelivered(e.target.checked)} />
-          {deliveryMethod === 'pickup' ? 'Ya se lo llevó' : 'Ya se envió'}
-        </label>
-        <input
-          value={deliveryNote}
-          onChange={(e) => setDeliveryNote(e.target.value)}
-          placeholder={deliveryMethod === 'shipping' ? 'Transporte o número de seguimiento (opcional)' : 'Quién retira, cuándo… (opcional)'}
-          aria-label="Detalle de la entrega"
-          className={`${INPUT_CLASS} mt-1`}
-        />
-      </Section>
+      {bagOpen && initial ? (
+        <Section title="Bolsa">
+          <p className="mb-2 text-sm text-stone-700">{describeBagDeadline(initial)}. Se despacha cuando se cierra.</p>
+          <label className={`${LABEL_CLASS} sm:max-w-xs`}>
+            <span className={LABEL_TEXT_CLASS}>Abierta hasta el</span>
+            <input
+              type="date"
+              value={bagClosesOn}
+              min={initial.saleDate}
+              onChange={(e) => e.target.value && setBagClosesOn(e.target.value)}
+              className={INPUT_CLASS}
+            />
+          </label>
+        </Section>
+      ) : (
+        <Section title="Entrega">
+          <div className="flex flex-wrap gap-2">
+            <Chip isActive={deliveryMethod === 'pickup'} onClick={() => setDeliveryMethod('pickup')}>
+              Retira / se lo lleva
+            </Chip>
+            <Chip isActive={deliveryMethod === 'shipping'} onClick={() => setDeliveryMethod('shipping')}>
+              Envío
+            </Chip>
+          </div>
+          <label className="mt-2 flex min-h-11 items-center gap-2 text-sm text-stone-700">
+            <input type="checkbox" className="h-5 w-5" checked={isDelivered} onChange={(e) => setDelivered(e.target.checked)} />
+            {deliveryMethod === 'pickup' ? 'Ya se lo llevó' : 'Despacho realizado'}
+          </label>
+          {isDelivered && deliveryMethod === 'shipping' && (
+            <div className="mt-1 rounded-lg border border-stone-200 bg-white p-3">
+              <DispatchFields value={dispatch} onChange={setDispatch} />
+            </div>
+          )}
+          <input
+            value={deliveryNote}
+            onChange={(e) => setDeliveryNote(e.target.value)}
+            placeholder={deliveryMethod === 'shipping' ? 'Notas del envío: sucursal, dirección… (opcional)' : 'Quién retira, cuándo… (opcional)'}
+            aria-label="Notas de la entrega"
+            className={`${INPUT_CLASS} mt-2`}
+          />
+        </Section>
+      )}
 
       <Section title="Datos de la venta">
         <div className="grid gap-3 sm:grid-cols-2">

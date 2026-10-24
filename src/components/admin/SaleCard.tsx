@@ -3,21 +3,27 @@ import type { Order } from '../../types/order';
 import { BUSINESS_NAME } from '../../config/site.config';
 import { formatCurrency } from '../../utils/format';
 import {
+  bagDaysLeft,
   balanceOf,
   buildSaleSummaryMessage,
   buildWhatsAppChatUrl,
+  carrierName,
   CHANNEL_LABELS,
+  creditOf,
+  describeBagDeadline,
   estimatedProfit,
   formatDayLabel,
   formatShortDate,
+  isBagOpen,
   paymentStateOf,
   relativeDay,
+  SHIPPING_PAYMENT_LABELS,
 } from '../../utils/sales';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { WhatsAppIcon } from '../ui/icons';
 
-export type SaleAction = 'pay' | 'deliver' | 'confirm' | 'cancel' | 'edit';
+export type SaleAction = 'pay' | 'dispatch' | 'confirm' | 'cancel' | 'edit' | 'addItems' | 'closeBag' | 'reopenBag';
 
 interface SaleCardProps {
   order: Order;
@@ -38,7 +44,12 @@ export function SaleCard({ order, whatsapp, isAdmin, isBusy, onAction, onDeleteP
   const isPending = order.status === 'pending';
   const isCancelled = order.status === 'cancelled';
   const isConfirmed = order.status === 'confirmed';
-  const awaitingDelivery = isConfirmed && order.delivery.status === 'pending';
+  const bagOpen = isBagOpen(order);
+  const bagExpired = bagOpen && bagDaysLeft(order) < 0;
+  const credit = creditOf(order);
+  // Una bolsa abierta todavía no se despacha: primero se cierra.
+  const awaitingDelivery = isConfirmed && order.delivery.status === 'pending' && !bagOpen;
+  const canReopenBag = Boolean(order.bag?.closedAt) && isConfirmed && order.delivery.status === 'pending';
   const profit = isAdmin && isConfirmed ? estimatedProfit(order) : null;
   const lines = showAllLines ? order.lines : order.lines.slice(0, VISIBLE_LINES);
   const whatsappUrl = !isCancelled ? buildWhatsAppChatUrl(whatsapp, buildSaleSummaryMessage(order, BUSINESS_NAME)) : null;
@@ -62,16 +73,26 @@ export function SaleCard({ order, whatsapp, isAdmin, isBusy, onAction, onDeleteP
         <div className="flex flex-wrap justify-end gap-1">
           {isPending && <Badge tone="stock-low">Pedido web sin confirmar</Badge>}
           {isCancelled && <Badge tone="stock-out">Cancelada</Badge>}
-          {isConfirmed && payment === 'paid' && <Badge tone="stock-in">Pagada</Badge>}
+          {bagOpen && <Badge tone={bagExpired ? 'stock-low' : 'brand'}>{bagExpired ? 'Bolsa vencida' : 'Bolsa abierta'}</Badge>}
+          {isConfirmed && credit > 0 && <Badge tone="stock-in">{formatCurrency(credit)} a favor</Badge>}
+          {isConfirmed && credit === 0 && order.total > 0 && payment === 'paid' && <Badge tone="stock-in">Pagada</Badge>}
           {isConfirmed && payment === 'partial' && <Badge tone="stock-low">Señada · debe {formatCurrency(balance)}</Badge>}
-          {isConfirmed && payment === 'unpaid' && <Badge tone="stock-low">Sin pagar</Badge>}
-          {awaitingDelivery && (
-            <Badge tone="brand">{order.delivery.method === 'shipping' ? 'Por enviar' : 'Por retirar'}</Badge>
-          )}
+          {isConfirmed && payment === 'unpaid' && order.total > 0 && <Badge tone="stock-low">Sin pagar</Badge>}
+          {awaitingDelivery && <Badge tone="brand">Por despachar</Badge>}
         </div>
       </div>
 
-      <ul className="mt-2.5 flex flex-col gap-1 border-t border-stone-100 pt-2.5 text-sm">
+      {bagOpen && (
+        <p className={`mt-1 text-xs font-semibold ${bagExpired ? 'text-stock-low' : 'text-stone-700'}`}>
+          {describeBagDeadline(order)}
+          {bagExpired && ' · cerrala, extendela o cancelala'}
+        </p>
+      )}
+
+      {order.lines.length === 0 && (
+        <p className="mt-2.5 border-t border-stone-100 pt-2.5 text-sm text-stone-600">Todavía no tiene prendas.</p>
+      )}
+      <ul className={`flex flex-col gap-1 text-sm ${order.lines.length > 0 ? 'mt-2.5 border-t border-stone-100 pt-2.5' : ''}`}>
         {lines.map((line) => (
           <li key={`${line.productId}-${line.variantId}-${line.productName}`} className="flex items-baseline justify-between gap-2">
             <span className="min-w-0 text-stone-700">
@@ -95,6 +116,18 @@ export function SaleCard({ order, whatsapp, isAdmin, isBusy, onAction, onDeleteP
         >
           {showAllLines ? 'Ver menos' : `Ver ${order.lines.length - VISIBLE_LINES} prendas más`}
         </button>
+      )}
+
+      {isConfirmed && order.delivery.status === 'delivered' && (
+        <p className="mt-2 text-xs text-stone-700">
+          {order.delivery.carrier === 'local'
+            ? `Entregada en el local${order.delivery.deliveredAt ? ` el ${formatShortDate(order.delivery.deliveredAt)}` : ''}`
+            : `Despachada${order.delivery.deliveredAt ? ` el ${formatShortDate(order.delivery.deliveredAt)}` : ''}${
+                carrierName(order.delivery) ? ` por ${carrierName(order.delivery)}` : ''
+              }`}
+          {order.delivery.trackingCode && ` · seguimiento ${order.delivery.trackingCode}`}
+          {order.delivery.shippingPayment && ` · ${SHIPPING_PAYMENT_LABELS[order.delivery.shippingPayment].toLowerCase()}`}
+        </p>
       )}
 
       {(order.delivery.note || order.notes || order.customer.comment) && (
@@ -137,16 +170,26 @@ export function SaleCard({ order, whatsapp, isAdmin, isBusy, onAction, onDeleteP
           </span>
         </p>
         {profit !== null && <p className="text-xs text-stone-600">Ganancia estimada {formatCurrency(profit)}</p>}
-        {isConfirmed && balance > 0 && order.channel !== 'presencial' && (
+        {isConfirmed && balance > 0 && !bagOpen && order.channel !== 'presencial' && (
           <p className="w-full text-xs text-stone-600">Reservada {relativeDay(order.saleDate)}</p>
         )}
       </div>
 
       {!isCancelled && (
         <div className="mt-2.5 flex flex-wrap gap-2">
-          {balance > 0 && (
-            <Button disabled={isBusy} onClick={() => onAction(order, 'pay')}>
+          {bagOpen && (
+            <Button disabled={isBusy} onClick={() => onAction(order, 'addItems')}>
+              + Prendas
+            </Button>
+          )}
+          {(balance > 0 || bagOpen) && (
+            <Button variant={bagOpen ? 'secondary' : 'primary'} disabled={isBusy} onClick={() => onAction(order, 'pay')}>
               Cobrar
+            </Button>
+          )}
+          {bagOpen && (
+            <Button variant="secondary" disabled={isBusy} onClick={() => onAction(order, 'closeBag')}>
+              Cerrar bolsa
             </Button>
           )}
           {isPending && (
@@ -155,8 +198,8 @@ export function SaleCard({ order, whatsapp, isAdmin, isBusy, onAction, onDeleteP
             </Button>
           )}
           {awaitingDelivery && (
-            <Button variant="secondary" disabled={isBusy} onClick={() => onAction(order, 'deliver')}>
-              {order.delivery.method === 'shipping' ? 'Marcar enviada' : 'Marcar entregada'}
+            <Button variant="secondary" disabled={isBusy} onClick={() => onAction(order, 'dispatch')}>
+              Despacho realizado
             </Button>
           )}
           {whatsappUrl && (
@@ -173,6 +216,11 @@ export function SaleCard({ order, whatsapp, isAdmin, isBusy, onAction, onDeleteP
           <Button variant="ghost" disabled={isBusy} onClick={() => onAction(order, 'edit')}>
             Editar
           </Button>
+          {canReopenBag && (
+            <Button variant="ghost" disabled={isBusy} onClick={() => onAction(order, 'reopenBag')}>
+              Reabrir bolsa
+            </Button>
+          )}
           <Button variant="danger" disabled={isBusy} onClick={() => onAction(order, 'cancel')}>
             {isPending ? 'Descartar' : 'Cancelar venta'}
           </Button>

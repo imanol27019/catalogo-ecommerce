@@ -11,6 +11,7 @@ import {
   CHANNEL_LABELS,
   daysBetween,
   formatDayLabel,
+  isBagOpen,
   matchesClient,
   normalizeSearch,
   paymentStateOf,
@@ -318,8 +319,11 @@ function ClientDetail({ client, onBack, onChanged }: { client: ClientWithStats; 
                     ) : (
                       <Badge tone="stock-low">Debe {formatCurrency(balanceOf(order))}</Badge>
                     )}
-                    {order.status === 'confirmed' && order.delivery.status === 'pending' && (
-                      <Badge tone="brand">{order.delivery.method === 'shipping' ? 'Por enviar' : 'Por retirar'}</Badge>
+                    {isBagOpen(order) ? (
+                      <Badge tone="brand">Bolsa abierta</Badge>
+                    ) : (
+                      order.status === 'confirmed' &&
+                      order.delivery.status === 'pending' && <Badge tone="brand">Por despachar</Badge>
                     )}
                   </div>
                 </li>
