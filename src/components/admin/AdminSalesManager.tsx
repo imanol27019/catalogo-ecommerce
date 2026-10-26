@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Order, SaleChannel } from '../../types/order';
 import type { Product } from '../../types/product';
-import type { CashSummary, Client, ClientPayload, ClientWithStats, SalesConfig } from '../../types/sales';
-import { deletePayment, fetchOrders, updateBag, updateOrderStatus } from '../../data/orders';
+import type { CashSummary, Client, ClientPayload, ClientWithStats, MessageTemplates, SalesConfig } from '../../types/sales';
+import { deletePayment, deleteSale, fetchOrders, updateBag, updateOrderStatus } from '../../data/orders';
+import { buildCustomerMessage } from '../../utils/messages';
 import { fetchCashSummary } from '../../data/sales';
 import { BUSINESS_NAME } from '../../config/site.config';
 import { formatCurrency, plural } from '../../utils/format';
@@ -11,7 +12,6 @@ import {
   addDays,
   bagDaysLeft,
   balanceOf,
-  buildSaleSummaryMessage,
   buildWhatsAppChatUrl,
   CHANNEL_LABELS,
   downloadTextFile,
@@ -190,6 +190,20 @@ export function AdminSalesManager({
           'No se pudo confirmar el pedido.',
         );
         return;
+      case 'delete': {
+        const question = [
+          `¿Eliminar para siempre la venta ${order.code} de ${order.customer.name}?`,
+          '',
+          ...(order.status === 'confirmed' ? [`${plural(order.itemCount, 'prenda vuelve', 'prendas vuelven')} al stock.`] : []),
+          ...(order.paidAmount > 0 && order.status !== 'cancelled'
+            ? [`Sus cobros (${formatCurrency(order.paidAmount)}) dejan de figurar en la caja y en los reportes.`]
+            : []),
+          'No se puede deshacer.',
+        ].join('\n');
+        if (!window.confirm(question)) return;
+        void runAction(order, () => deleteSale(order.id, session.password), order.status === 'confirmed', 'No se pudo eliminar la venta.');
+        return;
+      }
       case 'cancel': {
         const question =
           order.status === 'pending'
@@ -261,6 +275,7 @@ export function AdminSalesManager({
         key={order.id}
         order={order}
         whatsapp={order.clientId ? clientById.get(order.clientId)?.whatsapp : undefined}
+        templates={config.messageTemplates}
         isAdmin={isAdmin}
         isBusy={busyId === order.id}
         onAction={handleAction}
@@ -295,7 +310,13 @@ export function AdminSalesManager({
         </Button>
       </div>
 
-      {savedNotice && <SavedNotice order={savedNotice} whatsapp={clientById.get(savedNotice.clientId ?? '')?.whatsapp} />}
+      {savedNotice && (
+        <SavedNotice
+          order={savedNotice}
+          whatsapp={clientById.get(savedNotice.clientId ?? '')?.whatsapp}
+          templates={config.messageTemplates}
+        />
+      )}
 
       {error && (
         <Alert tone="error" onRetry={() => setReloadToken((t) => t + 1)}>
@@ -398,11 +419,10 @@ export function AdminSalesManager({
 
       <DispatchDialog
         order={dispatching}
+        whatsapp={dispatching?.clientId ? clientById.get(dispatching.clientId)?.whatsapp : undefined}
+        templates={config.messageTemplates}
         onClose={() => setDispatching(null)}
-        onSaved={() => {
-          setDispatching(null);
-          afterChange(false);
-        }}
+        onSaved={() => afterChange(false)}
       />
 
       <OpenBagDialog
@@ -442,9 +462,17 @@ export function AdminSalesManager({
   );
 }
 
-function SavedNotice({ order, whatsapp }: { order: Order; whatsapp?: string }) {
+function SavedNotice({
+  order,
+  whatsapp,
+  templates,
+}: {
+  order: Order;
+  whatsapp?: string;
+  templates: Partial<MessageTemplates>;
+}) {
   const balance = balanceOf(order);
-  const url = buildWhatsAppChatUrl(whatsapp, buildSaleSummaryMessage(order, BUSINESS_NAME));
+  const url = buildWhatsAppChatUrl(whatsapp, buildCustomerMessage('summary', order, BUSINESS_NAME, templates));
   return (
     <Alert tone="success" title={`Venta ${order.code} guardada · ${formatCurrency(order.total)}`}>
       <p>

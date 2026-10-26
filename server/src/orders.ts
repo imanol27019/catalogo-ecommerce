@@ -478,24 +478,30 @@ function linesAsPayload(lines: OrderLine[]): Record<string, unknown>[] {
 }
 
 /**
- * Suma (o resta, con `qty` negativa) unidades de un talle/color a una venta existente. Es lo que
- * usa el modo live: cada prenda que pide la clienta entra a su bolsa con un toque. Los precios se
- * recalculan con el total del producto, así el escalón por cantidad se aplica solo.
+ * Suma (o resta, con `qty` negativa) unidades de uno o varios talles/colores a una venta existente.
+ * Es lo que usa el armado de bolsas: se eligen varias prendas con sus cantidades y entran todas
+ * juntas. Los precios se recalculan con el total del producto, así el escalón por cantidad se
+ * aplica solo.
  */
-export function changeSaleItem(
+export function changeSaleItems(
   order: Order,
-  item: { productId: unknown; variantId: unknown; qty: unknown },
+  items: { productId: unknown; variantId: unknown; qty: unknown }[],
   ctx: Pick<SaleContext, 'products' | 'costs'>,
 ): Order {
-  const delta = Math.trunc(Number(item.qty));
-  if (!Number.isFinite(delta) || delta === 0 || Math.abs(delta) > MAX_QTY_PER_LINE) {
-    throw new OrderValidationError('Cantidad inválida.');
-  }
+  if (items.length === 0) throw new OrderValidationError('No elegiste ninguna prenda.');
+  if (items.length > MAX_LINES) throw new OrderValidationError('Son demasiadas prendas distintas de una vez.');
+
   const raw = linesAsPayload(order.lines);
-  const same = raw.find((r) => r.productId === item.productId && r.variantId === item.variantId);
-  if (same) same.qty = Number(same.qty) + delta;
-  else if (delta > 0) raw.push({ productId: item.productId, variantId: item.variantId, qty: delta });
-  else throw new OrderValidationError('Esa prenda no está en la venta.');
+  for (const item of items) {
+    const delta = Math.trunc(Number(item.qty));
+    if (!Number.isFinite(delta) || delta === 0 || Math.abs(delta) > MAX_QTY_PER_LINE) {
+      throw new OrderValidationError('Cantidad inválida.');
+    }
+    const same = raw.find((r) => r.productId === item.productId && r.variantId === item.variantId);
+    if (same) same.qty = Number(same.qty) + delta;
+    else if (delta > 0) raw.push({ productId: item.productId, variantId: item.variantId, qty: delta });
+    else throw new OrderValidationError('Esa prenda no está en la venta.');
+  }
 
   const lines = resolveLines(
     raw.filter((r) => Number(r.qty) > 0),

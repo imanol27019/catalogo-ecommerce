@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import type { Product } from '../../types/product';
-import type { PaymentMethod, SalesConfig } from '../../types/sales';
+import type { MessageTemplates, PaymentMethod, SalesConfig } from '../../types/sales';
 import { saveSalesConfig } from '../../data/sales';
 import { formatCurrency } from '../../utils/format';
 import { getEffectivePrice } from '../../utils/pricing';
@@ -11,6 +11,10 @@ import { Alert } from '../ui/Alert';
 import { MoneyInput } from '../ui/MoneyInput';
 import { INPUT_CLASS, INPUT_COMPACT_CLASS, LABEL_CLASS, LABEL_TEXT_CLASS } from '../ui/formStyles';
 import { describeApiError, useAdminSession } from './adminSession';
+import { SellerAccountsEditor } from './SellerAccountsEditor';
+import { MessageTemplatesEditor } from './MessageTemplatesEditor';
+import { sellerDraftsFrom, sellerPayloadFrom, validateSellerDrafts, type SellerDraft } from '../../utils/sellerDrafts';
+import { DEFAULT_TEMPLATES } from '../../utils/messages';
 
 interface AdminSalesSettingsProps {
   config: SalesConfig;
@@ -20,12 +24,14 @@ interface AdminSalesSettingsProps {
 
 export function AdminSalesSettings({ config, products, onSaved }: AdminSalesSettingsProps) {
   const session = useAdminSession();
-  const [sellers, setSellers] = useState<string[]>(config.sellers);
+  const [sellerDrafts, setSellerDrafts] = useState<SellerDraft[]>(() => sellerDraftsFrom(config.sellerAccounts));
+  const [templates, setTemplates] = useState<MessageTemplates>(() => ({
+    summary: config.messageTemplates.summary || DEFAULT_TEMPLATES.summary,
+    dispatch: config.messageTemplates.dispatch || DEFAULT_TEMPLATES.dispatch,
+  }));
   const [methods, setMethods] = useState<PaymentMethod[]>(config.paymentMethods);
   const [costs, setCosts] = useState<Record<string, number>>(config.costs ?? {});
   const [bagDays, setBagDays] = useState(config.bagDays);
-  const [sellerKey, setSellerKey] = useState('');
-  const [removeKey, setRemoveKey] = useState(false);
   const [costSearch, setCostSearch] = useState('');
   const [isSaving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
@@ -53,8 +59,9 @@ export function AdminSalesSettings({ config, products, onSaved }: AdminSalesSett
       setFeedback({ tone: 'error', text: 'Los días de bolsa abierta tienen que ser entre 1 y 60.' });
       return;
     }
-    if (sellerKey && sellerKey.trim().length < 6) {
-      setFeedback({ tone: 'error', text: 'La clave de vendedoras tiene que tener al menos 6 caracteres.' });
+    const sellersProblem = validateSellerDrafts(sellerDrafts);
+    if (sellersProblem) {
+      setFeedback({ tone: 'error', text: sellersProblem });
       return;
     }
     setSaving(true);
@@ -62,19 +69,21 @@ export function AdminSalesSettings({ config, products, onSaved }: AdminSalesSett
     try {
       const saved = await saveSalesConfig(
         {
-          sellers: sellers.map((s) => s.trim()).filter(Boolean),
+          sellerAccounts: sellerPayloadFrom(sellerDrafts),
           paymentMethods: cleanMethods,
           bagDays,
           costs,
-          ...(removeKey ? { sellerKey: null } : sellerKey.trim() ? { sellerKey: sellerKey.trim() } : {}),
+          // Un mensaje igual al original se guarda vacío: así, si el original mejora, lo toma solo.
+          messageTemplates: {
+            summary: templates.summary.trim() === DEFAULT_TEMPLATES.summary.trim() ? '' : templates.summary,
+            dispatch: templates.dispatch.trim() === DEFAULT_TEMPLATES.dispatch.trim() ? '' : templates.dispatch,
+          },
         },
         session.password,
       );
       onSaved(saved);
-      setSellers(saved.sellers);
+      setSellerDrafts(sellerDraftsFrom(saved.sellerAccounts));
       setMethods(saved.paymentMethods);
-      setSellerKey('');
-      setRemoveKey(false);
       setFeedback({ tone: 'success', text: 'Guardado.' });
     } catch (err) {
       const message = describeApiError(err, session, 'No se pudo guardar.');
@@ -87,16 +96,7 @@ export function AdminSalesSettings({ config, products, onSaved }: AdminSalesSett
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6" noValidate>
       <Fieldset title="Vendedoras">
-        <p className="mb-3 text-xs text-stone-600">
-          Cada venta registra quién la hizo, y en Reportes ves cuánto vendió cada una. Si no cargás ninguna, no se pregunta.
-        </p>
-        <EditableList
-          values={sellers}
-          onChange={setSellers}
-          placeholder="Nombre"
-          addLabel="+ Agregar vendedora"
-          itemLabel="vendedora"
-        />
+        <SellerAccountsEditor drafts={sellerDrafts} onChange={setSellerDrafts} />
       </Fieldset>
 
       <Fieldset title="Medios de pago">
@@ -158,42 +158,8 @@ export function AdminSalesSettings({ config, products, onSaved }: AdminSalesSett
         <p className="mt-2 text-xs text-stone-600">Cambiarlo vale para las bolsas nuevas; las abiertas mantienen su fecha.</p>
       </Fieldset>
 
-      <Fieldset title="Acceso de vendedoras">
-        <p className="mb-3 text-xs text-stone-600">
-          Con esta clave las vendedoras entran al panel y solo ven <strong>Ventas</strong> y <strong>Clientas</strong>: no ven costos,
-          ganancias ni reportes, y no pueden tocar productos ni configuración. Tu contraseña sigue siendo la única que abre todo.
-        </p>
-        <p className="mb-2 text-sm text-stone-700">
-          Estado:{' '}
-          <strong className="font-semibold">{config.hasSellerKey ? 'hay una clave activa' : 'todavía no hay clave'}</strong>
-        </p>
-        <label className={LABEL_CLASS}>
-          <span className={LABEL_TEXT_CLASS}>{config.hasSellerKey ? 'Cambiar la clave' : 'Crear la clave'} (mínimo 6 caracteres)</span>
-          <input
-            type="text"
-            value={sellerKey}
-            onChange={(e) => {
-              setSellerKey(e.target.value);
-              setRemoveKey(false);
-            }}
-            autoComplete="off"
-            className={`${INPUT_CLASS} sm:max-w-xs`}
-          />
-        </label>
-        {config.hasSellerKey && (
-          <label className="mt-2 flex min-h-11 items-center gap-2 text-sm text-stone-700">
-            <input
-              type="checkbox"
-              className="h-5 w-5"
-              checked={removeKey}
-              onChange={(e) => {
-                setRemoveKey(e.target.checked);
-                if (e.target.checked) setSellerKey('');
-              }}
-            />
-            Quitar la clave (nadie más que vos puede entrar)
-          </label>
-        )}
+      <Fieldset title="Mensajes de WhatsApp">
+        <MessageTemplatesEditor templates={templates} onChange={setTemplates} />
       </Fieldset>
 
       <Fieldset title="Costo de cada prenda">
@@ -255,47 +221,6 @@ export function AdminSalesSettings({ config, products, onSaved }: AdminSalesSett
         </Button>
       </div>
     </form>
-  );
-}
-
-function EditableList({
-  values,
-  onChange,
-  placeholder,
-  addLabel,
-  itemLabel,
-}: {
-  values: string[];
-  onChange: (values: string[]) => void;
-  placeholder: string;
-  addLabel: string;
-  itemLabel: string;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      {values.map((value, index) => (
-        <div key={index} className="flex items-center gap-2">
-          <input
-            value={value}
-            onChange={(e) => onChange(values.map((v, i) => (i === index ? e.target.value : v)))}
-            placeholder={placeholder}
-            aria-label={`${itemLabel} ${index + 1}`}
-            className={`${INPUT_COMPACT_CLASS} min-w-0 flex-1`}
-          />
-          <button
-            type="button"
-            onClick={() => onChange(values.filter((_, i) => i !== index))}
-            aria-label={`Quitar ${value || `${itemLabel} ${index + 1}`}`}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-lg text-stone-600 hover:bg-stone-100 hover:text-red-700"
-          >
-            ×
-          </button>
-        </div>
-      ))}
-      <Button type="button" variant="secondary" className="self-start" onClick={() => onChange([...values, ''])}>
-        {addLabel}
-      </Button>
-    </div>
   );
 }
 

@@ -5,6 +5,8 @@ import { ApiError } from '../../data/apiClient';
 export interface AdminSession {
   password: string;
   role: StaffRole;
+  /** Nombre de la vendedora que entró (sus ventas quedan a su nombre). Vacío si es la dueña. */
+  sellerName?: string;
   /** Se llama cuando el servidor rechaza la clave: el panel vuelve al login. */
   onAuthError: () => void;
 }

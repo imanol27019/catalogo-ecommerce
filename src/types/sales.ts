@@ -8,24 +8,49 @@ export interface PaymentMethod {
   label: string;
 }
 
+/** Textos de los mensajes de WhatsApp. Vacío = el texto de fábrica (ver `utils/messages.ts`). */
+export interface MessageTemplates {
+  summary: string;
+  dispatch: string;
+}
+
+/** Cuenta de una vendedora tal como la ve la administradora (la contraseña nunca vuelve). */
+export interface SellerAccountInfo {
+  id: string;
+  name: string;
+  username: string;
+  /** Tiene contraseña: puede entrar al panel. */
+  hasAccess: boolean;
+}
+
 export interface SalesConfig {
+  /** Nombres de las vendedoras, para atribuir las ventas. */
   sellers: string[];
   paymentMethods: PaymentMethod[];
   /** Cuántos días queda abierta la bolsa de una clienta de live. */
   bagDays: number;
-  /** Si hay una clave de vendedoras definida (la clave en sí nunca vuelve del servidor). */
-  hasSellerKey: boolean;
+  messageTemplates: Partial<MessageTemplates>;
   /** Costo por unidad de cada producto. Solo llega si entró la administradora. */
   costs?: Record<string, number>;
+  /** Solo llega si entró la administradora. */
+  sellerAccounts?: SellerAccountInfo[];
+}
+
+export interface SellerAccountPayload {
+  /** Sin id = vendedora nueva. */
+  id?: string;
+  name: string;
+  username: string;
+  /** `undefined` = no tocarla, `null` = quitarle el acceso, texto = contraseña nueva. */
+  password?: string | null;
 }
 
 export interface SalesConfigPayload {
-  sellers: string[];
+  sellerAccounts: SellerAccountPayload[];
   paymentMethods: PaymentMethod[];
   bagDays: number;
   costs: Record<string, number>;
-  /** `undefined` = no cambiarla, `null` = quitarla, texto = clave nueva. */
-  sellerKey?: string | null;
+  messageTemplates: Partial<MessageTemplates>;
 }
 
 export interface Client {

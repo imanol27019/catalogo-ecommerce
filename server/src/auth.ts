@@ -3,29 +3,37 @@ import type { NextFunction, Request, Response } from 'express';
 
 /**
  * Dos niveles de acceso al panel:
- * - `admin`: la dueña. Ve y toca todo (productos, costos, reportes, configuración).
- * - `seller`: las vendedoras. Cargan ventas, cobros y clientas, pero no ven costos ni ganancias
- *   ni pueden tocar el catálogo. Comparten una clave que la dueña define desde el panel.
+ * - `admin`: la dueña. Entra solo con su contraseña y ve y toca todo.
+ * - `seller`: cada vendedora, con su usuario y contraseña. Carga ventas, cobros y clientas, pero no
+ *   ve costos ni ganancias ni puede tocar el catálogo. Sus ventas quedan a su nombre.
  */
 export type StaffRole = 'admin' | 'seller';
 
-/** Hash de la clave de vendedoras (`sal:hash` en hex). `null` = no hay clave, nadie entra con ese rol. */
-let sellerKeyHash: string | null = null;
-
-export function setSellerKeyHash(hash: string | null): void {
-  sellerKeyHash = hash;
+interface SellerLogin {
+  name: string;
+  passwordHash: string;
 }
 
-/** La clave se guarda con scrypt y sal propia: aunque alguien lea la base, no la obtiene. */
-export function hashSellerKey(key: string): string {
+/** Cuentas que pueden entrar, por usuario. Se cargan al arrancar y al guardar la configuración. */
+let sellerLogins = new Map<string, SellerLogin>();
+
+export function setSellerLogins(accounts: { name: string; username: string; passwordHash: string | null }[]): void {
+  sellerLogins = new Map(
+    accounts
+      .filter((a): a is typeof a & { passwordHash: string } => Boolean(a.passwordHash))
+      .map((a) => [a.username, { name: a.name, passwordHash: a.passwordHash }]),
+  );
+}
+
+/** Las contraseñas se guardan con scrypt y sal propia: aunque alguien lea la base, no las obtiene. */
+export function hashPassword(password: string): string {
   const salt = randomBytes(16);
-  const hash = scryptSync(key, salt, 32);
+  const hash = scryptSync(password, salt, 32);
   return `${salt.toString('hex')}:${hash.toString('hex')}`;
 }
 
-function matchesSellerKey(provided: string): boolean {
-  if (!sellerKeyHash) return false;
-  const [saltHex, hashHex] = sellerKeyHash.split(':');
+function matchesHash(provided: string, stored: string): boolean {
+  const [saltHex, hashHex] = stored.split(':');
   if (!saltHex || !hashHex) return false;
   const expected = Buffer.from(hashHex, 'hex');
   const actual = scryptSync(provided, Buffer.from(saltHex, 'hex'), expected.length);
@@ -38,16 +46,25 @@ function safeEqual(a: string, b: string): boolean {
   return left.length === right.length && timingSafeEqual(left, right);
 }
 
-function resolveRole(req: Request): StaffRole | null {
+function resolveIdentity(req: Request): { role: StaffRole; sellerName?: string } | null {
   const provided = req.header('x-admin-password') ?? '';
   if (!provided) return null;
-  if (safeEqual(provided, process.env.ADMIN_PASSWORD ?? '')) return 'admin';
-  if (matchesSellerKey(provided)) return 'seller';
+  const username = (req.header('x-staff-user') ?? '').trim().toLowerCase();
+
+  if (!username) return safeEqual(provided, process.env.ADMIN_PASSWORD ?? '') ? { role: 'admin' } : null;
+
+  const login = sellerLogins.get(username);
+  if (login && matchesHash(provided, login.passwordHash)) return { role: 'seller', sellerName: login.name };
   return null;
 }
 
 export function roleOf(res: Response): StaffRole {
   return res.locals.role as StaffRole;
+}
+
+/** Nombre de la vendedora que hizo el pedido, si entró una vendedora. */
+export function sellerNameOf(res: Response): string | undefined {
+  return res.locals.sellerName as string | undefined;
 }
 
 /**
@@ -61,17 +78,18 @@ function guard(allowed: StaffRole[]) {
       return;
     }
 
-    const role = resolveRole(req);
-    if (!role) {
-      res.status(401).json({ error: 'Contraseña incorrecta.' });
+    const identity = resolveIdentity(req);
+    if (!identity) {
+      res.status(401).json({ error: 'Usuario o contraseña incorrectos.' });
       return;
     }
-    if (!allowed.includes(role)) {
+    if (!allowed.includes(identity.role)) {
       res.status(403).json({ error: 'Esta sección es solo para la administradora.' });
       return;
     }
 
-    res.locals.role = role;
+    res.locals.role = identity.role;
+    res.locals.sellerName = identity.sellerName;
     next();
   };
 }

@@ -1,14 +1,18 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Carrier, Order, ShippingPayment } from '../../types/order';
+import type { MessageTemplates } from '../../types/sales';
+import { BUSINESS_NAME } from '../../config/site.config';
 import { dispatchSale } from '../../data/orders';
-import { CARRIER_LABELS, SHIPPING_PAYMENT_LABELS, todayAr } from '../../utils/sales';
+import { buildWhatsAppChatUrl, CARRIER_LABELS, SHIPPING_PAYMENT_LABELS, todayAr } from '../../utils/sales';
+import { buildCustomerMessage, canSendDispatchNotice } from '../../utils/messages';
 import { dispatchDraftFrom, dispatchPayloadFrom, validateDispatch, type DispatchDraft } from '../../utils/dispatch';
 import { plural } from '../../utils/format';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Chip } from '../ui/Chip';
 import { Alert } from '../ui/Alert';
+import { WhatsAppIcon } from '../ui/icons';
 import { INPUT_CLASS, LABEL_CLASS, LABEL_TEXT_CLASS } from '../ui/formStyles';
 import { describeApiError, useAdminSession } from './adminSession';
 
@@ -89,23 +93,36 @@ export function DispatchFields({ value, onChange }: { value: DispatchDraft; onCh
 
 interface DispatchDialogProps {
   order: Order | null;
+  /** WhatsApp de la clienta, para avisarle que su pedido salió. */
+  whatsapp?: string;
+  templates: Partial<MessageTemplates>;
   onClose: () => void;
   onSaved: (order: Order) => void;
 }
 
-export function DispatchDialog({ order, onClose, onSaved }: DispatchDialogProps) {
+export function DispatchDialog({ order, whatsapp, templates, onClose, onSaved }: DispatchDialogProps) {
   return (
     <Modal isOpen={order !== null} onClose={onClose} title={order ? `Despacho realizado · ${order.code}` : 'Despacho realizado'}>
-      {order && <DispatchForm key={order.id} order={order} onClose={onClose} onSaved={onSaved} />}
+      {order && (
+        <DispatchForm key={order.id} order={order} whatsapp={whatsapp} templates={templates} onClose={onClose} onSaved={onSaved} />
+      )}
     </Modal>
   );
 }
 
-function DispatchForm({ order, onClose, onSaved }: { order: Order; onClose: () => void; onSaved: (order: Order) => void }) {
+function DispatchForm({
+  order,
+  whatsapp,
+  templates,
+  onClose,
+  onSaved,
+}: Omit<DispatchDialogProps, 'order'> & { order: Order }) {
   const session = useAdminSession();
   const [draft, setDraft] = useState<DispatchDraft>(() => ({ ...dispatchDraftFrom(order.delivery), deliveredAt: todayAr() }));
   const [isSaving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Una vez guardado, la ventana pasa a ofrecer el aviso para la clienta. */
+  const [saved, setSaved] = useState<Order | null>(null);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -117,13 +134,19 @@ function DispatchForm({ order, onClose, onSaved }: { order: Order; onClose: () =
     setSaving(true);
     setError(null);
     try {
-      onSaved(await dispatchSale(order.id, dispatchPayloadFrom(draft), session.password));
+      const updated = await dispatchSale(order.id, dispatchPayloadFrom(draft), session.password);
+      onSaved(updated);
+      // Si se entregó en mano en el local no hay nada que avisar: se cierra directamente.
+      if (canSendDispatchNotice(updated)) setSaved(updated);
+      else onClose();
     } catch (err) {
       setError(describeApiError(err, session, 'No se pudo guardar el despacho.'));
     } finally {
       setSaving(false);
     }
   }
+
+  if (saved) return <DispatchNotice order={saved} whatsapp={whatsapp} templates={templates} onClose={onClose} />;
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
@@ -142,5 +165,71 @@ function DispatchForm({ order, onClose, onSaved }: { order: Order; onClose: () =
         </Button>
       </div>
     </form>
+  );
+}
+
+/**
+ * Después de guardar el despacho: el mensajito para la clienta, armado con la plantilla de
+ * "Aviso de despacho" (incluye el seguimiento si hay). Se manda por WhatsApp o se copia, por si
+ * se le escribe por otro lado.
+ */
+function DispatchNotice({
+  order,
+  whatsapp,
+  templates,
+  onClose,
+}: {
+  order: Order;
+  whatsapp?: string;
+  templates: Partial<MessageTemplates>;
+  onClose: () => void;
+}) {
+  const message = buildCustomerMessage('dispatch', order, BUSINESS_NAME, templates);
+  const url = buildWhatsAppChatUrl(whatsapp, message);
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(message);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Alert tone="success" title="Despacho guardado">
+        ¿Le avisás a {order.customer.name.split(' ')[0]} que su pedido ya salió?
+      </Alert>
+      <pre className="whitespace-pre-wrap rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 font-sans text-sm text-stone-800">
+        {message}
+      </pre>
+      {!url && (
+        <p className="text-xs text-stone-600">
+          La clienta no tiene WhatsApp cargado: podés copiar el mensaje, o cargarle el número en su ficha.
+        </p>
+      )}
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button type="button" variant="ghost" onClick={onClose}>
+          Ahora no
+        </Button>
+        <Button type="button" variant="secondary" onClick={() => void copy()}>
+          {copied ? '¡Copiado!' : 'Copiar mensaje'}
+        </Button>
+        {url && (
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onClose}
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-whatsapp-dark px-4 font-heading text-sm font-semibold text-white underline-offset-2 hover:underline"
+          >
+            <WhatsAppIcon className="h-4 w-4" />
+            Avisarle por WhatsApp
+          </a>
+        )}
+      </div>
+    </div>
   );
 }

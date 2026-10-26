@@ -1,6 +1,6 @@
 import type express from 'express';
 import type { Collection, Filter, Document } from 'mongodb';
-import { requireAdmin, requireStaff, roleOf, hashSellerKey, setSellerKeyHash } from './auth';
+import { requireAdmin, requireStaff, roleOf, sellerNameOf, setSellerLogins } from './auth';
 import type { StaffRole } from './auth';
 import { asyncRoute, HttpError } from './http';
 import { isIsoDate, daysInRange, addDays, toArDate } from './dates';
@@ -9,7 +9,7 @@ import {
   applyStockChanges,
   buildDelivery,
   buildPayment,
-  changeSaleItem,
+  changeSaleItems,
   isBagOpen,
   buildSale,
   buildWebOrder,
@@ -21,7 +21,7 @@ import {
   type Order,
 } from './orders';
 import { buildSalesReport, clientKey } from './reports';
-import { sanitizeSalesConfig, SalesConfigValidationError, withDefaults, type SalesConfig } from './salesConfig';
+import { sanitizeSalesConfig, withDefaults, type SalesConfig } from './salesConfig';
 
 interface SalesRoutesDeps {
   ordersCollection: Collection;
@@ -71,7 +71,16 @@ export async function registerSalesRoutes(app: express.Express, deps: SalesRoute
     return withDefaults(doc ? stripId<Partial<SalesConfig>>(doc) : null);
   }
 
-  setSellerKeyHash((await getSalesConfig()).sellerKeyHash);
+  // Las vendedoras pasaron de ser una lista de nombres (con una clave compartida) a cuentas
+  // propias: se convierte una sola vez y se guarda, así cada una conserva el mismo id.
+  const storedConfig = await salesConfigCollection.findOne({ _id: 'salesConfig' as never });
+  if (storedConfig && !Array.isArray(storedConfig.sellerAccounts)) {
+    const migrated = withDefaults(stripId(storedConfig));
+    await salesConfigCollection.replaceOne({ _id: 'salesConfig' as never }, { _id: 'salesConfig' as never, ...migrated });
+    console.log('Vendedoras convertidas a cuentas propias.');
+  }
+
+  setSellerLogins((await getSalesConfig()).sellerAccounts);
 
   async function loadOrder(id: string): Promise<Order> {
     const doc = await ordersCollection.findOne({ _id: id as never });
@@ -92,13 +101,24 @@ export async function registerSalesRoutes(app: express.Express, deps: SalesRoute
 
   // --- Configuración de ventas -----------------------------------------------
 
+  /** Las vendedoras ven los nombres (para las ventas) pero no los usuarios ni los costos. */
   function publicConfig(config: SalesConfig, role: StaffRole) {
     return {
-      sellers: config.sellers,
+      sellers: config.sellerAccounts.map((s) => s.name),
       paymentMethods: config.paymentMethods,
       bagDays: config.bagDays,
-      hasSellerKey: Boolean(config.sellerKeyHash),
-      ...(role === 'admin' ? { costs: config.costs } : {}),
+      messageTemplates: config.messageTemplates,
+      ...(role === 'admin'
+        ? {
+            costs: config.costs,
+            sellerAccounts: config.sellerAccounts.map((s) => ({
+              id: s.id,
+              name: s.name,
+              username: s.username,
+              hasAccess: Boolean(s.passwordHash),
+            })),
+          }
+        : {}),
     };
   }
 
@@ -115,28 +135,15 @@ export async function registerSalesRoutes(app: express.Express, deps: SalesRoute
     requireAdmin,
     asyncRoute(async (req, res) => {
       const current = await getSalesConfig();
-      const clean = sanitizeSalesConfig(req.body);
-      const rawKey = (req.body as { sellerKey?: unknown })?.sellerKey;
-
-      let sellerKeyHash = current.sellerKeyHash;
-      if (rawKey === null || rawKey === '') {
-        sellerKeyHash = null;
-      } else if (typeof rawKey === 'string') {
-        const key = rawKey.trim();
-        if (key.length < 6) throw new SalesConfigValidationError('La clave de vendedoras tiene que tener al menos 6 caracteres.');
-        if (key === process.env.ADMIN_PASSWORD) {
-          throw new SalesConfigValidationError('La clave de vendedoras no puede ser igual a la de administradora.');
-        }
-        sellerKeyHash = hashSellerKey(key);
-      }
-
-      const updated: SalesConfig = { ...clean, sellerKeyHash, updatedAt: new Date().toISOString() };
+      const updated: SalesConfig = { ...sanitizeSalesConfig(req.body, current), updatedAt: new Date().toISOString() };
       await salesConfigCollection.replaceOne(
         { _id: 'salesConfig' as never },
         { _id: 'salesConfig' as never, ...updated },
         { upsert: true },
       );
-      setSellerKeyHash(sellerKeyHash);
+      // Una vendedora a la que se le quitó el acceso o se le cambió la contraseña queda afuera en
+      // su próximo pedido.
+      setSellerLogins(updated.sellerAccounts);
       res.json(publicConfig(updated, 'admin'));
     }),
   );
@@ -303,7 +310,9 @@ export async function registerSalesRoutes(app: express.Express, deps: SalesRoute
     '/api/sales',
     requireStaff,
     asyncRoute(async (req, res) => {
-      const body = (req.body ?? {}) as Record<string, unknown>;
+      // Si entró una vendedora, la venta queda a su nombre: no se puede cargar a nombre de otra.
+      const sellerName = sellerNameOf(res);
+      const body: Record<string, unknown> = { ...((req.body ?? {}) as Record<string, unknown>), ...(sellerName ? { seller: sellerName } : {}) };
       const [products, config, client] = await Promise.all([
         deps.getCatalogProducts(),
         getSalesConfig(),
@@ -328,7 +337,12 @@ export async function registerSalesRoutes(app: express.Express, deps: SalesRoute
       const existing = await loadOrder(req.params.id);
       if (existing.status === 'cancelled') throw new HttpError(409, 'Esta venta está cancelada: no se puede editar.');
 
-      const body = (req.body ?? {}) as Record<string, unknown>;
+      // Una vendedora que corrige una venta no se la queda: sigue a nombre de quien la hizo.
+      const sellerName = sellerNameOf(res);
+      const body: Record<string, unknown> = {
+        ...((req.body ?? {}) as Record<string, unknown>),
+        ...(sellerName ? { seller: existing.seller ?? sellerName } : {}),
+      };
       const [products, config, client] = await Promise.all([
         deps.getCatalogProducts(),
         getSalesConfig(),
@@ -382,6 +396,24 @@ export async function registerSalesRoutes(app: express.Express, deps: SalesRoute
         await applyStockChanges(catalogCollection, stockChangesBetween(order.lines, []));
       }
       res.json(forRole(updated, role));
+    }),
+  );
+
+  /**
+   * Eliminar una venta para siempre (una devolución, o una venta mal cargada). Si estaba
+   * confirmada, sus prendas vuelven al stock; sus cobros dejan de figurar en la caja y en los
+   * reportes. Solo la dueña: a diferencia de cancelar, no deja rastro.
+   */
+  app.delete(
+    '/api/sales/:id',
+    requireAdmin,
+    asyncRoute(async (req, res) => {
+      const order = await loadOrder(req.params.id);
+      await ordersCollection.deleteOne({ _id: order.id as never });
+      if (order.status === 'confirmed') {
+        await applyStockChanges(catalogCollection, stockChangesBetween(order.lines, []));
+      }
+      res.json({ ok: true, restoredUnits: order.status === 'confirmed' ? order.itemCount : 0 });
     }),
   );
 
@@ -469,9 +501,11 @@ export async function registerSalesRoutes(app: express.Express, deps: SalesRoute
       if (order.status === 'cancelled') throw new HttpError(409, 'Esta venta está cancelada.');
       const [products, config] = await Promise.all([deps.getCatalogProducts(), getSalesConfig()]);
       const body = (req.body ?? {}) as Record<string, unknown>;
-      const updated = changeSaleItem(
+      // Varias prendas de una (`items`) o una sola (compatibilidad con el panel anterior).
+      const rawItems = Array.isArray(body.items) ? (body.items as Record<string, unknown>[]) : [body];
+      const updated = changeSaleItems(
         order,
-        { productId: body.productId, variantId: body.variantId, qty: body.qty },
+        rawItems.map((item) => ({ productId: item.productId, variantId: item.variantId, qty: item.qty })),
         { products, costs: config.costs },
       );
       await saveOrder(updated);

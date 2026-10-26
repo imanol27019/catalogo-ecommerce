@@ -47,13 +47,21 @@ export async function dispatchSale(id: string, dispatch: DispatchPayload, passwo
   return apiPatch<Order>(`/api/sales/${id}/delivery`, dispatch, password);
 }
 
-/** Suma (o resta, con `qty` negativa) una prenda a la venta: lo usa el modo live. */
-export async function changeSaleItem(
-  id: string,
-  item: { productId: string; variantId: string; qty: number },
-  password: string,
-): Promise<Order> {
-  return apiPost<Order>(`/api/sales/${id}/items`, item, password);
+export interface SaleItemChange {
+  productId: string;
+  variantId: string;
+  /** Positiva suma, negativa resta. */
+  qty: number;
+}
+
+/** Suma (o resta) varias prendas de una a la venta: lo usa el armado de bolsas. */
+export async function changeSaleItems(id: string, items: SaleItemChange[], password: string): Promise<Order> {
+  return apiPost<Order>(`/api/sales/${id}/items`, { items }, password);
+}
+
+/** Borra la venta para siempre. Si estaba confirmada, sus prendas vuelven al stock. */
+export async function deleteSale(id: string, password: string): Promise<{ restoredUnits: number }> {
+  return apiDelete<{ ok: true; restoredUnits: number }>(`/api/sales/${id}`, password);
 }
 
 export async function updateBag(

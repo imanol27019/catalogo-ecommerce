@@ -15,7 +15,7 @@ export class ApiError extends Error {
   /** Mensaje listo para mostrarle a una persona, sin jerga técnica. */
   get userMessage(): string {
     if (this.isNetwork) return 'No pudimos conectarnos con el servidor. Revisá tu conexión.';
-    if (this.status === 401) return 'La contraseña no es correcta.';
+    if (this.status === 401) return 'El usuario o la contraseña no son correctos.';
     if (this.status === 413) return 'El archivo es demasiado grande.';
     if (this.status >= 500) return 'El servidor tuvo un problema. Volvé a intentar en un momento.';
     return this.message;
@@ -39,17 +39,27 @@ async function request<T>(method: string, path: string, init: RequestInit = {}):
   return res.json() as Promise<T>;
 }
 
+/**
+ * Usuario de la vendedora que entró al panel. La administradora entra sin usuario, solo con su
+ * contraseña. Se manda en un encabezado aparte, junto con la contraseña de siempre.
+ */
+let staffUser: string | null = null;
+
+export function setStaffUser(user: string | null): void {
+  staffUser = user;
+}
+
+function authHeaders(adminPassword?: string): Record<string, string> {
+  if (!adminPassword) return {};
+  return { 'X-Admin-Password': adminPassword, ...(staffUser ? { 'X-Staff-User': staffUser } : {}) };
+}
+
 function jsonHeaders(adminPassword?: string): HeadersInit {
-  return {
-    'Content-Type': 'application/json',
-    ...(adminPassword ? { 'X-Admin-Password': adminPassword } : {}),
-  };
+  return { 'Content-Type': 'application/json', ...authHeaders(adminPassword) };
 }
 
 export function apiGet<T>(path: string, adminPassword?: string): Promise<T> {
-  return request<T>('GET', path, {
-    headers: adminPassword ? { 'X-Admin-Password': adminPassword } : undefined,
-  });
+  return request<T>('GET', path, { headers: authHeaders(adminPassword) });
 }
 
 export function apiPost<T>(path: string, body: unknown, adminPassword?: string): Promise<T> {
@@ -65,7 +75,7 @@ export function apiPut<T>(path: string, body: unknown, adminPassword: string): P
 }
 
 export function apiDelete<T>(path: string, adminPassword: string): Promise<T> {
-  return request<T>('DELETE', path, { headers: { 'X-Admin-Password': adminPassword } });
+  return request<T>('DELETE', path, { headers: authHeaders(adminPassword) });
 }
 
 /** Sube el archivo tal cual, sin recomprimir, para no perder calidad de la foto. */

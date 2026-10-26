@@ -5,7 +5,7 @@ import type { Supplier } from '../../types/supplier';
 import type { Client, ClientPayload, ClientWithStats, SalesConfig, StaffRole } from '../../types/sales';
 import { catalog, fetchCatalogProducts, loadCatalog, saveCatalog } from '../../data/catalog';
 import { settings, saveSettings } from '../../data/settings';
-import { ApiError } from '../../data/apiClient';
+import { ApiError, setStaffUser } from '../../data/apiClient';
 import { fetchSuppliers } from '../../data/suppliers';
 import { createClient, fetchClients, fetchSalesConfig } from '../../data/sales';
 import { mergeCatalog } from '../../utils/catalogMerge';
@@ -18,7 +18,7 @@ import { AdminProductTable } from './AdminProductTable';
 import { AdminProductForm } from './AdminProductForm';
 import { AdminSettingsForm } from './AdminSettingsForm';
 import { AdminSuppliersManager } from './AdminSuppliersManager';
-import { AdminLoginScreen } from './AdminLoginScreen';
+import { AdminLoginScreen, type StaffLogin } from './AdminLoginScreen';
 import { ExportJsonButton } from './ExportJsonButton';
 import { AdminSessionContext, type AdminSession } from './adminSession';
 import { Alert } from '../ui/Alert';
@@ -27,6 +27,8 @@ import { Chip } from '../ui/Chip';
 
 const ADMIN_PASSWORD_KEY = 'catalogo:adminPassword';
 const ADMIN_ROLE_KEY = 'catalogo:adminRole';
+const STAFF_USER_KEY = 'catalogo:staffUser';
+const SELLER_NAME_KEY = 'catalogo:sellerName';
 
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -77,9 +79,23 @@ function readStoredRole(): StaffRole {
   return sessionStorage.getItem(ADMIN_ROLE_KEY) === 'seller' ? 'seller' : 'admin';
 }
 
+/**
+ * El usuario de la vendedora viaja en cada pedido al servidor (ver `setStaffUser`). Se restablece
+ * acá, al cargar el módulo, para que una recarga de la página no la deje sin usuario.
+ */
+setStaffUser(sessionStorage.getItem(STAFF_USER_KEY));
+
+const SESSION_KEYS = [ADMIN_PASSWORD_KEY, ADMIN_ROLE_KEY, STAFF_USER_KEY, SELLER_NAME_KEY];
+
+function clearStoredSession() {
+  for (const key of SESSION_KEYS) sessionStorage.removeItem(key);
+  setStaffUser(null);
+}
+
 export function AdminApp() {
   const [adminPassword, setAdminPassword] = useState<string | null>(() => sessionStorage.getItem(ADMIN_PASSWORD_KEY));
   const [role, setRole] = useState<StaffRole>(readStoredRole);
+  const [sellerName, setSellerName] = useState(() => sessionStorage.getItem(SELLER_NAME_KEY) ?? undefined);
   const [loginError, setLoginError] = useState<string | null>(null);
 
   const [tab, setTab] = useState<Tab>('sales');
@@ -118,15 +134,17 @@ export function AdminApp() {
 
   /** La contraseña dejó de servir (cambió en el servidor o venía guardada de antes). */
   const handleAuthError = useCallback(() => {
-    sessionStorage.removeItem(ADMIN_PASSWORD_KEY);
-    sessionStorage.removeItem(ADMIN_ROLE_KEY);
+    clearStoredSession();
     setAdminPassword(null);
     setLoginError('Tu sesión ya no es válida. Ingresá la contraseña de nuevo.');
   }, []);
 
   const session = useMemo<AdminSession | null>(
-    () => (adminPassword ? { password: adminPassword, role, onAuthError: handleAuthError } : null),
-    [adminPassword, role, handleAuthError],
+    () =>
+      adminPassword
+        ? { password: adminPassword, role, ...(sellerName ? { sellerName } : {}), onAuthError: handleAuthError }
+        : null,
+    [adminPassword, role, sellerName, handleAuthError],
   );
 
   function messageFor(err: unknown, fallback: string): string | null {
@@ -213,19 +231,23 @@ export function AdminApp() {
     return client;
   }
 
-  function handleLoginSuccess(password: string, nextRole: StaffRole) {
-    sessionStorage.setItem(ADMIN_PASSWORD_KEY, password);
-    sessionStorage.setItem(ADMIN_ROLE_KEY, nextRole);
-    setAdminPassword(password);
-    setRole(nextRole);
+  function handleLoginSuccess(login: StaffLogin) {
+    sessionStorage.setItem(ADMIN_PASSWORD_KEY, login.password);
+    sessionStorage.setItem(ADMIN_ROLE_KEY, login.role);
+    if (login.user) sessionStorage.setItem(STAFF_USER_KEY, login.user);
+    if (login.sellerName) sessionStorage.setItem(SELLER_NAME_KEY, login.sellerName);
+    setStaffUser(login.user);
+    setAdminPassword(login.password);
+    setRole(login.role);
+    setSellerName(login.sellerName);
     setTab('sales');
     setLoginError(null);
   }
 
   function handleLogout() {
-    sessionStorage.removeItem(ADMIN_PASSWORD_KEY);
-    sessionStorage.removeItem(ADMIN_ROLE_KEY);
+    clearStoredSession();
     setAdminPassword(null);
+    setSellerName(undefined);
     setLoginError(null);
   }
 
@@ -312,7 +334,7 @@ export function AdminApp() {
       <div className="mx-auto max-w-4xl px-4 pb-28 pt-5 sm:px-6 sm:pb-8">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <h1 className="font-heading text-lg font-bold text-stone-900">
-            {role === 'admin' ? 'Panel de administración' : 'Panel de ventas'}
+            {role === 'admin' ? 'Panel de administración' : `Hola, ${sellerName ?? 'vendedora'}`}
           </h1>
           <div className="flex items-center gap-3">
             <a

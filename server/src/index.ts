@@ -4,7 +4,7 @@ import dns from 'node:dns';
 import express from 'express';
 import cors from 'cors';
 import { connectDb } from './db';
-import { requireAdmin, requireStaff, roleOf } from './auth';
+import { requireAdmin, requireStaff, roleOf, sellerNameOf } from './auth';
 import { DEFAULT_LOW_STOCK_THRESHOLD, normalizeCatalogStock } from './stock';
 import { OrderValidationError, type CatalogProduct } from './orders';
 import { ClientValidationError } from './clients';
@@ -83,7 +83,7 @@ async function main() {
    * y clientas).
    */
   app.get('/api/admin/verify', requireStaff, (_req, res) => {
-    res.json({ ok: true, role: roleOf(res) });
+    res.json({ ok: true, role: roleOf(res), sellerName: sellerNameOf(res) });
   });
 
   // --- Imágenes de producto -------------------------------------------------

@@ -1,8 +1,6 @@
 import type { Carrier, Order, SaleChannel, ShippingPayment } from '../types/order';
 import type { Client } from '../types/sales';
-import { formatCurrency, plural } from './format';
 import { normalizeWhatsapp } from './supplier';
-import { sanitizeForWhatsApp } from './whatsapp';
 
 export const CHANNEL_LABELS: Record<SaleChannel, string> = {
   presencial: 'Local',
@@ -152,47 +150,6 @@ export function buildWhatsAppChatUrl(number: string | undefined, message: string
   const digits = normalizeWhatsapp(number ?? '');
   if (!digits) return null;
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
-}
-
-/**
- * Resumen para mandarle a la clienta: qué se llevó, cuánto pagó y cuánto le falta. Después de un
- * live es lo que se le escribe a cada una para que transfiera.
- */
-export function buildSaleSummaryMessage(order: Order, businessName: string): string {
-  const firstName = sanitizeForWhatsApp(order.customer.name.split(' ')[0] ?? '');
-  const lines = order.lines.map((line) => {
-    const variant = [line.size, line.color].filter(Boolean).join(' / ');
-    return `• ${line.qty}x ${sanitizeForWhatsApp(line.productName)}${variant ? ` (${variant})` : ''} — ${formatCurrency(line.subtotal)}`;
-  });
-  const balance = balanceOf(order);
-  const credit = creditOf(order);
-  const carrier = carrierName(order.delivery);
-  const dispatched = order.delivery.status === 'delivered' && order.delivery.carrier && order.delivery.carrier !== 'local';
-
-  return [
-    `Hola${firstName ? ` ${firstName}` : ''}! Te paso el resumen de tu ${isBagOpen(order) ? 'bolsa' : 'compra'} en ${businessName} (pedido ${order.code}):`,
-    '',
-    ...lines,
-    '',
-    ...(order.discount > 0 ? [`Descuento: −${formatCurrency(order.discount)}`] : []),
-    ...(order.shippingCost > 0 ? [`Envío: ${formatCurrency(order.shippingCost)}`] : []),
-    `*Total: ${formatCurrency(order.total)}* (${plural(order.itemCount, 'prenda', 'prendas')})`,
-    ...(order.paidAmount > 0 ? [`Ya pagaste: ${formatCurrency(order.paidAmount)}`] : []),
-    balance > 0
-      ? `*Te queda por pagar: ${formatCurrency(balance)}*`
-      : credit > 0
-        ? `Te quedan ${formatCurrency(credit)} a favor para seguir sumando prendas.`
-        : '¡Está todo pago! Gracias 💕',
-    ...(isBagOpen(order) && order.bag ? ['', `Tu bolsa queda abierta hasta el ${formatDayLabel(order.bag.closesOn)}.`] : []),
-    ...(dispatched
-      ? [
-          '',
-          `Tu pedido salió por ${sanitizeForWhatsApp(carrier)}.`,
-          ...(order.delivery.trackingCode ? [`Código de seguimiento: ${sanitizeForWhatsApp(order.delivery.trackingCode)}`] : []),
-          ...(order.delivery.shippingPayment === 'on_delivery' ? ['El envío se paga al recibirlo.'] : []),
-        ]
-      : []),
-  ].join('\n');
 }
 
 // --- Exportar ----------------------------------------------------------------

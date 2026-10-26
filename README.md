@@ -47,9 +47,10 @@ Para ver logs de la API o pararla: `docker compose logs -f api` / `docker compos
 Pide una contraseña antes de mostrar nada. Hay dos accesos:
 
 - **Administradora** (`ADMIN_PASSWORD` del `.env`): ve todo.
-- **Vendedoras**: una clave que la administradora crea en *Configuración → Ventas*. Solo ve
-  **Ventas** y **Clientas**: no ve costos, ganancias ni reportes, no toca productos ni
-  configuración, y no puede cancelar una venta que ya tiene cobros.
+- **Vendedoras**: cada una con su usuario y contraseña, que la administradora crea en
+  *Configuración → Ventas*. Entran tocando "Soy vendedora". Solo ven **Ventas** y **Clientas**: no
+  ven costos, ganancias ni reportes, no tocan productos ni configuración, y no pueden cancelar una
+  venta que ya tiene cobros. Sus ventas quedan a su nombre automáticamente.
 
 Pestañas:
 
@@ -66,7 +67,8 @@ Pestañas:
   mientras se lo está reponiendo. Al publicar, el panel trae el stock
   actual del servidor y respeta las ventas que se hayan registrado mientras se editaba.
 - **Configuración**: *Sitio y catálogo* (nombre del negocio, WhatsApp, mínimos, banner, FAQ…) y
-  *Ventas* (vendedoras, medios de pago por cuenta, clave de vendedoras y costo de cada prenda).
+  *Ventas* (vendedoras y su acceso, medios de pago por cuenta, días de bolsa, mensajes de WhatsApp
+  y costo de cada prenda).
 
 ### Ventas
 
@@ -74,15 +76,16 @@ Una sola carga de productos sirve para todo: las ventas del local, de los lives 
 WhatsApp usan el mismo catálogo y descuentan del mismo stock.
 
 - **Nueva venta**: canal (local / TikTok live / WhatsApp), clienta (se busca por nombre, @usuario o
-  WhatsApp, o se crea en el momento), prendas del catálogo (o un artículo fuera del catálogo),
+  WhatsApp, o se crea en el momento), prendas del catálogo eligiendo cantidades en una grilla
+  talle × color (varias a la vez, de varios modelos), o un artículo fuera del catálogo,
   precio especial por renglón si hace falta, descuento, envío cobrado, pago (todo / seña / nada
   todavía, con uno o más medios), entrega (retira o envío) y quién vendió. El stock se descuenta al
   registrarla, así una prenda reservada en un live no se vende dos veces.
 - Si la clienta ya tiene una venta abierta (sin enviar), el formulario lo avisa y permite sumar
   las prendas a esa venta.
 - **Bolsas** (lives de TikTok): cuando llega la seña se abre la bolsa de la clienta y durante unos
-  días (configurable, 5 por defecto) se le van sumando las prendas que pide con un toque; el stock
-  baja en el momento. La seña puede superar lo que lleva por ahora (queda a favor). Las bolsas
+  días (configurable, 5 por defecto) se le van sumando las prendas que pide, eligiendo cantidades
+  por talle/color y agregándolas todas juntas; el stock baja en el momento. La seña puede superar lo que lleva por ahora (queda a favor). Las bolsas
   vencidas quedan marcadas; al cerrarla pasa a por cobrar / por despachar.
 - **Hoy**: lo vendido en el día y el **cierre de caja** (lo que entró, por medio de pago, incluidos
   saldos de ventas anteriores).
@@ -92,8 +95,13 @@ WhatsApp usan el mismo catálogo y descuentan del mismo stock.
   prenda).
 - Desde cada venta: **Cobrar** (registra un pago; cobrar la seña de un pedido web lo confirma),
   **Despacho realizado** (Vía Cargo, Correo Argentino, entrega en el local, Andreani u otro, con
-  código de seguimiento y si el envío se pagó antes o se paga al recibirlo), mandarle el **resumen por WhatsApp** a la clienta, editar (el stock se
-  ajusta por la diferencia) o cancelar (las prendas vuelven al stock).
+  código de seguimiento y si el envío se pagó antes o se paga al recibirlo; al guardarlo ofrece
+  mandarle a la clienta el aviso de despacho por WhatsApp), mandarle el **resumen por WhatsApp**,
+  editar (el stock se ajusta por la diferencia), cancelar (queda en el historial como cancelada) o,
+  solo la administradora, **eliminar** (se borra para siempre). En los dos últimos casos las
+  prendas vuelven al stock.
+- Los textos del resumen y del aviso de despacho se editan en *Configuración → Ventas*, con datos
+  como `{nombre}` o `{seguimiento}`; una línea con un dato que la venta no tiene no se manda.
 
 Los pedidos que llegan del catálogo web no tocan el stock hasta que se confirman o se cobra la seña.
 

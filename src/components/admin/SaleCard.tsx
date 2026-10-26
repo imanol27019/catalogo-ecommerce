@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import type { Order } from '../../types/order';
+import type { MessageTemplates } from '../../types/sales';
 import { BUSINESS_NAME } from '../../config/site.config';
 import { formatCurrency } from '../../utils/format';
 import {
   bagDaysLeft,
   balanceOf,
-  buildSaleSummaryMessage,
   buildWhatsAppChatUrl,
   carrierName,
   CHANNEL_LABELS,
@@ -19,16 +19,19 @@ import {
   relativeDay,
   SHIPPING_PAYMENT_LABELS,
 } from '../../utils/sales';
+import { buildCustomerMessage, canSendDispatchNotice } from '../../utils/messages';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { WhatsAppIcon } from '../ui/icons';
 
-export type SaleAction = 'pay' | 'dispatch' | 'confirm' | 'cancel' | 'edit' | 'addItems' | 'closeBag' | 'reopenBag';
+export type SaleAction = 'pay' | 'dispatch' | 'confirm' | 'cancel' | 'delete' | 'edit' | 'addItems' | 'closeBag' | 'reopenBag';
 
 interface SaleCardProps {
   order: Order;
   /** WhatsApp de la clienta (de su ficha), para mandarle el resumen. */
   whatsapp?: string;
+  /** Plantillas de los mensajes, editables en Configuración → Ventas. */
+  templates: Partial<MessageTemplates>;
   isAdmin: boolean;
   isBusy: boolean;
   onAction: (order: Order, action: SaleAction) => void;
@@ -37,7 +40,7 @@ interface SaleCardProps {
 
 const VISIBLE_LINES = 4;
 
-export function SaleCard({ order, whatsapp, isAdmin, isBusy, onAction, onDeletePayment }: SaleCardProps) {
+export function SaleCard({ order, whatsapp, templates, isAdmin, isBusy, onAction, onDeletePayment }: SaleCardProps) {
   const [showAllLines, setShowAllLines] = useState(false);
   const balance = balanceOf(order);
   const payment = paymentStateOf(order);
@@ -52,7 +55,12 @@ export function SaleCard({ order, whatsapp, isAdmin, isBusy, onAction, onDeleteP
   const canReopenBag = Boolean(order.bag?.closedAt) && isConfirmed && order.delivery.status === 'pending';
   const profit = isAdmin && isConfirmed ? estimatedProfit(order) : null;
   const lines = showAllLines ? order.lines : order.lines.slice(0, VISIBLE_LINES);
-  const whatsappUrl = !isCancelled ? buildWhatsAppChatUrl(whatsapp, buildSaleSummaryMessage(order, BUSINESS_NAME)) : null;
+  const whatsappUrl = !isCancelled
+    ? buildWhatsAppChatUrl(whatsapp, buildCustomerMessage('summary', order, BUSINESS_NAME, templates))
+    : null;
+  const dispatchNoticeUrl = canSendDispatchNotice(order)
+    ? buildWhatsAppChatUrl(whatsapp, buildCustomerMessage('dispatch', order, BUSINESS_NAME, templates))
+    : null;
 
   return (
     <article
@@ -213,6 +221,17 @@ export function SaleCard({ order, whatsapp, isAdmin, isBusy, onAction, onDeleteP
               Resumen
             </a>
           )}
+          {dispatchNoticeUrl && (
+            <a
+              href={dispatchNoticeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-stone-300 bg-white px-3 font-heading text-sm font-semibold text-whatsapp-dark hover:bg-stone-50"
+            >
+              <WhatsAppIcon className="h-4 w-4" />
+              Aviso de despacho
+            </a>
+          )}
           <Button variant="ghost" disabled={isBusy} onClick={() => onAction(order, 'edit')}>
             Editar
           </Button>
@@ -223,6 +242,19 @@ export function SaleCard({ order, whatsapp, isAdmin, isBusy, onAction, onDeleteP
           )}
           <Button variant="danger" disabled={isBusy} onClick={() => onAction(order, 'cancel')}>
             {isPending ? 'Descartar' : 'Cancelar venta'}
+          </Button>
+          {isAdmin && (
+            <Button variant="danger" disabled={isBusy} onClick={() => onAction(order, 'delete')}>
+              Eliminar
+            </Button>
+          )}
+        </div>
+      )}
+      {/* Una venta cancelada no tiene más acciones, pero la dueña la puede borrar del historial. */}
+      {isCancelled && isAdmin && (
+        <div className="mt-2.5 flex">
+          <Button variant="danger" disabled={isBusy} onClick={() => onAction(order, 'delete')}>
+            Eliminar
           </Button>
         </div>
       )}

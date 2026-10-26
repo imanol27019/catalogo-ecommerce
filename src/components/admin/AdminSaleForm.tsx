@@ -4,7 +4,6 @@ import type { Product } from '../../types/product';
 import type { DeliveryMethod, Order, SaleChannel, SalePayload } from '../../types/order';
 import type { Client, ClientPayload, ClientWithStats, SalesConfig } from '../../types/sales';
 import { createSale, updateSale } from '../../data/orders';
-import { resolveImageUrl } from '../../data/apiClient';
 import { formatCurrency, plural } from '../../utils/format';
 import { getEffectivePrice, unitPriceForQty } from '../../utils/pricing';
 import {
@@ -12,7 +11,6 @@ import {
   describeBagDeadline,
   isBagOpen,
   MANUAL_CHANNELS,
-  normalizeSearch,
   readDeviceSeller,
   readLastChannel,
   relativeDay,
@@ -26,6 +24,7 @@ import { Alert } from '../ui/Alert';
 import { MoneyInput } from '../ui/MoneyInput';
 import { INPUT_CLASS, INPUT_COMPACT_CLASS, LABEL_CLASS, LABEL_TEXT_CLASS, TEXTAREA_CLASS } from '../ui/formStyles';
 import { ClientPicker } from './ClientPicker';
+import { VariantQtyPicker, type PickedItem } from './VariantQtyPicker';
 import { DispatchFields } from './DispatchDialog';
 import { dispatchDraftFrom, dispatchPayloadFrom, validateDispatch, type DispatchDraft } from '../../utils/dispatch';
 import { describeApiError, useAdminSession } from './adminSession';
@@ -133,6 +132,8 @@ export function AdminSaleForm({
   );
   const [seller, setSeller] = useState(() => {
     if (initial) return initial.seller ?? '';
+    // Una vendedora con su propio usuario no elige: la venta queda a su nombre.
+    if (session.sellerName) return session.sellerName;
     const remembered = readDeviceSeller();
     return config.sellers.includes(remembered) ? remembered : '';
   });
@@ -158,21 +159,10 @@ export function AdminSaleForm({
   const [paymentMode, setPaymentMode] = useState<PaymentMode>(readLastChannel() === 'presencial' ? 'full' : 'none');
   const [payments, setPayments] = useState<DraftPayment[]>([{ key: newKey(), methodId: firstMethod, amount: 0 }]);
 
-  const [search, setSearch] = useState('');
-  const [openProductId, setOpenProductId] = useState<string | null>(null);
   const [isSaving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const productById = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
-  const sellableProducts = useMemo(() => products.filter((p) => p.status !== 'archived'), [products]);
-
-  const visibleProducts = useMemo(() => {
-    const needle = normalizeSearch(search);
-    const list = needle
-      ? sellableProducts.filter((p) => normalizeSearch(`${p.name} ${p.category}`).includes(needle))
-      : sellableProducts;
-    return list.slice(0, needle ? 12 : 8);
-  }, [sellableProducts, search]);
 
   /** Unidades por producto: el escalón de precio se resuelve sobre el total, igual que en el servidor. */
   const qtyByProduct = useMemo(() => {
@@ -236,12 +226,28 @@ export function AdminSaleForm({
     setPaymentMode(inStore ? 'full' : 'none');
   }
 
-  function addVariant(productId: string, variantId: string) {
+  /** Lo elegido en el selector (varias prendas con su cantidad) se suma al detalle de una vez. */
+  function addPicked(items: PickedItem[]): boolean {
     setLines((prev) => {
-      const existing = prev.find((l) => l.productId === productId && l.variantId === variantId);
-      if (existing) return prev.map((l) => (l === existing ? { ...l, qty: l.qty + 1 } : l));
-      return [...prev, { key: newKey(), productId, variantId, qty: 1, priceOverride: null, name: '', unitCost: null }];
+      let next = prev;
+      for (const item of items) {
+        const existing = next.find((l) => l.productId === item.productId && l.variantId === item.variantId);
+        next = existing
+          ? next.map((l) => (l === existing ? { ...l, qty: l.qty + item.qty } : l))
+          : [...next, { key: newKey(), productId: item.productId, variantId: item.variantId, qty: item.qty, priceOverride: null, name: '', unitCost: null }];
+      }
+      return next;
     });
+    return true;
+  }
+
+  /** Cuántas quedan para elegir: el stock, más lo que esta misma venta ya tenía descontado, menos lo que ya está en el detalle. */
+  function availableFor(product: Product, variantId: string): number {
+    const variant = product.variants.find((v) => v.id === variantId);
+    const inDraft = lines
+      .filter((l) => l.productId === product.id && l.variantId === variantId)
+      .reduce((sum, l) => sum + l.qty, 0);
+    return (variant?.stockQty ?? 0) + alreadyReserved(product.id, variantId) - inDraft;
   }
 
   function addFreeLine() {
@@ -275,7 +281,7 @@ export function AdminSaleForm({
     if ((channel === 'tiktok' || channel === 'whatsapp') && !client) {
       return 'Elegí o creá la clienta: en las ventas online hace falta para saber quién debe y a quién enviar.';
     }
-    if (config.sellers.length > 0 && !seller) return 'Elegí quién hizo la venta.';
+    if (!session.sellerName && config.sellers.length > 0 && !seller) return 'Elegí quién hizo la venta.';
     if (!isEdit && paymentMode !== 'none') {
       if (paymentRows.some((p) => !p.methodId)) return 'Elegí el medio de cada pago.';
       if (paymentMode === 'partial' && paidNow <= 0) return 'Poné el monto de la seña, o elegí "No pagó todavía".';
@@ -419,82 +425,14 @@ export function AdminSaleForm({
         )}
       </Section>
 
-      <Section title="Prendas">
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar producto…"
-          aria-label="Buscar producto"
-          // Enter en el buscador no tiene que mandar la venta a medio cargar.
-          onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
-          className={INPUT_CLASS}
+      <Section title="Prendas" hint="Abrí un modelo y escribí cuántas de cada talle/color. Podés elegir de varios modelos y agregarlas juntas.">
+        <VariantQtyPicker
+          products={products}
+          availableOf={availableFor}
+          addLabel={(units) => `Agregar ${units} a la venta`}
+          onAdd={addPicked}
+          stickyClassName="bottom-20 sm:bottom-0"
         />
-        <ul className="mt-2 flex flex-col gap-1.5">
-          {visibleProducts.map((product) => {
-            const isOpen = openProductId === product.id;
-            const units = product.variants.reduce((s, v) => s + v.stockQty, 0);
-            return (
-              <li key={product.id} className="overflow-hidden rounded-lg border border-stone-200 bg-white">
-                <button
-                  type="button"
-                  onClick={() => setOpenProductId(isOpen ? null : product.id)}
-                  aria-expanded={isOpen}
-                  className="flex min-h-11 w-full items-center gap-3 px-2.5 py-1.5 text-left hover:bg-stone-50"
-                >
-                  {product.images[0] ? (
-                    <img src={resolveImageUrl(product.images[0])} alt="" className="h-11 w-9 shrink-0 rounded object-cover" />
-                  ) : (
-                    <span aria-hidden="true" className="h-11 w-9 shrink-0 rounded bg-brand-100" />
-                  )}
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold text-stone-900">{product.name}</span>
-                    <span className="block text-xs text-stone-600">
-                      {formatCurrency(getEffectivePrice(product))} · {units} u. en stock
-                      {product.status === 'draft' && ' · no publicado'}
-                    </span>
-                  </span>
-                  <span aria-hidden="true" className={`shrink-0 text-stone-600 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
-                    ▾
-                  </span>
-                </button>
-                {isOpen && (
-                  <div className="flex flex-wrap gap-1.5 border-t border-stone-100 p-2.5">
-                    {product.variants.map((variant) => {
-                      const inDraft = lines
-                        .filter((l) => l.productId === product.id && l.variantId === variant.id)
-                        .reduce((s, l) => s + l.qty, 0);
-                      const available = variant.stockQty + alreadyReserved(product.id, variant.id) - inDraft;
-                      return (
-                        <button
-                          key={variant.id}
-                          type="button"
-                          disabled={available <= 0}
-                          onClick={() => addVariant(product.id, variant.id)}
-                          aria-label={`Agregar ${product.name} ${variant.size} ${variant.color}, quedan ${Math.max(0, available)}`}
-                          className="min-h-11 rounded-lg border border-stone-300 px-2.5 text-xs font-medium text-stone-700 hover:border-brand-500 hover:bg-brand-50 disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-50 disabled:text-stone-500"
-                        >
-                          {[variant.size, variant.color].filter(Boolean).join(' / ')}
-                          <span className="ml-1 text-stone-600">({Math.max(0, available)})</span>
-                        </button>
-                      );
-                    })}
-                    {product.variants.every((v) => v.stockQty + alreadyReserved(product.id, v.id) <= 0) && (
-                      <p className="w-full text-xs text-stone-600">
-                        Sin stock registrado. Si en realidad hay, sumalo en la pestaña Stock.
-                      </p>
-                    )}
-                  </div>
-                )}
-              </li>
-            );
-          })}
-          {visibleProducts.length === 0 && (
-            <li className="rounded-lg border border-dashed border-stone-300 px-3 py-4 text-center text-sm text-stone-600">
-              No hay productos con ese nombre.
-            </li>
-          )}
-        </ul>
         <button
           type="button"
           onClick={addFreeLine}
@@ -690,7 +628,7 @@ export function AdminSaleForm({
 
       <Section title="Datos de la venta">
         <div className="grid gap-3 sm:grid-cols-2">
-          {config.sellers.length > 0 && (
+          {!session.sellerName && config.sellers.length > 0 && (
             <div className="sm:col-span-2">
               <p className={`${LABEL_TEXT_CLASS} mb-1 text-sm`}>¿Quién vendió?</p>
               <div className="flex flex-wrap gap-2">
